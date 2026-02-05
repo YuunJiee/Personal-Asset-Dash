@@ -28,4 +28,7 @@ logs/
 *.swo
 .*.swp
 
-# Note: Python and Database files are handled by backend/.gitignore
+# Root-level database files (CRITICAL!)
+/*.db
+
+# Note: Python and Database files in backend/ are handled by backend/.gitignore
