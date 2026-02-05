@@ -2,7 +2,9 @@ import json
 import os
 from pathlib import Path
 
-CONFIG_FILE = "config.json"
+# Get the backend directory path
+BACKEND_DIR = Path(__file__).parent
+CONFIG_FILE = BACKEND_DIR / "config.json"
 DEFAULT_PROFILE = "default"
 DB_PREFIX = "sql_app"
 
@@ -31,8 +33,10 @@ def get_db_url(profile_name=None):
         db_file = f"{DB_PREFIX}.db"
     else:
         db_file = f"{DB_PREFIX}_{profile_name}.db"
-        
-    return f"sqlite:///./{db_file}"
+    
+    # Use backend directory for database files
+    db_path = BACKEND_DIR / db_file
+    return f"sqlite:///{db_path}"
 
 def list_profiles():
     config = load_config()
@@ -66,10 +70,10 @@ def delete_profile(name: str):
         save_config(config)
         
         # Optionally delete the DB file
-        db_file = f"{DB_PREFIX}_{name}.db"
-        if os.path.exists(db_file):
+        db_file = BACKEND_DIR / f"{DB_PREFIX}_{name}.db"
+        if db_file.exists():
             try:
-                os.remove(db_file)
+                db_file.unlink()
             except:
                 pass
         return True
