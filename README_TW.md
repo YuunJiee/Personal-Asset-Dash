@@ -24,32 +24,16 @@
 
 ## 📸 應用程式截圖
 
-### 儀表板
+### 儀表板總覽
 ![儀表板](./screenshots/dashboard.png)
 
 ### 資產管理
 ![資產](./screenshots/assets.png)
 
-### 投資追蹤
-![投資](./screenshots/investments.png)
-
-### 數據分析
-![分析](./screenshots/analytics.png)
-
-### 交易紀錄
-![歷史](./screenshots/history.png)
-
-### 財務日曆
-![日曆](./screenshots/calendar.png)
-
-### 支出追蹤
-![支出](./screenshots/expenses.png)
-
-### 設定與工具
-![設定](./screenshots/settings.png)
-
 ### 深色模式（繁體中文）
 ![深色模式](./screenshots/dashboard_dark_TW.png)
+
+> 📁 更多截圖請參見 [`/screenshots`](./screenshots) 資料夾
 
 ---
 

@@ -24,32 +24,16 @@ This is a passion project built to solve my own financial tracking challenges, a
 
 ## 📸 Screenshots
 
-### Dashboard
+### Dashboard Overview
 ![Dashboard](./screenshots/dashboard.png)
 
-### Assets Management
+### Asset Management
 ![Assets](./screenshots/assets.png)
-
-### Investment Tracking
-![Investments](./screenshots/investments.png)
-
-### Analytics
-![Analytics](./screenshots/analytics.png)
-
-### Transaction History
-![History](./screenshots/history.png)
-
-### Financial Calendar
-![Calendar](./screenshots/calendar.png)
-
-### Expense Tracking
-![Expenses](./screenshots/expenses.png)
-
-### Settings & Tools
-![Settings](./screenshots/settings.png)
 
 ### Dark Mode (Traditional Chinese)
 ![Dark Mode](./screenshots/dashboard_dark_TW.png)
+
+> 📁 More screenshots available in [`/screenshots`](./screenshots) directory
 
 ---
 
