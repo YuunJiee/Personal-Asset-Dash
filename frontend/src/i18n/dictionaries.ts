@@ -1,0 +1,853 @@
+export type Language = 'en' | 'zh-TW';
+
+export const translations = {
+    en: {
+        // Sidebar
+        dashboard: "Dashboard",
+        assets: "Assets",
+        investments: "Investments",
+        analytics: "Analytics",
+        fixed_expenses: "Expenses",
+        history: "History",
+        settings: "Settings",
+        calendar: "Calendar",
+        collapse: "Collapse",
+        dark_mode: "Dark Mode",
+        light_mode: "Light Mode",
+
+        // Dashboard & Widgets
+        net_worth: "Net Worth",
+        total_assets: "Total Assets",
+        total_liabilities: "Total Liabilities",
+        assets_breakdown: "Assets Breakdown",
+        top_assets: "Top Assets",
+        set_goal: "Set Goal",
+        limit_layout: "Limit Layout",
+        done: "Done",
+        last_updated: "Last updated",
+        time_for_checkin: "Time for a Check-in?",
+        checkin_message: "Your dashboard hasn't been updated for {days} days. Personal finance is \"fuzzy\", but a quick update helps keep your FIRE goals on track!",
+        add_asset: "Add Asset",
+        edit_asset: "Edit Asset",
+        transfer: "Transfer",
+        rebalancing: "Rebalancing",
+        set_targets: "Set Targets",
+        target: "Target",
+        current: "Current",
+
+        // Analytics
+        analytics_title: "Analytics",
+        analytics_desc: "Deep dive into your net worth trends and performance.",
+        asset_allocation: "Asset Allocation",
+        category: "Category",
+        sub_category: "Sub Category",
+        top_performers: "Top Performers",
+        winners: "Winners",
+        losers: "Losers",
+        no_data: "No data available",
+
+        // History
+        history_title: "History Log",
+        history_desc: "Full record of all account changes and transactions.",
+        date: "Date",
+        asset: "Asset",
+        type: "Type",
+        change_amount: "Change Amount",
+        price_at_time: "Price @ Time",
+        delete_record: "Delete Record",
+        delete_confirm: "Are you sure you want to delete this transaction record?",
+        delete_asset_confirm: "Are you sure you want to delete this asset?",
+        delete_expense_confirm: "Are you sure you want to delete this expense?",
+        borrow_spend: "Borrow / Spend",
+        repay_reduce: "Repay / Reduce",
+        increase_buy: "Increase / Buy",
+        decrease_sell: "Decrease / Sell",
+        buy: "Increase",
+        sell: "Decrease",
+        allocation: "Allocation",
+
+        // Expenses
+        expenses_title: "Fixed Expenses",
+        expenses_desc: "Track recurring bills and subscriptions",
+        add_expense: "Add Expense",
+        edit_expense: "Edit Expense",
+        monthly_reservation: "Monthly Reservation",
+        monthly_fixed: "Total Monthly Cost",
+        yearly_average: "Annual Projection",
+        all_subscriptions: "All Expenses",
+        no_expenses: "No expenses added yet. Click \"Add Expense\" to start.",
+        monthly_res_desc: "Amount to set aside each month (Monthly + Yearly/12)",
+        monthly_fixed_desc: "Includes monthly bills and pro-rated yearly subscriptions.",
+        total_yearly: "Total Yearly",
+
+        // Expense Form
+        name: "Name",
+        amount: "Amount",
+        frequency: "Frequency",
+        due_day: "Due Day",
+        split_with: "Split With (People)",
+        your_share: "Your share",
+        monthly: "Monthly",
+        yearly: "Yearly",
+        save_changes: "Save Changes",
+        expense_category_label: "Category / Tag",
+        category_placeholder: "Subscription, Rent, Gym...",
+
+        // Settings
+        general_settings: "General Settings",
+        visuals: "Visuals",
+        preferences: "Preferences",
+        integrations: "Integrations",
+        data_management: "Data Management",
+
+        // Settings Labels & Descriptions
+        budget_cycle: "Budget Cycle",
+        monthly_start_day: "Monthly Start Day",
+        start_day_of_month: "Start Day of Month",
+        budget_reset_desc: "Budget resets on the {day} of each month.",
+
+        chart_palette: "Chart Palette",
+        chart_palette_desc: "Color scheme for dashboard charts.",
+        category_visibility: "Category Visibility",
+        category_visibility_desc: "Choose which asset categories to show on your dashboard.",
+        visible: "Visible",
+        hidden: "Hidden",
+
+        price_update_freq: "Price Update Frequency",
+        price_update_desc: "How often to fetch new prices for stocks and crypto.",
+        every_hour: "Every Hour",
+        every_4_hours: "Every 4 Hours",
+        every_12_hours: "Every 12 Hours",
+        every_24_hours: "Every 24 Hours",
+        every_15_mins: "Every 15 mins",
+        every_30_mins: "Every 30 mins",
+        daily: "Daily",
+
+        base_currency: "Base Currency",
+        base_currency_desc: "Select your primary currency for aggregation.",
+
+        language: "Language",
+        language_desc: "Interface language.",
+
+        appearance: "Appearance",
+        appearance_desc: "Appearance settings for the application.",
+
+        // MAX Integration
+        max_integration: "MAX Exchange Integration",
+        api_key: "MAX API Key",
+        api_secret: "MAX API Secret",
+        api_key_desc: "Read-only access to convert balances.",
+        enter_api_key: "Enter API Key...",
+        enter_api_secret: "Enter Secret...",
+        sync_now: "Sync Now",
+        syncing: "Syncing...",
+        sync_success: "Synced!",
+        save_keys: "Save Keys",
+
+        // Data Management
+        backup_data: "Backup Data",
+        backup_desc: "Download a backup file of all your assets and transaction history.",
+        backup_json: "Download JSON",
+        reset_system: "System Reset",
+        reset_desc: "Permanently delete all data. This action cannot be undone.",
+        reset_button: "Reset All Data",
+
+        version: "Personal Asset Dashboard v1.2",
+
+        // Asset Categories
+        Fluid: "Fluid",
+        Investment: "Investment",
+        Fixed: "Fixed",
+        Receivables: "Receivables",
+        Liabilities: "Liabilities",
+        Total: "Total",
+
+        // Common
+        per_month_suffix: "/mo",
+        loading: "Loading...",
+        no_assets_yet: "No assets yet",
+        no_assets_found_matching: "No assets found matching",
+        updated_label: "Updated",
+        transaction_history: "Transaction History",
+        transactions: "transactions",
+        no_transactions_yet: "No transactions yet",
+        average_cost: "Average Cost",
+        ph_average_cost: "e.g. 100",
+        avg_cost_desc: "Initial cost based on current price. Edit if different.",
+        ph_amount: "e.g. 1000",
+        balance: "Balance",
+        price: "Price",
+        close: "Close",
+        back: "Back",
+        confirm: "Confirm",
+        cancel: "Cancel",
+        add_button: "Add",
+        add_to_favorites: "Add to Favorites",
+        edit: "Edit",
+        delete: "Delete",
+        search: "Search...",
+        save: "Save",
+        saved: "Saved",
+        select_placeholder: "Select...",
+        sort_desc: "Sort Descending",
+        sort_asc: "Sort Ascending",
+        // All Assets Page
+        all_assets_title: "All Assets",
+        all_assets_desc: "Comprehensive list of all tracked assets.",
+
+        // Portfolio Page
+        portfolio_title: "Portfolio",
+        portfolio_desc: "Real-time performance of stocks and crypto.",
+        no_investments_yet: "No investment assets yet. Add stocks or crypto to get started!",
+        stocks: "Stocks",
+        cryptocurrencies: "Cryptocurrencies",
+        other_investments: "Other Investments",
+
+        // Table Headers
+        price_twd: "Price (TWD)",
+        holdings: "Holdings",
+        avg_cost_twd: "Avg Cost (TWD)",
+        value_twd: "Value (TWD)",
+        pl_twd: "P/L (TWD)",
+        return_pct: "Return (%)",
+
+        // Sidebar / Favorites
+        favorites: "Favorites",
+        no_favorites: "No favorites yet",
+
+        // Mobile Card Labels
+        avg_cost: "Avg Cost",
+
+        // Settings - Extra
+        network_updates: "Network & Updates",
+        morandi: "Morandi (Earthy)",
+        classic: "Classic (Green/Blue)",
+        vibrant: "Vibrant (Neon)",
+
+        // Subcategories
+        sc_cash: "Cash",
+        sc_ewallet: "E-Wallet",
+        sc_debit_card: "Debit Card",
+        sc_other: "Other",
+        sc_fund: "Fund",
+        sc_stock: "Stock",
+        sc_crypto: "Crypto",
+        sc_other_invest: "Other Investment",
+        sc_real_estate: "Real Estate",
+        sc_car: "Car",
+        sc_other_fixed: "Other Fixed Asset",
+        sc_credit_card: "Credit Card",
+        sc_loan: "Loan",
+        sc_payable: "Payable",
+        sc_other_liability: "Other Liability",
+
+        // Dialogs & Forms
+        subcategory: "Sub Category",
+        include_in_net_worth: "Include in Net Worth",
+        initial_balance: "Initial Balance",
+        current_shares: "Current Shares",
+        current_holdings: "Current Holdings",
+        market: "Market",
+        ticker: "Ticker",
+        tags: "Tags",
+        add_tag: "Add tag...",
+        icon_label: "Icon",
+        // Placeholders
+        ph_bank_account: "e.g. My Bank Account",
+        ph_stock: "e.g. TSMC Stock",
+        ph_asset_name: "Asset Name",
+        ph_ticker_tw: "e.g. 2330",
+        ph_ticker_us: "e.g. AAPL",
+        ph_shares: "e.g. 1000",
+        ph_crypto_amount: "e.g. 0.12345678",
+        ph_balance: "0.00",
+        ph_tags: "e.g. Savings, Emergency (Optional)",
+
+        // Transfer
+        transfer_funds: "Transfer Funds",
+        from: "From",
+        to: "To",
+        select_source: "Select Source",
+        select_destination: "Select Destination",
+        fee_optional: "Fee (Optional)",
+        date_optional: "Date (Optional)",
+        transferring: "Transferring...",
+
+        // Adjust Balance
+        adjust_balance: "Adjust Balance",
+        set_final_balance: "Set Final Balance",
+        adjust_plus_minus: "Adjust (+/-)",
+        current_balance: "Current Balance",
+        new_balance: "New Balance",
+        amount_to_add_sub: "Amount to Add/Subtract",
+        adjustment: "Adjustment",
+
+        // Profile
+        my_ledgers: "My Ledgers",
+        create_new: "Create New...",
+        create_new_profile: "Create New Profile",
+        profile_desc: "Create a separate ledger (e.g., 'Real', 'Business').",
+        profile_name_placeholder: "Profile Name (e.g., Real)",
+        create_profile: "Create Profile",
+
+        // Expenses Formatting
+        monthly_due_day: "Monthly (Due Day {day})",
+
+        // Rebalance
+        define_allocation_desc: "Define your ideal allocation between Fluid (Cash) and Investment assets.",
+        total: "Total",
+
+        // Analytics Components
+        net_worth_trend: "Net Worth Trend",
+        monthly_change: "Monthly Change",
+        pl_analysis: "P&L Analysis",
+        profit: "Profit",
+        loss: "Loss",
+
+        // Trade Dialog
+        trade: "Trade",
+        quantity: "Quantity",
+        price_unit: "Price (Unit)",
+        total_amount: "Total Amount",
+
+        // Time Ranges
+        range_30d: "30D",
+        range_3mo: "3MO",
+        range_6mo: "6MO",
+        range_1y: "1Y",
+        range_all: "ALL",
+
+        // Short Labels for Mobile
+        cat_Total: "All",
+        cat_Investment: "Invest",
+        cat_Fluid: "Cash",
+        cat_Fixed: "Fixed",
+        cat_Liabilities: "Debt",
+
+        lbl_Category: "Cat.",
+        lbl_SubCategory: "Sub.",
+
+        // Price Alerts
+        price_alerts: "Price Alerts",
+        target_price: "Target Price",
+        condition: "Condition",
+        above: "Above",
+        below: "Below",
+        active_alerts: "Active Alerts",
+        no_alerts_set: "No alerts set",
+        triggered: "Triggered",
+
+        // Goal Dialog
+        set_financial_goal: "Set Financial Goal",
+        update_financial_goal: "Update Financial Goal",
+        goal_type_label: "Goal Type",
+        goal_name: "Goal Name",
+        target_amount_twd: "Target Amount (TWD)",
+        type_net_worth: "FIRE / Net Worth Target",
+        type_monthly_spending: "Monthly Budget Limit",
+        ph_fire_goal: "e.g. FIRE 2030",
+        ph_monthly_limit: "e.g. Monthly Limit",
+        ph_target_amount: "e.g. 30000000",
+        set_goal_button: "Set Goal",
+        update_goal_button: "Update Goal",
+
+
+        // Calendar
+        financial_calendar: "Financial Calendar",
+        financial_calendar_desc: "Track your daily cash flow",
+
+        // Simulator
+        wealth_simulator: "Wealth Simulator",
+        wealth_simulator_desc: "Project your future wealth with compound interest",
+        tools: "Tools",
+        initial_amount: "Initial Amount",
+        monthly_contribution: "Monthly Contribution",
+        annual_return: "Annual Return",
+        years_to_grow: "Years to Grow",
+        total_projected_wealth: "Total Projected Wealth",
+        total_principal: "Total Principal",
+        total_interest: "Total Interest Earned",
+        simulator_disclaimer: "This calculation is for simulation purposes only and does not guarantee future performance.", /* spell-checker: disable-line */
+
+        // Emergency Fund
+        emergency_fund_check: "Emergency Fund Check",
+        emergency_fund_desc: "Calculate how long you can survive without income based on your liquid assets.",
+        emergency_fund_subtitle: "Is your safety net strong enough?",
+        liquid_assets: "Liquid Assets",
+        monthly_expenses: "Monthly Expenses",
+        monthly_expenses_hint: "Rent, food, bills, etc.",
+        target_months: "Target Survival",
+        survival_time: "Survival Time",
+        months: "Months",
+        health_critical: "Critical",
+        health_warning: "Warning",
+        health_good: "Healthy",
+        health_excellent: "Excellent",
+        emergency_fund_success: "You hit your target!",
+        emergency_fund_shortfall: "You need {amount} more to reach your target.",
+
+        month_names_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        days_names_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        total_inflow: "Total Inflow",
+        total_outflow: "Total Outflow",
+        net_flow: "Net Flow",
+        inflow_desc: "Income, Deposits, Buys",
+        outflow_desc: "Expenses, Withdrawals, Sells",
+        income: "Income",
+        expense: "Expense",
+        no_transactions_on_day: "No transactions on this day.",
+
+        // Edit Transaction Dialog
+        edit_transaction: "Edit Transaction",
+        date_time: "Date & Time",
+        amount_qty: "Amount (Qty)",
+        price_unit_cost: "Price (Unit Cost)",
+        edit_txn_warning: "Changes will reflect in Asset Total & Net Worth.",
+        delete_transaction_confirm: "Are you sure you want to delete this transaction? This cannot be undone.",
+        failed_update_txn: "Failed to update transaction",
+        failed_delete_txn: "Failed to delete transaction",
+
+        // Goal Widget
+        goal_complete: "Complete",
+        predicted: "Predicted",
+        goal_target: "Goal",
+        budget_left: "Left",
+        budget_over: "Over",
+        pacing_fast: "Pacing Fast",
+        on_track: "On Track",
+        over_budget: "Over Budget",
+        under_budget: "Under Budget",
+        daily_allowance_desc: "~${amount}/day for {days} days",
+        spent: "Spent",
+        limit: "Limit",
+        budget_suffix: "(Budget)",
+        net_worth_suffix: "(FIRE)",
+
+    },
+    "zh-TW": {
+        // Sidebar
+        dashboard: "儀表板",
+        assets: "所有資產",
+        investments: "投資組合",
+        analytics: "分析報表",
+        fixed_expenses: "支出",
+        history: "歷史紀錄",
+        settings: "設定",
+        calendar: "行事曆",
+        collapse: "收起選單",
+        dark_mode: "深色模式",
+        light_mode: "淺色模式",
+
+        // Dashboard & Widgets
+        net_worth: "淨值",
+        total_assets: "總資產",
+        total_liabilities: "總負債",
+        assets_breakdown: "資產分佈",
+        top_assets: "前幾大資產",
+        set_goal: "設定目標",
+        limit_layout: "調整排版",
+        done: "完成",
+        last_updated: "最後更新",
+        time_for_checkin: "該回來看看囉？",
+        checkin_message: "您的儀表板已經 {days} 天沒有更新了。理財需要持續關注，更新一下數據讓您的 FIRE 目標更清晰！",
+        add_asset: "新增資產",
+        edit_asset: "編輯資產",
+        transfer: "資產轉移",
+        rebalancing: "資產平衡狀況",
+        set_targets: "設定目標",
+        target: "目標",
+        current: "目前",
+
+        // Analytics
+        analytics_title: "分析報表",
+        analytics_desc: "深入了解您的淨值趨勢和資產表現。",
+        asset_allocation: "資產配置",
+        category: "類別",
+        sub_category: "子類別",
+        top_performers: "表現最佳/最差",
+        winners: "獲利排行",
+        losers: "虧損排行",
+        no_data: "尚無資料",
+
+        // History
+        history_title: "歷史紀錄",
+        history_desc: "所有帳戶變動和交易的完整紀錄。",
+        date: "日期",
+        asset: "資產",
+        type: "類別",
+        change_amount: "變動金額",
+        price_at_time: "當時價格",
+        delete_record: "刪除紀錄",
+
+        delete_confirm: "您確定要刪除這筆交易紀錄嗎？",
+        delete_asset_confirm: "您確定要刪除這項資產嗎？",
+        delete_expense_confirm: "您確定要刪除這筆支出嗎？",
+        borrow_spend: "借入 / 支出",
+        repay_reduce: "償還 / 減少",
+        increase_buy: "增加 / 買入",
+        decrease_sell: "減少 / 賣出",
+        buy: "增加",
+        sell: "減少",
+        allocation: "配置",
+
+        // Expenses
+        expenses_title: "固定支出",
+        expenses_desc: "追蹤重複性的帳單和訂閱服務",
+        add_expense: "新增支出",
+        edit_expense: "編輯支出",
+        monthly_reservation: "每月預留",
+        monthly_fixed: "每月固定",
+        yearly_average: "年度平均",
+        all_subscriptions: "所有支出項目",
+        no_expenses: "尚無支出紀錄。點擊「新增支出」開始使用。",
+        monthly_res_desc: "每月應存下的金額 (月費 + 年費/12)",
+        monthly_fixed_desc: "房租、水電費、網路費等",
+        total_yearly: "年度總計",
+
+        // Expense Form
+        name: "名稱",
+        amount: "金額",
+        frequency: "頻率",
+        due_day: "繳款日",
+        split_with: "分攤人數",
+        your_share: "您的份額",
+        monthly: "每月",
+        yearly: "每年",
+        save_changes: "儲存變更",
+        expense_category_label: "類別 / 標籤",
+        category_placeholder: "訂閱、房租、健身房...",
+
+        // Settings
+        general_settings: "一般設定",
+        visuals: "視覺外觀",
+        preferences: "偏好設定",
+        integrations: "串接整合",
+        data_management: "資料管理",
+
+        // Settings Labels & Descriptions
+        budget_cycle: "預算週期",
+        monthly_start_day: "每月起始日",
+        start_day_of_month: "每月結算日",
+        budget_reset_desc: "每月 {day} 號重置預算。",
+
+        chart_palette: "圖表配色",
+        chart_palette_desc: "儀表板圖表的色彩風格。",
+        category_visibility: "資產顯示設定",
+        category_visibility_desc: "選擇要在儀表板上顯示的資產類別。",
+        visible: "顯示",
+        hidden: "隱藏",
+
+        price_update_freq: "價格更新頻率",
+        price_update_desc: "多久自動抓取一次股票和加密貨幣的最新價格。",
+        every_hour: "每小時",
+        every_4_hours: "每 4 小時",
+        every_12_hours: "每 12 小時",
+        every_24_hours: "每 24 小時",
+        every_15_mins: "每 15 分鐘",
+        every_30_mins: "每 30 分鐘",
+        daily: "每日",
+
+        base_currency: "基礎貨幣",
+        base_currency_desc: "選擇用於計算總資產的主要貨幣。",
+
+        language: "語言",
+        language_desc: "介面語言。",
+
+        appearance: "外觀設定",
+        appearance_desc: "應用程式的深淺色主題。",
+
+        // MAX Integration
+        max_integration: "MAX 交易所串接",
+        api_key: "MAX API Key",
+        api_secret: "MAX API Secret",
+        api_key_desc: "僅需讀取權限以同步餘額。",
+        enter_api_key: "輸入 API Key...",
+        enter_api_secret: "輸入 Secret...",
+        sync_now: "立即同步",
+        syncing: "同步中...",
+        sync_success: "同步成功！",
+        save_keys: "儲存金鑰",
+
+        backup_data: "備份資料",
+        backup_desc: "下載所有資產和交易紀錄的備份檔案。",
+        backup_json: "下載 JSON 備份",
+
+        reset_system: "系統重置",
+        reset_desc: "永久刪除所有資料。此操作無法復原。",
+        reset_button: "重置所有資料",
+
+        version: "Personal Asset Dashboard v1.2",
+
+        // Asset Categories
+        Fluid: "流動資產",
+        Investment: "投資",
+        Fixed: "固定資產",
+        Receivables: "應收帳款",
+        Liabilities: "負債",
+        Total: "總計",
+
+        // Common
+        per_month_suffix: "/月",
+        loading: "載入中...",
+        no_assets_yet: "尚無資產",
+        no_assets_found_matching: "找不到符合的資產",
+        updated_label: "更新",
+        transaction_history: "交易紀錄",
+        transactions: "筆交易",
+        no_transactions_yet: "尚無交易紀錄",
+        average_cost: "平均成本",
+        ph_average_cost: "例如：100",
+        avg_cost_desc: "依照目前市價計算，若不同請修改。",
+        ph_amount: "例如：1000",
+        balance: "餘額",
+        price: "價格",
+        close: "關閉",
+        back: "返回",
+        confirm: "確認",
+        cancel: "取消",
+        add_button: "新增",
+        add_to_favorites: "加入我的最愛",
+        edit: "編輯",
+        delete: "刪除",
+        search: "搜尋...",
+        save: "儲存",
+        saved: "已儲存",
+        select_placeholder: "選擇...",
+        sort_desc: "降冪排序",
+        sort_asc: "升冪排序",
+        // All Assets Page
+        all_assets_title: "所有資產",
+        all_assets_desc: "所有追蹤資產的完整列表。",
+
+        // Portfolio Page
+        portfolio_title: "投資組合",
+        portfolio_desc: "即時查看股票與加密貨幣的表現。",
+        no_investments_yet: "尚無投資資產。新增股票或加密貨幣來開始！",
+        stocks: "股票",
+        cryptocurrencies: "加密貨幣",
+        other_investments: "其他投資",
+
+        // Table Headers
+        price_twd: "價格 (TWD)",
+        holdings: "持倉量",
+        avg_cost_twd: "平均成本 (TWD)",
+        value_twd: "市值 (TWD)",
+        pl_twd: "損益 (TWD)",
+        return_pct: "報酬率 (%)",
+
+        // Sidebar / Favorites
+        favorites: "最愛項目",
+        no_favorites: "尚無最愛項目",
+
+        // Mobile Card Labels
+        avg_cost: "平均成本",
+
+        // Settings - Extra
+        network_updates: "連線與更新",
+        morandi: "莫蘭迪色系 (大地)",
+        classic: "經典 (藍綠)",
+        vibrant: "鮮豔 (霓虹)",
+
+        // Subcategories
+        sc_cash: "現金",
+        sc_ewallet: "電子錢包",
+        sc_debit_card: "簽帳金融卡",
+        sc_other: "其他",
+        sc_fund: "基金",
+        sc_stock: "股票",
+        sc_crypto: "加密貨幣",
+        sc_other_invest: "其他投資",
+        sc_real_estate: "房地產",
+        sc_car: "車輛",
+        sc_other_fixed: "其他固定資產",
+        sc_credit_card: "信用卡",
+        sc_loan: "貸款",
+        sc_payable: "應付帳款",
+        sc_other_liability: "其他負債",
+
+        // Dialogs & Forms
+        subcategory: "子類別",
+        include_in_net_worth: "計入淨值計算",
+        initial_balance: "初始餘額",
+        current_shares: "目前股數",
+        current_holdings: "目前持倉",
+        market: "市場",
+        ticker: "股票代號",
+        tags: "標籤",
+        add_tag: "新增標籤...",
+        icon_label: "圖示",
+        // Placeholders
+        ph_bank_account: "例如：我的銀行帳戶",
+        ph_stock: "例如：台積電",
+        ph_asset_name: "資產名稱",
+        ph_ticker_tw: "例如：2330",
+        ph_ticker_us: "例如：AAPL",
+        ph_shares: "例如：1000",
+        ph_crypto_amount: "例如：0.12345678",
+        ph_balance: "0.00",
+        ph_tags: "例如：儲蓄, 緊急預備金 (選填)",
+
+        // Transfer
+        transfer_funds: "資產轉移",
+        from: "從",
+        to: "至",
+        select_source: "選擇來源帳戶",
+        select_destination: "選擇轉入帳戶",
+        fee_optional: "手續費 (選填)",
+        date_optional: "日期 (選填)",
+        transferring: "轉移中...",
+
+        // Adjust Balance
+        adjust_balance: "調整餘額",
+        set_final_balance: "設定最終餘額",
+        adjust_plus_minus: "增減金額 (+/-)",
+        current_balance: "目前餘額",
+        new_balance: "新餘額",
+        amount_to_add_sub: "增減金額",
+        adjustment: "調整金額",
+
+        // Profile
+        my_ledgers: "我的帳本",
+        create_new: "建立新帳本...",
+        create_new_profile: "建立新帳本",
+        profile_desc: "建立一個獨立的帳本 (例如：「真實資產」、「公司帳」)。",
+        profile_name_placeholder: "帳本名稱 (例如：Real)",
+        create_profile: "建立帳本",
+
+        // Expenses Formatting
+        monthly_due_day: "每月 {day} 號繳款",
+
+        // Rebalance
+        define_allocation_desc: "設定您理想的流動資產 (現金) 與投資資產比例。",
+        total: "總計",
+
+        // Analytics Components
+        net_worth_trend: "淨值趨勢",
+        monthly_change: "每月變動",
+        pl_analysis: "損益分析",
+        profit: "獲利",
+        loss: "虧損",
+
+        // Trade Dialog
+        trade: "交易",
+        quantity: "數量",
+        price_unit: "單價",
+        total_amount: "總金額",
+
+        // Time Ranges
+        range_30d: "30天",
+        range_3mo: "3個月",
+        range_6mo: "6個月",
+        range_1y: "1年",
+        range_all: "全部",
+
+        // Short Labels for Mobile
+        cat_Total: "總計",
+        cat_Investment: "投資",
+        cat_Fluid: "流動",
+        cat_Fixed: "固定",
+        cat_Liabilities: "負債",
+
+        lbl_Category: "類別",
+        lbl_SubCategory: "子類",
+
+        // Price Alerts
+        price_alerts: "價格提醒",
+        target_price: "目標價格",
+        condition: "條件",
+        above: "以上",
+        below: "以下",
+        active_alerts: "啟用中的提醒",
+        no_alerts_set: "尚無提醒設定",
+        triggered: "已觸發",
+
+        // Goal Dialog
+        set_financial_goal: "設定財務目標",
+        update_financial_goal: "更新財務目標",
+        goal_type_label: "目標類型",
+        goal_name: "目標名稱",
+        target_amount_twd: "目標金額 (TWD)",
+        type_net_worth: "FIRE / 淨值目標",
+        type_monthly_spending: "每月預算上限",
+        ph_fire_goal: "例如：FIRE 2030",
+        ph_monthly_limit: "例如：每月上限",
+        ph_target_amount: "例如：30000000",
+        set_goal_button: "設定目標",
+        update_goal_button: "更新目標",
+
+
+        // Calendar
+        financial_calendar: "財務日曆",
+        financial_calendar_desc: "追蹤每日現金流向",
+
+        // Simulator
+        wealth_simulator: "財富模擬器",
+        wealth_simulator_desc: "透過複利效應預測您的未來財富",
+        tools: "工具",
+        initial_amount: "起始本金",
+        monthly_contribution: "每月投入",
+        annual_return: "年化報酬率",
+        years_to_grow: "複利年限",
+        total_projected_wealth: "預估總資產",
+        total_principal: "總投入本金",
+        total_interest: "總獲利 (複利)",
+        simulator_disclaimer: "此試算僅供模擬參考，並不保證未來實際投資績效。",
+
+        // Emergency Fund
+        emergency_fund_check: "緊急預備金檢測",
+        emergency_fund_desc: "根據您的流動資產，計算您在無收入情況下能生存多久。",
+        emergency_fund_subtitle: "您的財務安全網夠強固嗎？",
+        liquid_assets: "流動資產 (現金)",
+        monthly_expenses: "每月必須支出",
+        monthly_expenses_hint: "房租、伙食、帳單等",
+        target_months: "目標生存月數",
+        survival_time: "生存時間",
+        months: "個月",
+        health_critical: "危險",
+        health_warning: "需注意",
+        health_good: "健康",
+        health_excellent: "極佳",
+        emergency_fund_success: "您已達成目標！",
+        emergency_fund_shortfall: "距離目標還差 {amount}。",
+
+        month_names_short: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+        days_names_short: ["日", "一", "二", "三", "四", "五", "六"],
+        total_inflow: "總流入",
+        total_outflow: "總流出",
+        net_flow: "淨流量",
+        inflow_desc: "收入、存款、買入",
+        outflow_desc: "支出、提款、賣出",
+        income: "收入",
+        expense: "支出",
+        no_transactions_on_day: "本日無交易紀錄。",
+
+        // Edit Transaction Dialog
+        edit_transaction: "編輯交易",
+        date_time: "日期與時間",
+        amount_qty: "數量 (Amount)",
+        price_unit_cost: "單價 (Unit Cost)",
+        edit_txn_warning: "變更將直接反映於資產總額與淨值。",
+        delete_transaction_confirm: "您確定要刪除這筆交易嗎？此操作無法復原。",
+        failed_update_txn: "更新交易失敗",
+        failed_delete_txn: "刪除交易失敗",
+
+        // Goal Widget
+        goal_complete: "達成率",
+        predicted: "預計達成",
+        goal_target: "目標",
+        budget_left: "剩餘",
+        budget_over: "超支",
+        pacing_fast: "消耗過快",
+        on_track: "進度正常",
+        over_budget: "已超支",
+        under_budget: "控制良好",
+        daily_allowance_desc: "約 ${amount}/天 (剩 {days} 天)",
+        spent: "已花費",
+        limit: "上限",
+        budget_suffix: "(預算)",
+        net_worth_suffix: "(FIRE)",
+
+    }
+};
+
+export type TranslationKey = keyof typeof translations.en;

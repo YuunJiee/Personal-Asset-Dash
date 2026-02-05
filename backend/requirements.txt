@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+yfinance
+ccxt
+pydantic
+apscheduler
