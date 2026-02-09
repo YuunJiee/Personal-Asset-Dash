@@ -51,6 +51,12 @@ if [ ! -d "node_modules" ]; then
     npm install
 fi
 
+# Check if .next build exists, if not, build it
+if [ ! -d ".next" ]; then
+    echo "Building frontend for production..."
+    npm run build
+fi
+
 # Start Frontend
 echo "🎨 Starting Frontend..."
 npm start &
