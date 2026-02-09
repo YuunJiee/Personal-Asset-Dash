@@ -58,6 +58,28 @@ This is a passion project built to solve my own financial tracking challenges, a
 
 ## 🚀 Quick Start
 
+### Development Mode (Fast Iteration)
+Use this for coding and testing changes without rebuilding. Hot-reloading is enabled.
+```bash
+./scripts/dev.sh
+```
+
+### Production Mode (Full Build)
+Use this to build and deploy the application.
+```bash
+./scripts/prod.sh
+```
+
+### Management Scripts
+- **Stop All**: `./scripts/stop.sh`
+- **View Logs**: `./scripts/logs.sh`
+- **Check Status**: `./scripts/status.sh`
+- **Update App**: `./scripts/update.sh`
+- **Deploy (Systemd)**: `./scripts/deploy.sh`
+
+### Manual Setup
+
+
 ### Prerequisites
 - **Python 3.8+** (for backend)
 - **Node.js 18+** (for frontend)

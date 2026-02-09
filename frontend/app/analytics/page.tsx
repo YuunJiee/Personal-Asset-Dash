@@ -2,43 +2,11 @@
 
 import { MonthlyChangeChart } from "@/components/MonthlyChangeChart";
 import { NetWorthTrendChart } from "@/components/NetWorthTrendChart";
-import { usePrivacy } from "@/components/PrivacyProvider";
-import { useState, useEffect } from "react";
-
 import { useLanguage } from "@/components/LanguageProvider";
 import { PieChart } from "lucide-react";
-import { WealthSimulatorWidget } from "@/components/WealthSimulatorWidget";
-import { EmergencyFundWidget } from "@/components/EmergencyFundWidget";
-import { fetchDashboardData } from "@/lib/api";
 
 export default function AnalyticsPage() {
-    const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
-
-    const [dashboardData, setDashboardData] = useState<any>(null);
-    const [currentNetWorth, setCurrentNetWorth] = useState(0);
-    const [currentCash, setCurrentCash] = useState(0);
-
-    useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                const data = await fetchDashboardData();
-                if (data) {
-                    setDashboardData(data);
-                    // Calculate net worth and cash for tools
-                    if (data.assets) {
-                        const total = data.assets.reduce((sum: number, a: any) => sum + (a.include_in_net_worth !== false ? (a.value_twd || 0) : 0), 0);
-                        setCurrentNetWorth(total);
-                        const cashTotal = data.assets.filter((a: any) => a.category === 'Fluid').reduce((sum: number, a: any) => sum + (a.value_twd || 0), 0);
-                        setCurrentCash(cashTotal);
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch dashboard data for analytics", error);
-            }
-        };
-        fetchDashboard();
-    }, []);
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
@@ -64,19 +32,6 @@ export default function AnalyticsPage() {
             </header>
 
             <div className="space-y-8">
-                {/* Financial Tools */}
-                {dashboardData ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <WealthSimulatorWidget currentNetWorth={currentNetWorth} />
-                        <EmergencyFundWidget currentCash={currentCash} />
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="h-[400px] w-full bg-muted/20 animate-pulse rounded-3xl border border-transparent"></div>
-                        <div className="h-[400px] w-full bg-muted/20 animate-pulse rounded-3xl border border-transparent"></div>
-                    </div>
-                )}
-
                 {/* Historical Charts */}
                 <div className="space-y-8">
                     <NetWorthTrendChart />

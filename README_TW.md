@@ -58,6 +58,27 @@
 
 ## 🚀 快速開始
 
+### 開發模式（快速迭代）
+用於編寫程式碼和測試變更，無需重新編譯。支援即時熱重載 (Hot Reload)。
+```bash
+./scripts/dev.sh
+```
+
+### 生產模式（完整編譯）
+用於編譯並部署應用程式。
+```bash
+./scripts/prod.sh
+```
+
+### 管理腳本
+- **停止所有服務**：`./scripts/stop.sh`
+- **查看日誌**：`./scripts/logs.sh`
+- **檢查狀態**：`./scripts/status.sh`
+- **更新應用程式**：`./scripts/update.sh`
+- **部署 (Systemd)**：`./scripts/deploy.sh`
+
+### 手動安裝步驟
+
 ### 系統需求
 - **Python 3.8+**（後端）
 - **Node.js 18+**（前端）

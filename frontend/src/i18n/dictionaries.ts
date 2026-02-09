@@ -4,12 +4,12 @@ export const translations = {
     en: {
         // Sidebar
         dashboard: "Dashboard",
-        assets: "Assets",
+        assets: "All Assets",
         stock: "Portfolio",
         crypto: "Crypto",
         analytics: "Analytics",
         fixed_expenses: "Fixed Expenses",
-        calendar: "Calendar",
+        calendar: "Financial Calendar",
         history: "History",
         settings: "Settings",
         collapse: "Collapse",
@@ -46,6 +46,9 @@ export const translations = {
         winners: "Winners",
         losers: "Losers",
         no_data: "No data available",
+        no_data_available: "No data available",
+        add_assets_to_see_trends: "Add assets to see trends",
+        no_favorites: "No favorites yet",
 
         // History
         history_title: "History Log",
@@ -153,7 +156,7 @@ export const translations = {
         reset_desc: "Permanently delete all data. This action cannot be undone.",
         reset_button: "Reset All Data",
 
-        version: "Personal Asset Dashboard v1.2",
+        version: "Yantage v2.1",
 
         // Asset Categories
         Fluid: "Cash",
@@ -462,12 +465,12 @@ export const translations = {
     "zh-TW": {
         // Sidebar
         dashboard: "儀表板",
-        assets: "資產",
+        assets: "所有資產",
         stock: "投資組合",
         crypto: "加密貨幣",
         analytics: "分析報表",
         fixed_expenses: "固定支出",
-        calendar: "行事曆",
+        calendar: "財務日曆",
         history: "歷史紀錄",
         settings: "設定",
         collapse: "收起選單",
@@ -504,6 +507,8 @@ export const translations = {
         winners: "獲利排行",
         losers: "虧損排行",
         no_data: "尚無資料",
+        no_data_available: "尚無資料",
+        add_assets_to_see_trends: "新增資產以查看趨勢",
 
         // History
         history_title: "歷史紀錄",
@@ -612,7 +617,7 @@ export const translations = {
         reset_desc: "永久刪除所有資料。此操作無法復原。",
         reset_button: "重置所有資料",
 
-        version: "Personal Asset Dashboard v1.2",
+        version: "Yantage v2.1",
 
         // Asset Categories
         Fluid: "流動資產",

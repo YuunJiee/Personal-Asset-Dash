@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-10
+
+### ✨ Added
+- **Management Scripts Suite**: Created comprehensive `scripts/` directory containing:
+  - `dev.sh`: Development mode with hot-reloading (fast iteration).
+  - `prod.sh`: Production mode (build & run).
+  - `deploy.sh`: Automated Systemd service deployment.
+  - `update.sh`: One-click update (git pull + rebuild + restart).
+  - `stop.sh`, `status.sh`, `logs.sh`: Service management utilities.
+- **Enhanced Documentation**: Updated `README.md` and `README_TW.md` with detailed script usage instructions.
+
+### 🔧 Changed
+- **Sidebar Renaming**:
+  - "Calendar" → "Financial Calendar" (財務日曆)
+  - "Assets" → "All Assets" (所有資產)
+- **Version Update**: Bumped application version to v2.1.
+
+### 🐛 Fixed
+- **Chart Sizing**: Fixed `width(-1)` errors in Recharts by adding `min-w-0` to containers.
+- **Backend Startup**: Resolved `ImportError` in startup scripts by correctly setting `PYTHONPATH`.
+- **Systemd Conflicts**: Updated scripts to automatically handle conflicts with running systemd services.
+
 ## [2.0.0] - 2026-02-09
 
 ### 🚨 Breaking Changes

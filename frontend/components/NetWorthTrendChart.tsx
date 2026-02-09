@@ -24,23 +24,24 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
     const [data, setData] = useState<DataPoint[]>([]);
     const [range, setRange] = useState<string>('30d');
     const [isLoading, setIsLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const fetchData = async () => {
             setIsLoading(true);
             try {
                 // Fetch from backend
                 const result = await fetchHistory(range);
-                if (result && result.length > 0) { // Check if result is valid and not empty
+                if (result && result.length > 0) {
                     setData(result);
                 } else {
-                    // Fallback Mock Data if endpoint fails or returns empty (for demo)
-                    const mockData = generateMockData(range);
-                    setData(mockData);
+                    // No data available - show empty state
+                    setData([]);
                 }
             } catch (error) {
                 console.error("Failed to fetch history:", error);
-                setData(generateMockData(range));
+                setData([]);
             } finally {
                 setIsLoading(false);
             }
@@ -48,6 +49,8 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
 
         fetchData();
     }, [range]);
+
+    if (!mounted) return <div className={cn("rounded-3xl shadow-sm border-border bg-card h-[400px]", className)} />;
 
     return (
         <Card className={cn("rounded-3xl shadow-sm border-border bg-card", className)}>
@@ -73,9 +76,17 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="h-[350px] w-full">
+                <div className="h-[350px] w-full min-w-0">
                     {isLoading ? (
                         <div className="h-full w-full flex items-center justify-center text-muted-foreground">Loading...</div>
+                    ) : data.length === 0 ? (
+                        <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground">
+                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p className="text-sm">{t('no_data_available')}</p>
+                            <p className="text-xs mt-1 opacity-70">{t('add_assets_to_see_trends')}</p>
+                        </div>
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={data}>
@@ -125,31 +136,4 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
             </CardContent>
         </Card>
     );
-}
-
-// Temporary Mock Data Generator until Backend Logic is 100%
-function generateMockData(range: string) {
-    const data = [];
-    let points = 30;
-    if (range === '3mo') points = 90;
-    if (range === '6mo') points = 180;
-    if (range === '1y') points = 365;
-
-    let baseValue = 1500000;
-    const now = new Date();
-
-    for (let i = points; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - i);
-
-        // Random walk
-        const change = (Math.random() - 0.48) * 20000;
-        baseValue += change;
-
-        data.push({
-            date: d.toISOString().split('T')[0],
-            value: baseValue
-        });
-    }
-    return data;
 }

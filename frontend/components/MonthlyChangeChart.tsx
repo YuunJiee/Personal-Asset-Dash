@@ -27,22 +27,29 @@ export function MonthlyChangeChart() {
     const [originalData, setOriginalData] = useState<DataPoint[]>([]);
     const [category, setCategory] = useState<string>('Total');
     const [isLoading, setIsLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const fetchData = async () => {
             setIsLoading(true);
             try {
                 // Fetch 1 year of data to calculate monthly changes
                 const result: DataPoint[] = await fetchHistory('1y');
-                setOriginalData(result);
-                // Process initial (Total)
-                const processed = processMonthlyChanges(result, 'Total');
-                setData(processed);
+                if (result && result.length > 0) {
+                    setOriginalData(result);
+                    // Process initial (Total)
+                    const processed = processMonthlyChanges(result, 'Total');
+                    setData(processed);
+                } else {
+                    // No data available
+                    setOriginalData([]);
+                    setData([]);
+                }
             } catch (error) {
                 console.error("Failed to fetch history:", error);
-                const mockData = generateMockData();
-                setOriginalData(mockData);
-                setData(processMonthlyChanges(mockData, 'Total'));
+                setOriginalData([]);
+                setData([]);
             } finally {
                 setIsLoading(false);
             }
@@ -104,6 +111,8 @@ export function MonthlyChangeChart() {
         return changes.slice(-12); // Last 12 months
     };
 
+    if (!mounted) return <div className="rounded-3xl shadow-sm border-border bg-card h-[400px]" />;
+
     return (
         <Card className="rounded-3xl shadow-sm border-border bg-card">
             <CardHeader className="pb-2 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0">
@@ -113,15 +122,16 @@ export function MonthlyChangeChart() {
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">{t('pl_analysis')}</p>
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide justify-center md:justify-end">
+                <div className="flex gap-1 bg-muted p-1 rounded-lg overflow-x-auto scrollbar-hide">
                     {['Total', 'Fluid', 'Stock', 'Crypto', 'Receivables', 'Liabilities'].map(cat => (
                         <button
                             key={cat}
                             onClick={() => setCategory(cat)}
                             className={cn(
-                                "px-3 py-1.5 text-xs font-medium rounded-xl transition-all border whitespace-nowrap min-w-[60px]",
-                                "bg-background text-muted-foreground border-border hover:border-foreground/50",
-                                category === cat && "bg-foreground text-background border-foreground"
+                                "px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                                category === cat
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             {/* Use Mobile Short Keys */}
@@ -131,9 +141,17 @@ export function MonthlyChangeChart() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="h-[300px] w-full">
+                <div className="h-[300px] w-full min-w-0">
                     {isLoading ? (
                         <div className="h-full w-full flex items-center justify-center text-muted-foreground">Loading...</div>
+                    ) : data.length === 0 ? (
+                        <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground">
+                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <p className="text-sm">{t('no_data_available')}</p>
+                            <p className="text-xs mt-1 opacity-70">{t('add_assets_to_see_trends')}</p>
+                        </div>
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data}>
@@ -172,30 +190,4 @@ export function MonthlyChangeChart() {
             </CardContent>
         </Card>
     );
-}
-
-// Temporary Mock Data Generator (Same as NetWorthTrendChart)
-function generateMockData() {
-    // ... (Keep existing mock implementation, but ideally update to include breakdown if needed by fallback. For now leave as is, since mock path is failover)
-    // Actually, let's update mock data to have breakdown so UI doesn't break if backend fails
-    const data = [];
-    let baseValue = 1500000;
-    const now = new Date();
-    for (let i = 540; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - i);
-        const change = (Math.random() - 0.45) * 5000;
-        baseValue += change;
-        data.push({
-            date: d.toISOString().split('T')[0],
-            value: baseValue,
-            breakdown: {
-                'Investment': baseValue * 0.6,
-                'Fluid': baseValue * 0.3,
-                'Fixed': baseValue * 0.1,
-                'Total': baseValue
-            }
-        });
-    }
-    return data;
 }

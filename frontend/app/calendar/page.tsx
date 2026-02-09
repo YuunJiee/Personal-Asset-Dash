@@ -210,14 +210,13 @@ export default function FinancialCalendar() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
             <div className="text-sm text-muted-foreground font-medium mb-1">{t('total_inflow')}</div>
             <div className="text-2xl font-bold text-trend-up flex items-center">
               <DollarSign className="w-5 h-5 text-muted-foreground mr-1" />
               {isPrivacyMode ? '****' : monthlyInflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">{t('inflow_desc')}</div>
           </div>
           <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
             <div className="text-sm text-muted-foreground font-medium mb-1">{t('total_outflow')}</div>
@@ -225,7 +224,6 @@ export default function FinancialCalendar() {
               <DollarSign className="w-5 h-5 text-muted-foreground mr-1" />
               {isPrivacyMode ? '****' : monthlyOutflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">{t('outflow_desc')}</div>
           </div>
           <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
             <div className="text-sm text-muted-foreground font-medium mb-1">{t('net_flow')}</div>

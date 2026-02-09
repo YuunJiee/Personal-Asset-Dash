@@ -38,7 +38,14 @@ def read_setting(key: str, db: Session = Depends(get_db)):
         "price_update_interval_minutes": "60",
         "budget_start_day": "1",
         "chart_theme": "Morandi",
-        "visible_categories": '["Fluid","Investment","Fixed","Receivables","Liabilities"]'
+        "visible_categories": '["Fluid","Investment","Fixed","Receivables","Liabilities"]',
+        "wealth_simulator_monthly_contribution": "10000",
+        "wealth_simulator_annual_return": "6",
+        "wealth_simulator_years": "20",
+        "wealth_simulator_initial_amount": "0",
+        "emergency_fund_monthly_expense": "30000",
+        "emergency_fund_target_months": "6",
+        "emergency_fund_cash": "0"
     }
     
     if setting is None:

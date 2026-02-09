@@ -26,7 +26,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Personal Asset Dashboard API")
 
 # CORS setup - use environment variable or default to localhost
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,https://assets.yuunjiee.com").split(",")
 
 app.add_middleware(
     CORSMiddleware,

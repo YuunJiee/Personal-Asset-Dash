@@ -5,15 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { Settings, Download, Trash2, Globe, DollarSign, Palette, Calendar, PieChart as PieChartIcon, Calculator, Key, Wallet, RefreshCw, Sun, Moon, Languages } from 'lucide-react';
+import { Settings, Download, Trash2, Globe, DollarSign, Palette, Calendar, PieChart as PieChartIcon, Key, Wallet, RefreshCw, Sun, Moon, Languages } from 'lucide-react';
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { CategoryVisibility } from "@/components/CategoryVisibility";
 import { useGlobalTheme } from "@/components/GlobalThemeProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useTheme } from "next-themes";
-import { WealthSimulatorDialog } from "@/components/WealthSimulatorDialog";
-import { EmergencyFundDialog } from "@/components/EmergencyFundDialog";
-import { LifeBuoy } from "lucide-react";
+
 import { fetchSetting, updateSetting, fetchDashboardData, API_URL } from '@/lib/api';
 
 export default function SettingsPage() {
@@ -23,11 +21,7 @@ export default function SettingsPage() {
     const [budgetStartDay, setBudgetStartDay] = useState('1');
     const [updateInterval, setUpdateInterval] = useState('60');
 
-    // Simulator
-    const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
-    const [isEmergencyOpen, setIsEmergencyOpen] = useState(false); // Emergency Fund
-    const [currentNetWorth, setCurrentNetWorth] = useState(0);
-    const [currentCash, setCurrentCash] = useState(0); // Emergency Fund Cash
+
 
     // Global Theme Hook (Chart Colors)
     const { themeName: chartTheme, setThemeName: setChartTheme } = useGlobalTheme();
@@ -56,17 +50,7 @@ export default function SettingsPage() {
 
         loadSettings();
 
-        // Fetch Net Worth for Simulator
-        fetchDashboardData()
-            .then(data => {
-                if (data && data.assets) {
-                    const total = data.assets.reduce((sum: number, a: any) => sum + (a.include_in_net_worth !== false ? (a.value_twd || 0) : 0), 0);
-                    setCurrentNetWorth(total);
-                    const cashTotal = data.assets.filter((a: any) => a.category === 'Cash' || a.category === 'Bank').reduce((sum: number, a: any) => sum + (a.value_twd || 0), 0);
-                    setCurrentCash(cashTotal);
-                }
-            })
-            .catch(() => { });
+        // Fetch Net Worth for Simulator logic removed
     }, []);
 
     const handleSaveChartTheme = (val: string) => {
@@ -248,37 +232,7 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                {/* TOOLS */}
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('tools')}</h2>
-                    <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
-                        {/* Wealth Simulator */}
-                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors p-6 group border-b border-border" onClick={() => setIsSimulatorOpen(true)}>
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-2xl group-hover:scale-110 transition-transform">
-                                    <Calculator className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg">{t('wealth_simulator')}</h3>
-                                    <p className="text-sm text-muted-foreground">{t('wealth_simulator_desc')}</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Emergency Fund Card */}
-                        <div className="flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors p-6 group" onClick={() => setIsEmergencyOpen(true)}>
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 rounded-2xl group-hover:scale-110 transition-transform">
-                                    <LifeBuoy className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg">{t('emergency_fund_check')}</h3>
-                                    <p className="text-sm text-muted-foreground">{t('emergency_fund_subtitle')}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
                 {/* DATA MANAGEMENT */}
                 <section className="space-y-4">
@@ -308,17 +262,7 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            <WealthSimulatorDialog
-                isOpen={isSimulatorOpen}
-                onClose={() => setIsSimulatorOpen(false)}
-                currentNetWorth={currentNetWorth}
-            />
 
-            <EmergencyFundDialog
-                isOpen={isEmergencyOpen}
-                onClose={() => setIsEmergencyOpen(false)}
-                currentCash={currentCash}
-            />
         </div>
 
     );
