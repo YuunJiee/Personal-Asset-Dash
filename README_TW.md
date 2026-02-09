@@ -3,7 +3,7 @@
 **Yantage** 是一款注重隱私的個人財務管理工具，旨在幫助您追蹤淨資產、管理多類別資產，並實現財務自由。採用「模糊記帳」理念，專注於高階資產追蹤，無需記錄每一筆交易的繁瑣負擔。
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
 
 > [English Version](README.md) | 繁體中文版
@@ -22,44 +22,37 @@
 
 ---
 
-## 📸 應用程式截圖
+## ✨ 主要功能
 
-### 儀表板總覽
-![儀表板](./screenshots/dashboard.png)
-
-### 資產管理
-![資產](./screenshots/assets.png)
-
-### 深色模式（繁體中文）
-![深色模式](./screenshots/dashboard_dark_TW.png)
-
-> 📁 更多截圖請參見 [`/screenshots`](./screenshots) 資料夾
-
----
-
-## ✨ 功能特色
+### 🎨 **現代簡約設計**
+- **柔和配色**：舒適的薄荷綠、米色和藍灰色調
+- **清晰排版**：易讀的介面與明確的視覺層次
+- **深色模式**：無縫切換主題，舒適閱讀
+- **響應式佈局**：針對桌面和行動裝置優化
 
 ### 📊 **全方位資產管理**
 - **多類別追蹤**：管理 5 大類資產（流動資產、投資、固定資產、應收帳款、負債）
 - **即時估值**：自動抓取股票價格（台股/美股透過 Yahoo Finance）與加密貨幣（透過 CCXT/MAX）
 - **MAX 交易所整合**：使用唯讀 API 自動同步餘額與交易紀錄
+- **可展開資產卡片**：單擊即可深入查看個別持倉
 
 ### 🎯 **財務規劃工具**
+- **目標追蹤**：FIRE（財務獨立，提早退休）目標的視覺化進度條
+- **智慧預算管理**：追蹤每月支出，顯示進度指標（符合預算、超支、節省）
 - **財富模擬器**：根據投入金額與預期報酬率預測未來財富
 - **緊急預備金檢測**：根據流動資產計算財務生存時間
-- **目標追蹤**：設定並監控 FIRE（財務獨立，提早退休）目標
-- **預算管理**：視覺化追蹤每月預算進度
 
 ### 📈 **分析與洞察**
-- **淨值趨勢**：歷史追蹤與互動式圖表
-- **資產配置**：視覺化投資組合分布
-- **再平衡建議**：維持目標資產配置
-- **績效排行**：追蹤表現最佳/最差的資產
+- **淨值趨勢**：歷史追蹤與互動式圖表，支援多種時間範圍（30天、3個月、6個月、1年、全部）
+- **資產配置**：使用環形圖視覺化投資組合分布
+- **再平衡建議**：維持目標資產配置，提供可執行的建議
+- **績效排行**：追蹤表現最佳/最差的資產，顯示百分比漲跌
 
 ### 🔒 **隱私優先**
 - **100% 本地儲存**：所有資料儲存於本地 SQLite 資料庫
 - **無雲端同步**：您的財務資料永不離開您的電腦
 - **安全的 API 金鑰**：加密儲存於本地資料庫
+- **無追蹤**：無分析、無遙測、無資料收集
 
 ---
 
@@ -77,30 +70,55 @@
    cd Personal-Asset-Dash
    ```
 
-2. **執行啟動腳本**
+2. **後端設定**
    ```bash
-   ./start.sh
+   cd backend
+   pip install -r requirements.txt
+   
+   # 可選：複製環境變數範本
+   cp .env.example .env
+   # 編輯 .env 檔案以自訂配置（如 CORS origins）
    ```
-   此腳本會自動：
-   - 建立 Python 虛擬環境（或使用 Conda）
-   - 安裝後端依賴套件
-   - 安裝前端依賴套件
-   - 同時啟動前後端伺服器
 
-3. **訪問應用程式**
+3. **前端設定**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+4. **啟動應用程式**
+   ```bash
+   # 後端（從 backend 目錄）
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   
+   # 前端（從 frontend 目錄，另開終端機）
+   npm run dev
+   ```
+
+5. **訪問應用程式**
    - **前端介面**：http://localhost:3000
    - **API 文件**：http://localhost:8000/docs
+
+### 環境變數配置（可選）
+
+後端支援使用 `.env` 檔案進行配置。可用的環境變數：
+
+- `ALLOWED_ORIGINS`: CORS 允許的來源，以逗號分隔（預設：`http://localhost:3000`）
+- `LOG_LEVEL`: 日誌級別（DEBUG, INFO, WARNING, ERROR, CRITICAL，預設：INFO）
+
+範例 `.env` 檔案已提供在 `backend/.env.example`。詳細說明請參考配置指南。
 
 ---
 
 ## 🛠️ 技術架構
 
 ### 前端
-- **框架**：Next.js 15（App Router）
-- **UI**：Shadcn/UI + TailwindCSS
+- **框架**：Next.js 16（App Router）
+- **UI**：Shadcn/UI + TailwindCSS 4
 - **圖表**：Recharts
 - **狀態管理**：React Server Components + Client Hooks
 - **國際化**：自訂字典式翻譯（英文/繁體中文）
+- **圖示**：Lucide React
 
 ### 後端
 - **框架**：FastAPI
@@ -108,7 +126,8 @@
 - **排程器**：APScheduler（背景價格更新）
 - **服務**：
   - `MAXService`：交易所整合（HMAC 驗證）
-  - `MarketService`：即時價格抓取
+  - `WalletService`：Web3 整合，追蹤鏈上餘額
+  - `MarketService`：透過 yfinance 和 CCXT 即時抓取價格
 
 ---
 
@@ -121,12 +140,14 @@ personal-asset-dash/
 │   ├── services/         # 業務邏輯
 │   ├── models.py         # SQLAlchemy 模型
 │   ├── schemas.py        # Pydantic 驗證
+│   ├── .env.example      # 環境變數範本
 │   └── README.md         # 後端文件
 ├── frontend/             # Next.js 前端
 │   ├── app/              # App Router 頁面
 │   ├── components/       # React 元件
-│   ├── src/i18n/         # 翻譯檔案
+│   ├── lib/              # 工具函式與 API 客戶端
 │   └── README.md         # 前端文件
+├── screenshots/          # 應用程式截圖
 ├── .gitignore            # Git 忽略規則
 └── start.sh              # 啟動腳本
 ```
@@ -137,13 +158,12 @@ personal-asset-dash/
 
 ### 後端設定
 1. 進入設定頁面
-2. 設定 MAX 交易所 API（選用）：
-   - 輸入 API Key
-   - 輸入 API Secret
-   - 點擊「同步 MAX 資產」
+2. 配置整合（選用）：
+   - **MAX 交易所**：輸入 API Key 和 Secret 以啟用自動同步
+   - **錢包地址**：新增 Ethereum、Scroll 或 BSC 地址以追蹤鏈上資產
 
 ### 環境變數
-參考 `.env.example` 查看可用的設定選項。
+參考 `backend/.env.example` 查看可用的設定選項。
 
 ---
 
@@ -152,6 +172,7 @@ personal-asset-dash/
 - **後端 API**：參見 [backend/README.md](backend/README.md)
 - **前端元件**：參見 [frontend/README.md](frontend/README.md)
 - **API 參考**：http://localhost:8000/docs（執行時）
+- **配置指南**：參見 artifacts 中的 `configuration_guide.md`
 
 ---
 
@@ -188,6 +209,7 @@ MIT License - 詳見 LICENSE 檔案。
 - 使用 [Next.js](https://nextjs.org/) 建構
 - 由 [FastAPI](https://fastapi.tiangolo.com/) 驅動
 - UI 元件來自 [Shadcn/UI](https://ui.shadcn.com/)
+- 圖表由 [Recharts](https://recharts.org/) 提供
 - 開發過程中使用 AI 程式設計輔助工具協作
 
 ---

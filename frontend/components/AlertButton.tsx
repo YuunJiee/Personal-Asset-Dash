@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Input } from "@/components/ui/input";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useLanguage } from '@/components/LanguageProvider';
+import { API_URL } from '@/lib/api';
 
 interface Alert {
     id: number;
@@ -32,7 +33,7 @@ export function AlertButton({ assetId, currentPrice, ticker }: AlertButtonProps)
 
     const fetchAlerts = async () => {
         try {
-            const res = await fetch(`http://localhost:8000/api/alerts/${assetId}`);
+            const res = await fetch(`${API_URL}/alerts/${assetId}`);
             if (res.ok) {
                 const data = await res.json();
                 setAlerts(data);
@@ -55,7 +56,7 @@ export function AlertButton({ assetId, currentPrice, ticker }: AlertButtonProps)
         if (isNaN(price)) return;
 
         try {
-            const res = await fetch(`http://localhost:8000/api/alerts/${assetId}`, {
+            const res = await fetch(`${API_URL}/alerts/${assetId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -74,7 +75,7 @@ export function AlertButton({ assetId, currentPrice, ticker }: AlertButtonProps)
 
     const handleDeleteAlert = async (id: number) => {
         try {
-            await fetch(`http://localhost:8000/api/alerts/${id}`, { method: 'DELETE' });
+            await fetch(`${API_URL}/alerts/${id}`, { method: 'DELETE' });
             fetchAlerts();
         } catch (error) {
             console.error(error);

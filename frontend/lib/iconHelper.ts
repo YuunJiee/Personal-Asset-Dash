@@ -16,8 +16,8 @@ export const getCategoryIconName = (category: string, subCategory?: string): str
     // Category Defaults
     switch (category) {
         case 'Fluid': return 'Wallet';
-        case 'Investment': return 'TrendingUp';
-        case 'Fixed': return 'Building';
+        case 'Stock': return 'TrendingUp';
+        case 'Crypto': return 'Bitcoin';
         case 'Receivables': return 'Briefcase';
         case 'Liabilities': return 'CreditCard';
         default: return 'Coins';

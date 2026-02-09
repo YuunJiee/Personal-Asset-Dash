@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PieChart, Settings, Menu, TrendingUp, CreditCard, Sun, Moon, ChevronLeft, ChevronRight, Eye, EyeOff, Download, Wallet, Calendar, Star } from 'lucide-react';
+import { LayoutDashboard, PieChart, Settings, Menu, TrendingUp, CreditCard, Sun, Moon, ChevronLeft, ChevronRight, Eye, EyeOff, Download, Wallet, Calendar, Star, Bitcoin, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
@@ -11,6 +11,7 @@ import { ProfileSwitcher } from './ProfileSwitcher';
 import { AssetIcon } from './IconPicker';
 
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchDashboardData, API_URL } from '@/lib/api';
 
 interface AppSidebarProps {
     isCollapsed: boolean;
@@ -32,17 +33,18 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
     }, []);
 
     const downloadBackup = () => {
-        window.open('http://localhost:8000/api/system/backup', '_blank');
+        window.open(`${API_URL}/system/backup`, '_blank');
     };
 
     const navItems = [
         { name: t('dashboard'), href: '/', icon: LayoutDashboard },
         { name: t('assets'), href: '/assets', icon: Wallet },
-        { name: t('investments'), href: '/investments', icon: TrendingUp },
+        { name: t('stock'), href: '/stock', icon: TrendingUp },
         { name: t('analytics'), href: '/analytics', icon: PieChart },
         { name: t('fixed_expenses'), href: '/expenses', icon: CreditCard },
+        { name: t('crypto'), href: '/crypto', icon: Bitcoin },
         { name: t('calendar'), href: '/calendar', icon: Calendar },
-        { name: t('history'), href: '/history', icon: Menu },
+        { name: t('history'), href: '/history', icon: History },
 
     ];
 
@@ -51,14 +53,16 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
     useEffect(() => {
         const loadFavorites = async () => {
             try {
-                const res = await fetch('http://localhost:8000/api/dashboard/');
-                if (res.ok) {
-                    const data = await res.json();
+                const data = await fetchDashboardData();
+                if (data && data.assets) {
                     setAssets(data.assets || []);
                     const favs = data.assets.filter((a: any) => a.is_favorite).slice(0, 5);
                     setFavorites(favs);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Sidebar couldn't load favorites:", e);
+                // Keep existing favorites or set to empty to avoid repeated crashes
+            }
         };
         loadFavorites();
         const interval = setInterval(loadFavorites, 5000);
@@ -217,20 +221,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
 
 
 
-                    {/* Language Toggle (Example Implementation) */}
-                    <button
-                        onClick={() => setLanguage(language === 'en' ? 'zh-TW' : 'en')}
-                        className={cn(
-                            "flex items-center justify-center gap-2 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-all text-foreground font-medium text-sm",
-                            isCollapsed && "px-0"
-                        )}
-                        title="Switch Language"
-                    >
-                        <span className="w-5 h-5 flex items-center justify-center text-lg leading-none">
-                            {language === 'en' ? '文' : 'En'}
-                        </span>
-                        {!isCollapsed && <span>{language === 'en' ? '中文' : 'English'}</span>}
-                    </button>
+
 
                     {/* Settings Link */}
                     <Link
@@ -246,21 +237,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                         {!isCollapsed && <span>{t('settings')}</span>}
                     </Link>
 
-                    {/* Theme Toggle */}
-                    <button
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className={cn(
-                            "flex items-center justify-center gap-2 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-all text-foreground font-medium text-sm",
-                            isCollapsed && "px-0"
-                        )}
-                        title="Toggle Theme"
-                    >
-                        <div className="relative w-5 h-5 flex items-center justify-center shrink-0">
-                            <Sun className="absolute h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                        </div>
-                        {!isCollapsed && <span>{mounted && theme === "dark" ? t('light_mode') : t('dark_mode')}</span>}
-                    </button>
+
                 </div>
             </aside >
             <AssetActionDialog

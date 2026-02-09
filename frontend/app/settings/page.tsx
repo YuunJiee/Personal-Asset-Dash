@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { Settings, Download, Trash2, Globe, DollarSign, Palette, Calendar, PieChart as PieChartIcon, Calculator } from 'lucide-react';
+import { Settings, Download, Trash2, Globe, DollarSign, Palette, Calendar, PieChart as PieChartIcon, Calculator, Key, Wallet, RefreshCw, Sun, Moon, Languages } from 'lucide-react';
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { CategoryVisibility } from "@/components/CategoryVisibility";
 import { useGlobalTheme } from "@/components/GlobalThemeProvider";
@@ -14,14 +14,12 @@ import { useTheme } from "next-themes";
 import { WealthSimulatorDialog } from "@/components/WealthSimulatorDialog";
 import { EmergencyFundDialog } from "@/components/EmergencyFundDialog";
 import { LifeBuoy } from "lucide-react";
+import { fetchSetting, updateSetting, fetchDashboardData, API_URL } from '@/lib/api';
 
 export default function SettingsPage() {
     // Mock States for now (would be Context in real implementation)
-    // Mock States for now (would be Context in real implementation)
     const [currency, setCurrency] = useState('TWD');
-    const [apiKey, setApiKey] = useState('');
-    const [apiSecret, setApiSecret] = useState('');
-    const [isSyncing, setIsSyncing] = useState(false);
+
     const [budgetStartDay, setBudgetStartDay] = useState('1');
     const [updateInterval, setUpdateInterval] = useState('60');
 
@@ -41,43 +39,29 @@ export default function SettingsPage() {
     const { language, setLanguage, t } = useLanguage();
 
     useEffect(() => {
-        // Fetch budget start day
-        fetch('http://localhost:8000/api/settings/budget_start_day')
-            .then(res => res.json())
-            .then(data => setBudgetStartDay(data.value ? String(data.value) : '1'))
-            .catch(err => console.log('Setting not found, using default'));
+        // Fetch Settings
+        const loadSettings = async () => {
+            try {
+                const results = await Promise.all([
+                    fetchSetting('budget_start_day'),
+                    fetchSetting('price_update_interval_minutes'),
+                ]);
 
-        fetch('http://localhost:8000/api/settings/price_update_interval_minutes')
-            .then(res => res.json())
-            .then(data => setUpdateInterval(String(data.value)))
-            .catch(() => setUpdateInterval('60'));
+                if (results[0].value) setBudgetStartDay(String(results[0].value));
+                if (results[1].value) setUpdateInterval(String(results[1].value));
+            } catch (e) {
+                console.error("Failed to load settings:", e);
+            }
+        };
 
-        fetch('http://localhost:8000/api/settings/max_api_key')
-            .then(res => res.json())
-            .then(data => setApiKey(data.value || ''))
-            .catch(() => { });
-
-        fetch('http://localhost:8000/api/settings/max_api_secret')
-            .then(res => res.json())
-            .then(data => setApiSecret(data.value || ''))
-            .catch(() => { });
-
-        // chart_theme is handled by GlobalThemeProvider now
+        loadSettings();
 
         // Fetch Net Worth for Simulator
-        fetch('http://localhost:8000/api/dashboard')
-            .then(res => res.json())
+        fetchDashboardData()
             .then(data => {
-                if (data.net_worth_history && data.net_worth_history.length > 0) {
-                    // Check if backend provides current net worth directly or use history
-                    // dashboard.assets can sum up too.
-                    // The /api/dashboard returns 'stats'.
-                    // Let's assume calculate from assets in data if needed or just 0.
-                    // Actually `data` has `assets`, can sum.
+                if (data && data.assets) {
                     const total = data.assets.reduce((sum: number, a: any) => sum + (a.include_in_net_worth !== false ? (a.value_twd || 0) : 0), 0);
                     setCurrentNetWorth(total);
-
-                    // Fetch Cash for Emergency Fund (Assuming Category is 'Cash' or similar)
                     const cashTotal = data.assets.filter((a: any) => a.category === 'Cash' || a.category === 'Bank').reduce((sum: number, a: any) => sum + (a.value_twd || 0), 0);
                     setCurrentCash(cashTotal);
                 }
@@ -85,92 +69,40 @@ export default function SettingsPage() {
             .catch(() => { });
     }, []);
 
-    const handleSaveKeys = async () => {
-        try {
-            await fetch('http://localhost:8000/api/settings/max_api_key', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'max_api_key', value: apiKey })
-            });
-            await fetch('http://localhost:8000/api/settings/max_api_secret', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'max_api_secret', value: apiSecret })
-            });
-            alert("Keys saved!");
-        } catch (e) { console.error(e); }
-    };
-
-    const handleSyncMax = async () => {
-        setIsSyncing(true);
-        // Save keys first just in case
-        await handleSaveKeys();
-
-        try {
-            const res = await fetch('http://localhost:8000/api/system/sync/max', { method: 'POST' });
-            if (res.ok) {
-                alert("Synced successfully! Check your Assets.");
-            } else {
-                alert("Sync failed. Check API Keys.");
-            }
-        } catch (e) {
-            alert("Sync error.");
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
     const handleSaveChartTheme = (val: string) => {
         setChartTheme(val as any);
     };
 
     const handleSaveUpdateInterval = async (val: string) => {
         setUpdateInterval(val);
-        try {
-            await fetch('http://localhost:8000/api/settings/price_update_interval_minutes', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'price_update_interval_minutes', value: val })
-            });
-        } catch (e) { console.error(e); }
+        updateSetting('price_update_interval_minutes', val);
     };
 
     const handleSaveBudgetDay = async (val: string) => {
         setBudgetStartDay(val);
-        try {
-            await fetch('http://localhost:8000/api/settings/budget_start_day', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'budget_start_day', value: val })
-            });
-        } catch (e) {
-            console.error(e);
-        }
+        updateSetting('budget_start_day', val);
     };
 
     const handleExport = async () => {
-        // Fetch all data
-        const res = await fetch('http://localhost:8000/api/dashboard/');
-        const data = await res.json();
-
-        // Create download
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `asset_dashboard_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
+        try {
+            const data = await fetchDashboardData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `asset_dashboard_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        } catch (e) {
+            console.error("Export failed:", e);
+        }
     };
 
     const handleReset = async () => {
         if (!confirm("Are you sure you want to delete ALL data? This action cannot be undone.")) return;
-        // Double confirmation for safety
         if (!confirm("Double check: ALL assets, transactions, and goals will be lost. Confirm reset?")) return;
 
         try {
-            const res = await fetch('http://localhost:8000/api/system/reset', {
-                method: 'DELETE'
-            });
+            const res = await fetch(`${API_URL}/system/reset`, { method: 'DELETE' });
             if (res.ok) {
                 alert("System has been reset to factory defaults.");
                 window.location.href = '/';
@@ -195,59 +127,66 @@ export default function SettingsPage() {
                 </div>
             </header>
 
-            <div className="max-w-2xl space-y-8">
-                {/* BUDGET SETTINGS */}
+            <div className="max-w-2xl space-y-8 pb-24">
+
+                {/* GLOBAL SETTINGS (Language & Theme) */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('budget_cycle')}</h2>
-                    <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                            <Calendar className="w-5 h-5" /> {t('monthly_start_day')}
-                        </h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium mb-2 block">{t('start_day_of_month')}</label>
-                                <div className="flex gap-4 items-center">
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        max="31"
-                                        className="w-32 bg-muted border border-border"
-                                        value={budgetStartDay}
-                                        onChange={(e) => {
-                                            const val = parseInt(e.target.value);
-                                            if (val >= 1 && val <= 31) handleSaveBudgetDay(e.target.value);
-                                            else if (e.target.value === '') setBudgetStartDay('');
-                                        }}
-                                        onBlur={(e) => {
-                                            if (!e.target.value || parseInt(e.target.value) < 1) handleSaveBudgetDay('1');
-                                            if (parseInt(e.target.value) > 31) handleSaveBudgetDay('31');
-                                        }}
-                                    />
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('budget_reset_desc').replace('{day}', String(budgetStartDay))}
-                                    </p>
-                                </div>
+                    <h2 className="text-lg font-semibold border-b border-border pb-2">Appearance & Language</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex flex-col gap-3">
+                            <div className="flex items-center gap-2 font-medium">
+                                <Languages className="w-4 h-4" />
+                                <span>Language</span>
+                            </div>
+                            <div className="flex gap-2 mt-auto">
+                                <Button
+                                    variant={language === 'en' ? 'default' : 'outline'}
+                                    onClick={() => setLanguage('en')}
+                                    className="flex-1"
+                                >
+                                    English
+                                </Button>
+                                <Button
+                                    variant={language === 'zh-TW' ? 'default' : 'outline'}
+                                    onClick={() => setLanguage('zh-TW')}
+                                    className="flex-1"
+                                >
+                                    中文
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex flex-col gap-3">
+                            <div className="flex items-center gap-2 font-medium">
+                                <Palette className="w-4 h-4" />
+                                <span>Theme</span>
+                            </div>
+                            <div className="flex gap-2 mt-auto">
+                                <Button
+                                    variant={theme === 'light' ? 'default' : 'outline'}
+                                    onClick={() => setTheme('light')}
+                                    className="flex-1"
+                                >
+                                    <Sun className="w-4 h-4 mr-2" /> Light
+                                </Button>
+                                <Button
+                                    variant={theme === 'dark' ? 'default' : 'outline'}
+                                    onClick={() => setTheme('dark')}
+                                    className="flex-1"
+                                >
+                                    <Moon className="w-4 h-4 mr-2" /> Dark
+                                </Button>
                             </div>
                         </div>
                     </div>
                 </section>
 
+                {/* INTEGRATIONS */}
 
 
-                {/* CATEGORY VISIBILITY */}
+                {/* PREFERENCES */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('category_visibility')}</h2>
-                    <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
-                        <p className="text-sm text-muted-foreground mb-4">{t('category_visibility_desc')}</p>
-                        <CategoryVisibility />
-                    </div>
-                </section>
-
-
-
-                {/* NETWORK & UPDATES */}
-                <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('network_updates')}</h2>
+                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('preferences')}</h2>
                     <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
@@ -262,7 +201,6 @@ export default function SettingsPage() {
                                         { value: '15', label: t('every_15_mins') || 'Every 15 mins' },
                                         { value: '30', label: t('every_30_mins') || 'Every 30 mins' },
                                         { value: '60', label: t('every_hour') },
-                                        { value: '240', label: t('every_4_hours') },
                                         { value: '1440', label: t('daily') || 'Daily' },
                                     ]}
                                 />
@@ -271,98 +209,42 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
-                {/* PREFERENCES */}
+                {/* BUDGET SETTINGS */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('preferences')}</h2>
-
-                    <div className="grid gap-6">
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label className="text-base flex items-center gap-2"><DollarSign className="w-4 h-4" /> {t('base_currency')}</Label>
-                                <p className="text-sm text-muted-foreground">{t('base_currency_desc')}</p>
-                            </div>
-                            <div className="w-[180px]">
-                                <CustomSelect
-                                    value={currency}
-                                    onChange={setCurrency}
-                                    options={[
-                                        { value: 'TWD', label: 'TWD (NT$)' },
-                                        { value: 'USD', label: 'USD ($)' },
-                                    ]}
+                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('budget_cycle')}</h2>
+                    <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
+                        <div>
+                            <label className="text-sm font-medium mb-2 block">{t('start_day_of_month')}</label>
+                            <div className="flex gap-4 items-center">
+                                <Input
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    className="w-32 bg-muted border border-border"
+                                    value={budgetStartDay}
+                                    onChange={(e) => {
+                                        const val = parseInt(e.target.value);
+                                        if (val >= 1 && val <= 31) handleSaveBudgetDay(e.target.value);
+                                        else if (e.target.value === '') setBudgetStartDay('');
+                                    }}
+                                    onBlur={(e) => {
+                                        if (!e.target.value || parseInt(e.target.value) < 1) handleSaveBudgetDay('1');
+                                        if (parseInt(e.target.value) > 31) handleSaveBudgetDay('31');
+                                    }}
                                 />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label className="text-base flex items-center gap-2"><Globe className="w-4 h-4" /> {t('language')}</Label>
-                                <p className="text-sm text-muted-foreground">{t('language_desc')}</p>
-                            </div>
-                            <div className="w-[180px]">
-                                <CustomSelect
-                                    value={language}
-                                    onChange={(val) => setLanguage(val as any)}
-                                    options={[
-                                        { value: 'en', label: 'English' },
-                                        { value: 'zh-TW', label: '繁體中文' },
-                                    ]}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label className="text-base flex items-center gap-2"><Palette className="w-4 h-4" /> {t('appearance')}</Label>
-                                <p className="text-sm text-muted-foreground">{t('appearance_desc')}</p>
-                            </div>
-                            <div className="w-[180px]">
-                                <CustomSelect
-                                    value={theme || 'system'}
-                                    onChange={setTheme}
-                                    options={[
-                                        { value: 'light', label: t('light_mode') },
-                                        { value: 'dark', label: t('dark_mode') },
-                                        { value: 'system', label: 'System Default' },
-                                    ]}
-                                />
+                                <p className="text-sm text-muted-foreground">
+                                    {t('budget_reset_desc').replace('{day}', String(budgetStartDay))}
+                                </p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* INTEGRATIONS */}
+                {/* CATEGORY VISIBILITY */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('integrations')}</h2>
-                    <div className="bg-card p-6 rounded-3xl border border-border shadow-sm space-y-4">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>{t('api_key')}</Label>
-                                <Input
-                                    type="password"
-                                    value={apiKey}
-                                    onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder={t('enter_api_key')}
-                                    className="font-mono"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{t('api_secret')}</Label>
-                                <Input
-                                    type="password"
-                                    value={apiSecret}
-                                    onChange={(e) => setApiSecret(e.target.value)}
-                                    placeholder={t('enter_api_secret')}
-                                    className="font-mono"
-                                />
-                                <p className="text-xs text-muted-foreground">{t('api_key_desc')}</p>
-                            </div>
-                            <div className="flex gap-4 pt-2">
-                                <Button onClick={handleSaveKeys} variant="outline">{t('save_keys')}</Button>
-                                <Button onClick={handleSyncMax} disabled={isSyncing}>
-                                    {isSyncing ? t('syncing') : t('sync_now')}
-                                </Button>
-                            </div>
-                        </div>
+                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('category_visibility')}</h2>
+                    <div className="bg-card p-6 rounded-3xl border border-border shadow-sm">
+                        <CategoryVisibility />
                     </div>
                 </section>
 
@@ -381,9 +263,6 @@ export default function SettingsPage() {
                                     <p className="text-sm text-muted-foreground">{t('wealth_simulator_desc')}</p>
                                 </div>
                             </div>
-                            <Button variant="ghost" className="rounded-full">
-                                Try Now
-                            </Button>
                         </div>
 
                         {/* Emergency Fund Card */}
@@ -397,9 +276,6 @@ export default function SettingsPage() {
                                     <p className="text-sm text-muted-foreground">{t('emergency_fund_subtitle')}</p>
                                 </div>
                             </div>
-                            <Button variant="ghost" className="rounded-full">
-                                Check
-                            </Button>
                         </div>
                     </div>
                 </section>
@@ -407,27 +283,21 @@ export default function SettingsPage() {
                 {/* DATA MANAGEMENT */}
                 <section className="space-y-4">
                     <h2 className="text-lg font-semibold border-b border-border pb-2">{t('data_management')}</h2>
-
                     <div className="bg-muted/30 p-4 rounded-xl space-y-4">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="font-medium">{t('backup_data')}</h3>
-                                <p className="text-sm text-muted-foreground">{t('backup_desc')}</p>
                             </div>
                             <Button variant="outline" onClick={handleExport}>
-                                <Download className="w-4 h-4 mr-2" />
-                                {t('backup_json')}
+                                <Download className="w-4 h-4 mr-2" /> {t('backup_json')}
                             </Button>
                         </div>
-
                         <div className="flex items-center justify-between pt-4 border-t border-border/50">
                             <div>
                                 <h3 className="font-medium text-red-500">{t('reset_system')}</h3>
-                                <p className="text-sm text-muted-foreground">{t('reset_desc')}</p>
                             </div>
                             <Button variant="destructive" onClick={handleReset}>
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                {t('reset_button')}
+                                <Trash2 className="w-4 h-4 mr-2" /> {t('reset_button')}
                             </Button>
                         </div>
                     </div>

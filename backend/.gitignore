@@ -37,3 +37,8 @@ logs/
 .idea/
 *.swp
 *.swo
+
+# Migration scripts (temporary development files)
+migrate_*.py
+check_*.py
+verify_*.py

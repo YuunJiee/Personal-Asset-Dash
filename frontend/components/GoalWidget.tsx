@@ -5,36 +5,36 @@ import { Plus, Target, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchGoals, fetchForecast, fetchSetting } from '@/lib/api';
 
 export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: { dashboardData: any, refreshTrigger: number, onEditGoal: (goal: any) => void }) {
     const { t } = useLanguage();
     const [goals, setGoals] = useState<any[]>([]);
 
-    const fetchGoals = async () => {
+    const fetchGoalsList = async () => {
         try {
-            const res = await fetch('http://localhost:8000/api/goals/');
-            if (res.ok) setGoals(await res.json());
+            const data = await fetchGoals();
+            setGoals(data);
         } catch (e) {
-            console.error(e);
+            // Error fetching goals
         }
     };
 
     // Fetch Forecast
     const [forecasts, setForecasts] = useState<any>({});
     useEffect(() => {
-        fetch('http://localhost:8000/api/stats/forecast')
-            .then(res => res.json())
+        fetchForecast()
             .then(data => {
                 // Map forecasts by goal_id
                 const map: any = {};
                 data.forecasts.forEach((f: any) => map[f.goal_id] = f);
                 setForecasts(map);
             })
-            .catch(console.error);
+            .catch(() => { });
     }, [refreshTrigger]);
 
     useEffect(() => {
-        fetchGoals();
+        fetchGoalsList();
     }, [refreshTrigger]);
 
     const netWorth = dashboardData?.net_worth || 0;
@@ -42,8 +42,7 @@ export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: { dash
     const [startDay, setStartDay] = useState(1);
 
     useEffect(() => {
-        fetch('http://localhost:8000/api/settings/budget_start_day')
-            .then(res => res.json())
+        fetchSetting('budget_start_day')
             .then(data => setStartDay(parseInt(data.value) || 1))
             .catch(() => setStartDay(1));
     }, [refreshTrigger]);

@@ -5,18 +5,12 @@ import React from 'react';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, Search } from "lucide-react";
+import { ArrowUpDown, Search, Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchAssets, deleteAsset } from "@/lib/api";
 
-async function fetchAssets() {
-    const res = await fetch('http://localhost:8000/api/assets/');
-    if (!res.ok) throw new Error('Failed to fetch assets');
-    return res.json();
-}
-
-import { deleteAsset } from "@/lib/api";
 import { Pencil, Trash2 } from "lucide-react";
 import { AssetIcon } from "@/components/IconPicker";
 import { getCategoryIconName } from "@/lib/iconHelper";
@@ -94,9 +88,14 @@ export default function AssetsPage() {
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
             <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('all_assets_title')}</h1>
-                    <p className="text-muted-foreground mt-1">{t('all_assets_desc')}</p>
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <Wallet className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('all_assets_title')}</h1>
+                        <p className="text-muted-foreground mt-1">{t('all_assets_desc')}</p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2 bg-card p-2 rounded-xl border border-border shadow-sm w-full md:w-auto">
                     <Search className="w-4 h-4 text-muted-foreground ml-2" />
@@ -111,7 +110,7 @@ export default function AssetsPage() {
 
             {/* Mobile List View */}
             <div className="md:hidden space-y-6">
-                {['Fluid', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
+                {['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
                     const categoryAssets = filteredAssets.filter(a => a.category === category);
                     if (categoryAssets.length === 0) return null;
 
@@ -132,17 +131,21 @@ export default function AssetsPage() {
                                             <div className="flex items-center gap-3">
                                                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                                                     asset.category === 'Fluid' ? 'bg-emerald-400/10' :
-                                                        asset.category === 'Investment' ? 'bg-indigo-500/10' :
-                                                            asset.category === 'Fixed' ? 'bg-blue-400/10' :
-                                                                asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
+                                                        asset.category === 'Crypto' ? 'bg-orange-500/10' :
+                                                            asset.category === 'Stock' ? 'bg-indigo-500/10' :
+                                                                asset.category === 'Investment' ? 'bg-indigo-500/10' :
+                                                                    asset.category === 'Fixed' ? 'bg-blue-400/10' :
+                                                                        asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
                                                 )}>
                                                     <AssetIcon
                                                         icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category)}
                                                         className={cn("w-5 h-5",
                                                             asset.category === 'Fluid' ? 'text-emerald-400' :
-                                                                asset.category === 'Investment' ? 'text-indigo-500' :
-                                                                    asset.category === 'Fixed' ? 'text-blue-400' :
-                                                                        asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
+                                                                asset.category === 'Crypto' ? 'text-orange-500' :
+                                                                    asset.category === 'Stock' ? 'text-indigo-500' :
+                                                                        asset.category === 'Investment' ? 'text-indigo-500' :
+                                                                            asset.category === 'Fixed' ? 'text-blue-400' :
+                                                                                asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
                                                         )}
                                                     />
                                                 </div>
@@ -184,7 +187,7 @@ export default function AssetsPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {['Fluid', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
+                        {['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
                             const categoryAssets = filteredAssets.filter(a => a.category === category);
                             if (categoryAssets.length === 0) return null;
 
@@ -209,17 +212,21 @@ export default function AssetsPage() {
                                                     <div className="flex items-center gap-3">
                                                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                                                             asset.category === 'Fluid' ? 'bg-emerald-400/10' :
-                                                                asset.category === 'Investment' ? 'bg-indigo-500/10' :
-                                                                    asset.category === 'Fixed' ? 'bg-blue-400/10' :
-                                                                        asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
+                                                                asset.category === 'Crypto' ? 'bg-orange-500/10' :
+                                                                    asset.category === 'Stock' ? 'bg-indigo-500/10' :
+                                                                        asset.category === 'Investment' ? 'bg-indigo-500/10' :
+                                                                            asset.category === 'Fixed' ? 'bg-blue-400/10' :
+                                                                                asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
                                                         )}>
                                                             <AssetIcon
                                                                 icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category)}
                                                                 className={cn("w-5 h-5",
                                                                     asset.category === 'Fluid' ? 'text-emerald-400' :
-                                                                        asset.category === 'Investment' ? 'text-indigo-500' :
-                                                                            asset.category === 'Fixed' ? 'text-blue-400' :
-                                                                                asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
+                                                                        asset.category === 'Crypto' ? 'text-orange-500' :
+                                                                            asset.category === 'Stock' ? 'text-indigo-500' :
+                                                                                asset.category === 'Investment' ? 'text-indigo-500' :
+                                                                                    asset.category === 'Fixed' ? 'text-blue-400' :
+                                                                                        asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
                                                                 )}
                                                             />
                                                         </div>

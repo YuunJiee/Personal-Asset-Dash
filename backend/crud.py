@@ -3,10 +3,47 @@ from . import models, schemas
 from datetime import datetime
 
 def get_asset(db: Session, asset_id: int):
-    return db.query(models.Asset).filter(models.Asset.id == asset_id).first()
+    asset = db.query(models.Asset).filter(models.Asset.id == asset_id).first()
+    if asset:
+        total_qty = sum(t.amount for t in asset.transactions)
+        asset.value_twd = (asset.current_price or 0.0) * total_qty
+        
+        # Also compute unrealized PL if possible
+        total_cost = sum(t.amount * t.buy_price for t in asset.transactions if t.buy_price > 0)
+        # simplistic PL
+        if total_cost > 0:
+            asset.unrealized_pl = asset.value_twd - total_cost
+            asset.roi = (asset.unrealized_pl / total_cost) * 100
+    return asset
 
 def get_assets(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Asset).offset(skip).limit(limit).all()
+    assets = db.query(models.Asset).offset(skip).limit(limit).all()
+    for asset in assets:
+        # Compute value_twd dynamically
+        total_qty = sum(t.amount for t in asset.transactions)
+        asset.value_twd = (asset.current_price or 0.0) * total_qty
+        
+        # Compute PL/ROI
+        # We need buy_price for transactions.
+        # This is expensive for many assets, but necessary for the view.
+        cost_basis = 0.0
+        invested_capital = 0.0
+        for t in asset.transactions:
+             # Basic logic: 
+             # If is_transfer, skip cost? Or assume 0 cost?
+             # If buy_price is set.
+             if t.amount > 0 and t.buy_price > 0:
+                 invested_capital += t.amount * t.buy_price
+        
+        # Store temporary attributes for Pydantic
+        if invested_capital > 0:
+            asset.unrealized_pl = asset.value_twd - invested_capital
+            asset.roi = (asset.unrealized_pl / invested_capital) * 100
+        else:
+            asset.unrealized_pl = 0.0
+            asset.roi = 0.0
+            
+    return assets
 
 def create_asset(db: Session, asset: schemas.AssetCreate):
     db_asset = models.Asset(

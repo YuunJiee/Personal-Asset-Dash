@@ -5,25 +5,23 @@ import { Switch } from '@/components/ui/switch'; // Will check if this exists, e
 import { Label } from '@/components/ui/label';
 
 import { useLanguage } from '@/components/LanguageProvider';
+import { fetchSetting, updateSetting } from '@/lib/api';
 
-const ALL_CATEGORIES = ['Fluid', 'Investment', 'Fixed', 'Receivables', 'Liabilities'];
+const ALL_CATEGORIES = ['Fluid', 'Stock', 'Crypto', 'Fixed', 'Receivables', 'Liabilities'];
 
 export function CategoryVisibility() {
     const { t } = useLanguage();
     const [visibility, setVisibility] = useState<Record<string, boolean>>({
         'Fluid': true,
-        'Investment': true,
+        'Stock': true,
+        'Crypto': true,
         'Fixed': true,
         'Receivables': true,
         'Liabilities': true
     });
 
     useEffect(() => {
-        fetch('http://localhost:8000/api/settings/visible_categories')
-            .then(res => {
-                if (res.ok) return res.json();
-                throw new Error('Not found');
-            })
+        fetchSetting('visible_categories')
             .then(data => {
                 try {
                     const parsed = JSON.parse(data.value);
@@ -42,11 +40,7 @@ export function CategoryVisibility() {
         setVisibility(newVisibility);
 
         try {
-            await fetch('http://localhost:8000/api/settings/visible_categories', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'visible_categories', value: JSON.stringify(newVisibility) })
-            });
+            await updateSetting('visible_categories', JSON.stringify(newVisibility));
         } catch (e) {
             console.error(e);
         }

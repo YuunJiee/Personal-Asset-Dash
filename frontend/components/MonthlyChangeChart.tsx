@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchHistory } from '@/lib/api';
 
 interface DataPoint {
     date: string;
     value: number;
+    breakdown?: Record<string, number>;
 }
 
 interface MonthlyChange {
@@ -17,17 +20,9 @@ interface MonthlyChange {
     isPositive: boolean;
 }
 
-// ... types
-interface DataPoint {
-    date: string;
-    value: number;
-    breakdown?: Record<string, number>;
-}
-
-// ... existing interfaces
-
 export function MonthlyChangeChart() {
     const { t, language } = useLanguage();
+    const { isPrivacyMode } = usePrivacy();
     const [data, setData] = useState<MonthlyChange[]>([]);
     const [originalData, setOriginalData] = useState<DataPoint[]>([]);
     const [category, setCategory] = useState<string>('Total');
@@ -38,18 +33,11 @@ export function MonthlyChangeChart() {
             setIsLoading(true);
             try {
                 // Fetch 1 year of data to calculate monthly changes
-                const res = await fetch(`http://localhost:8000/api/stats/history?range=1y`);
-                if (res.ok) {
-                    const result: DataPoint[] = await res.json();
-                    setOriginalData(result);
-                    // Process initial (Total)
-                    const processed = processMonthlyChanges(result, 'Total');
-                    setData(processed);
-                } else {
-                    const mockData = generateMockData();
-                    setOriginalData(mockData);
-                    setData(processMonthlyChanges(mockData, 'Total'));
-                }
+                const result: DataPoint[] = await fetchHistory('1y');
+                setOriginalData(result);
+                // Process initial (Total)
+                const processed = processMonthlyChanges(result, 'Total');
+                setData(processed);
             } catch (error) {
                 console.error("Failed to fetch history:", error);
                 const mockData = generateMockData();
@@ -126,15 +114,14 @@ export function MonthlyChangeChart() {
                     <p className="text-sm text-muted-foreground">{t('pl_analysis')}</p>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide justify-center md:justify-end">
-                    {['Total', 'Investment', 'Fluid', 'Fixed', 'Liabilities'].map(cat => (
+                    {['Total', 'Fluid', 'Stock', 'Crypto', 'Receivables', 'Liabilities'].map(cat => (
                         <button
                             key={cat}
                             onClick={() => setCategory(cat)}
                             className={cn(
                                 "px-3 py-1.5 text-xs font-medium rounded-xl transition-all border whitespace-nowrap min-w-[60px]",
-                                category === cat
-                                    ? "bg-foreground text-background border-foreground"
-                                    : "bg-background text-muted-foreground border-border hover:border-foreground/50"
+                                "bg-background text-muted-foreground border-border hover:border-foreground/50",
+                                category === cat && "bg-foreground text-background border-foreground"
                             )}
                         >
                             {/* Use Mobile Short Keys */}
@@ -161,19 +148,21 @@ export function MonthlyChangeChart() {
                                     tickLine={false}
                                     axisLine={false}
                                     tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
-                                    tickFormatter={(val) => '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val)}
+                                    tickFormatter={(val) =>
+                                        isPrivacyMode ? '****' : '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0, notation: "compact" }).format(val)
+                                    }
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'var(--muted)', opacity: 0.2 }}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
                                     formatter={(value: any) => [
-                                        `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(value)}`,
+                                        isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(value)}`,
                                         value >= 0 ? t('profit') : t('loss')
                                     ]}
                                 />
                                 <Bar dataKey="change" radius={[4, 4, 0, 0]}>
                                     {data.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.isPositive ? 'var(--color-investment)' : 'var(--color-liabilities)'} />
+                                        <Cell key={`cell-${index}`} fill={entry.isPositive ? 'var(--color-trend-up)' : 'var(--color-liabilities)'} />
                                     ))}
                                 </Bar>
                             </BarChart>

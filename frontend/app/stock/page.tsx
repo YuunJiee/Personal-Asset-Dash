@@ -11,7 +11,10 @@ import { updateAsset } from "@/lib/api";
 import { fetchDashboardData } from "@/lib/api";
 
 import { TradeDialog } from "@/components/TradeDialog";
-import { AlertCircle, ArrowLeftRight } from "lucide-react";
+import { AlertCircle, ArrowLeftRight, TrendingUp } from "lucide-react";
+import { PortfolioAllocation } from "@/components/PortfolioAllocation";
+import { TopMovers } from "@/components/TopMovers";
+import { TopPerformersWidget } from "@/components/TopPerformersWidget";
 
 // Reusable Table Component
 function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title: string, assets: any[], exchangeRate: number, onUpdate: () => void, onTrade: (asset: any) => void }) {
@@ -288,42 +291,63 @@ export default function InvestmentPage() {
     }, []);
 
     // Categorize
-    const stocks = assets.filter(a =>
-        (a.category === 'Investment' && a.sub_category && a.sub_category.includes('Stock')) ||
-        (a.ticker && a.ticker.endsWith('.TW'))
-    );
-
-    const crypto = assets.filter(a =>
-        (a.category === 'Investment' && a.sub_category && a.sub_category.includes('Crypto')) ||
-        (a.ticker && a.ticker.includes('-'))
-    );
-
-    // Everything else that is investment but not captured above (e.g. Funds, or untagged)
-    const others = assets.filter(a =>
-        ['Investment'].includes(a.category) &&
-        !stocks.includes(a) &&
-        !crypto.includes(a)
-    );
+    const portfolioAssets = assets.filter(a => ['Stock', 'Crypto', 'Fund', 'Other Investment'].includes(a.category) || a.category === 'Investment');
 
     const { t } = useLanguage();
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('portfolio_title')}</h1>
-                <p className="text-muted-foreground mt-1">{t('portfolio_desc')}</p>
+            <header className="mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                        <TrendingUp className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('portfolio_title')}</h1>
+                        <p className="text-muted-foreground mt-1">{t('portfolio_desc')}</p>
+                    </div>
+                </div>
+                <a
+                    href="/analytics"
+                    className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-sm font-medium"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    {t('view_analytics')}
+                </a>
             </header>
 
-            {assets.filter(a => a.category === 'Investment').length === 0 && (
+            {portfolioAssets.length === 0 && (
                 <div className="bg-card rounded-3xl shadow-sm border border-border p-12 text-center">
-                    <div className="text-muted-foreground text-lg mb-2">📊</div>
                     <p className="text-muted-foreground">{t('no_investments_yet')}</p>
                 </div>
             )}
 
-            <AssetTable title={t('stocks')} assets={stocks} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
-            <AssetTable title={t('cryptocurrencies')} assets={crypto} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
-            <AssetTable title={t('other_investments')} assets={others} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
+            {portfolioAssets.length > 0 && (
+                <>
+                    <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <PortfolioAllocation
+                            assets={portfolioAssets}
+                            title={t('allocation_by_asset')}
+                            defaultTab="Asset"
+                            showToggle={false}
+                        />
+                        <PortfolioAllocation
+                            assets={portfolioAssets}
+                            title={t('allocation_by_platform')}
+                            defaultTab="Platform"
+                            showToggle={false}
+                        />
+                        <TopMovers assets={portfolioAssets} />
+                    </div>
+                    <div className="mb-8">
+                        <TopPerformersWidget assets={portfolioAssets} />
+                    </div>
+                </>
+            )}
+
+            <AssetTable title={t('assets')} assets={portfolioAssets} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
 
             <TradeDialog
                 isOpen={!!tradingAsset}

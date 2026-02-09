@@ -1,18 +1,14 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { ArrowDownLeft, ArrowUpRight, Trash2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Trash2, History } from "lucide-react";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { cn } from "@/lib/utils";
 
 
 import { useLanguage } from "@/components/LanguageProvider";
 
-async function fetchAssets() {
-    const res = await fetch('http://localhost:8000/api/assets/');
-    if (!res.ok) throw new Error("Failed");
-    return res.json();
-}
+import { fetchAssets } from "@/lib/api";
 
 // ... imports
 import { TransactionEditDialog } from "@/components/TransactionEditDialog";
@@ -23,8 +19,9 @@ export default function HistoryPage() {
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
 
-    const fetchTxns = () => {
-        fetchAssets().then(assets => {
+    const fetchTxns = async () => {
+        try {
+            const assets = await fetchAssets();
             const allTxns: any[] = [];
             assets.forEach((asset: any) => {
                 if (asset.transactions) {
@@ -43,7 +40,10 @@ export default function HistoryPage() {
             // Sort by date desc
             allTxns.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setTransactions(allTxns);
-        }).catch(console.error);
+        } catch (error) {
+            console.error("Failed to fetch assets for history:", error);
+            // Optionally, set an error state or display a message to the user
+        }
     };
 
     useEffect(() => {
@@ -59,9 +59,14 @@ export default function HistoryPage() {
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('history_title')}</h1>
-                <p className="text-muted-foreground mt-1">{t('history_desc')}</p>
+            <header className="mb-8 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center text-gray-500">
+                    <History className="w-6 h-6" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('history_title')}</h1>
+                    <p className="text-muted-foreground mt-1">{t('history_desc')}</p>
+                </div>
             </header>
 
             {/* Mobile Card List */}

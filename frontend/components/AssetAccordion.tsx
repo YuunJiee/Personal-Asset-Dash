@@ -20,12 +20,15 @@ interface AssetAccordionProps {
     assets: any[];
     color: string;
     onAddClick?: () => void;
+    onTitleClick?: () => void;
+    onActionClick?: () => void;
+    actionIcon?: React.ReactNode;
     className?: string;
     isEditMode?: boolean;
     percentage?: number;
 }
 
-export function AssetAccordion({ category, title, totalAmount, assets, color, onAddClick, className, isEditMode, percentage }: AssetAccordionProps) {
+export function AssetAccordion({ category, title, totalAmount, assets, color, onAddClick, onTitleClick, onActionClick, actionIcon, className, isEditMode, percentage }: AssetAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
     const { isPrivacyMode } = usePrivacy();
@@ -104,7 +107,13 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
             <div
                 {...attributes}
                 {...listeners}
-                onClick={isEditMode ? undefined : toggleOpen}
+                onClick={(e) => {
+                    if (isEditMode) return;
+                    // If title click handler exists and we clicked loosely (not on buttons), maybe we just toggle open?
+                    // User wants Title to link. But the whole card is the toggle.
+                    // Let's make the Title Text clickable specifically if handler exists.
+                    toggleOpen();
+                }}
                 className={cn(
                     "relative p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-sm border border-transparent hover:shadow-md group touch-none",
                     color,
@@ -113,11 +122,37 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                 )}
             >
                 <div className="flex justify-between items-start mb-4">
-                    <h3 className={cn("text-lg font-medium tracking-tight flex items-center gap-2", isOpen ? "text-gray-900" : "text-white/90")}>
+                    <h3
+                        className={cn("text-lg font-medium tracking-tight flex items-center gap-2", isOpen ? "text-gray-900" : "text-white/90", onTitleClick ? "hover:underline cursor-pointer z-10" : "")}
+                        onClick={(e) => {
+                            if (onTitleClick) {
+                                e.stopPropagation();
+                                onTitleClick();
+                            }
+                        }}
+                    >
                         {isEditMode && <GripVertical className="w-5 h-5 opacity-60" />}
                         {title}
+                        {onTitleClick && <ChevronRight className="w-4 h-4 opacity-50" />}
                     </h3>
                     <div className="flex gap-2">
+                        {/* Secondary Action (Integration) */}
+                        {onActionClick && actionIcon && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onActionClick();
+                                }}
+                                className={cn(
+                                    "p-2 rounded-full backdrop-blur-sm transition-colors hover:bg-white hover:text-black",
+                                    isOpen ? "bg-gray-100 text-gray-500" : "bg-white/20 text-white"
+                                )}
+                                title="Action"
+                            >
+                                {actionIcon}
+                            </button>
+                        )}
+
                         {/* Quick Add Button in Header */}
                         <button
                             onClick={(e) => {
@@ -128,7 +163,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                 "p-2 rounded-full backdrop-blur-sm transition-colors hover:bg-white hover:text-black",
                                 isOpen ? "bg-gray-100 text-gray-500" : "bg-white/20 text-white"
                             )}
-                            title="Add Asset to this Category"
+                            title="Add Asset"
                         >
                             <Plus className="w-5 h-5" />
                         </button>
@@ -215,18 +250,25 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                             </>
                                                         )}
                                                     </div>
-                                                    {/* Tags Display */}
-                                                    {asset.tags && asset.tags.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1 mt-1">
-                                                            {asset.tags.map((tag: any) => (
-                                                                <span key={tag.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground opacity-80">
-                                                                    #{tag.name}
-                                                                </span>
-                                                            ))}
+                                                    {/* Payment Due Day for Credit Cards */}
+                                                    {asset.category === 'Liabilities' && asset.payment_due_day && (
+                                                        <div className="text-[10px] text-muted-foreground/80 font-medium">
+                                                            📅 {t('due_on_day').replace('{day}', asset.payment_due_day)}
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
+
+                                            {/* Tags Display */}
+                                            {asset.tags && asset.tags.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {asset.tags.map((tag: any) => (
+                                                        <span key={tag.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground opacity-80">
+                                                            #{tag.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
 
                                             {/* Right Side */}
                                             <div className="flex flex-col items-end gap-1">
@@ -261,14 +303,16 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                             </div>
 
                                             {/* Progress Bar at Bottom */}
-                                            {totalAmount > 0 && asset.include_in_net_worth !== false && (
-                                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50 overflow-hidden rounded-b-3xl">
-                                                    <div
-                                                        className="h-full bg-primary/20"
-                                                        style={{ width: `${(value / totalAmount) * 100}%` }}
-                                                    />
-                                                </div>
-                                            )}
+                                            {
+                                                totalAmount > 0 && asset.include_in_net_worth !== false && (
+                                                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted/50 overflow-hidden rounded-b-3xl">
+                                                        <div
+                                                            className="h-full bg-primary/20"
+                                                            style={{ width: `${(value / totalAmount) * 100}%` }}
+                                                        />
+                                                    </div>
+                                                )
+                                            }
                                         </div>
                                     );
                                 })}
@@ -280,15 +324,17 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
 
 
             {/* Unified Asset Action Dialog */}
-            {selectedAsset && (
-                <AssetActionDialog
-                    isOpen={!!selectedAsset}
-                    onClose={handleCloseDialogs}
-                    asset={selectedAsset}
-                    allAssets={assets} // Pass all assets for Transfer context
-                    initialMode={dialogMode}
-                />
-            )}
+            {
+                selectedAsset && (
+                    <AssetActionDialog
+                        isOpen={!!selectedAsset}
+                        onClose={handleCloseDialogs}
+                        asset={selectedAsset}
+                        allAssets={assets} // Pass all assets for Transfer context
+                        initialMode={dialogMode}
+                    />
+                )
+            }
         </div >
     );
 }

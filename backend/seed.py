@@ -5,16 +5,56 @@ from datetime import datetime
 
 Base.metadata.create_all(bind=engine)
 
+
+def seed_web3_assets(db: Session):
+    # Check if exists
+    scroll_eth = db.query(models.Asset).filter(models.Asset.name == "Scroll ETH").first()
+    if not scroll_eth:
+        print("Seeding Scroll ETH...")
+        asset = models.Asset(
+            name="Scroll ETH",
+            ticker="ETH",
+            category="Fluid",
+            sub_category="Crypto",
+            source="manual_wallet", # Will be picked up by wallet_service because we set network
+            network="Scroll",
+            contract_address=None,
+            include_in_net_worth=True
+        )
+        db.add(asset)
+        db.commit()
+    
+    # Example Token (LiquidUSD on Scroll - Need real address or placeholder)
+    # Using a placeholder address for now
+    liquid_usd = db.query(models.Asset).filter(models.Asset.name == "LiquidUSD (Scroll)").first()
+    if not liquid_usd:
+        print("Seeding LiquidUSD...")
+        asset = models.Asset(
+            name="LiquidUSD (Scroll)",
+            ticker="LUSD",
+            category="Investment",
+            sub_category="Stablecoin",
+            source="manual_wallet",
+            network="Scroll",
+            contract_address="0xfE7eE0D0afb617Ea8cC6a5839b231A8591873138", # Example LUSD on Scroll
+            decimals=18,
+            include_in_net_worth=True
+        )
+        db.add(asset)
+        db.commit()
+
 def seed_data():
     db = SessionLocal()
+    seed_web3_assets(db) # Call web3 seeder
     
     # Check if data exists
-    if db.query(models.Asset).first():
-        print("Data already exists.")
+    if db.query(models.Asset).filter(models.Asset.source == 'manual').first():
+        print("Manual Data already exists.")
         db.close()
         return
 
     # Create Assets
+
     assets = [
         models.Asset(name="Cash", category="Fluid", current_price=1.0, last_updated_at=datetime.utcnow()),
         models.Asset(name="AAPL", ticker="AAPL", category="Investment", current_price=150.0, last_updated_at=datetime.utcnow()),

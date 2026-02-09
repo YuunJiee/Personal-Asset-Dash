@@ -5,7 +5,9 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchHistory } from '@/lib/api';
 
 interface DataPoint {
     date: string;
@@ -18,6 +20,7 @@ interface NetWorthTrendChartProps {
 
 export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
     const { t } = useLanguage();
+    const { isPrivacyMode } = usePrivacy();
     const [data, setData] = useState<DataPoint[]>([]);
     const [range, setRange] = useState<string>('30d');
     const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +30,8 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
             setIsLoading(true);
             try {
                 // Fetch from backend
-                const res = await fetch(`http://localhost:8000/api/stats/history?range=${range}`);
-                if (res.ok) {
-                    const result = await res.json();
+                const result = await fetchHistory(range);
+                if (result && result.length > 0) { // Check if result is valid and not empty
                     setData(result);
                 } else {
                     // Fallback Mock Data if endpoint fails or returns empty (for demo)
@@ -100,13 +102,13 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
                                     axisLine={false}
                                     tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
                                     tickFormatter={(val) =>
-                                        '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val)
+                                        isPrivacyMode ? '****' : '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0, notation: "compact" }).format(val)
                                     }
                                     domain={['auto', 'auto']}
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: any) => '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(value)}
+                                    formatter={(value: any) => isPrivacyMode ? '****' : '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(value)}
                                 />
                                 <Area
                                     type="monotone"

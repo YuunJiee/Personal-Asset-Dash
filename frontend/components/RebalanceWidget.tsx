@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchRebalanceData, updateSetting } from '@/lib/api';
 
 export function RebalanceWidget() {
     const { t } = useLanguage();
@@ -22,14 +23,11 @@ export function RebalanceWidget() {
     // ... (fetch logic same) ...
     const fetchData = async () => {
         try {
-            const res = await fetch('http://localhost:8000/api/stats/rebalance');
-            if (res.ok) {
-                const json = await res.json();
-                setData(json);
-                setTargets(json.targets || {});
-            }
+            const json = await fetchRebalanceData();
+            setData(json);
+            setTargets(json.targets || {});
         } catch (e) {
-            console.error(e);
+            // Error fetching rebalance data
         }
     };
 
@@ -37,19 +35,15 @@ export function RebalanceWidget() {
 
     const handleSaveTargets = async () => {
         try {
-            await fetch('http://localhost:8000/api/settings/target_allocation', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'target_allocation', value: JSON.stringify(targets) })
-            });
+            await updateSetting('target_allocation', JSON.stringify(targets));
             setIsSettingsOpen(false);
             fetchData();
-        } catch (e) { console.error(e); }
+        } catch (e) { /* Error saving targets */ }
     };
 
     if (!data) return null;
 
-    const categories = ['Fluid', 'Investment'];
+    const categories = ['Fluid', 'Stock', 'Crypto'];
 
     return (
         <div className="bg-card p-6 rounded-3xl border border-border shadow-sm space-y-6">
@@ -72,7 +66,10 @@ export function RebalanceWidget() {
                     const targetVal = targets[cat] || 0;
 
                     // Color Logic
-                    const colorClass = cat === 'Fluid' ? 'bg-[var(--color-fluid)]' : 'bg-[var(--color-investment)]';
+                    let colorClass = 'bg-gray-500';
+                    if (cat === 'Fluid') colorClass = 'bg-[var(--color-fluid)]';
+                    else if (cat === 'Stock') colorClass = 'bg-[var(--color-stock)]';
+                    else if (cat === 'Crypto') colorClass = 'bg-[var(--color-crypto)]';
 
                     return (
                         <div key={cat} className="space-y-2">
@@ -140,23 +137,28 @@ export function RebalanceWidget() {
                         );
                     })()
                 ) : data.suggestions && data.suggestions.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3">
                         {data.suggestions.map((s: any, i: number) => (
                             <div key={i} className={cn(
-                                "p-3 rounded-xl border flex items-center gap-3",
+                                "p-3 rounded-xl border flex items-center justify-between",
                                 s.action === 'Sell' ? "bg-[#D4A59A]/10 border-[#D4A59A]/30" : "bg-[#A4C3B2]/10 border-[#A4C3B2]/30"
                             )}>
-                                <div className={cn("p-2 rounded-full shrink-0", s.action === 'Sell' ? "bg-[#D4A59A]/20 text-[#a87e72] dark:text-[#E0D5C3]" : "bg-[#A4C3B2]/20 text-[#6e8c7c] dark:text-[#E0D5C3]")}>
-                                    <AlertTriangle className="w-4 h-4" />
+                                <div className="flex items-center gap-3">
+                                    <div className={cn("p-2 rounded-full shrink-0", s.action === 'Sell' ? "bg-[#D4A59A]/20 text-[#a87e72] dark:text-[#E0D5C3]" : "bg-[#A4C3B2]/20 text-[#6e8c7c] dark:text-[#E0D5C3]")}>
+                                        <AlertTriangle className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-base flex items-center gap-1.5">
+                                            {s.action === 'Sell' ? t('decrease') : t('increase')} {t(s.category as any) || s.category}
+                                            <ArrowRight className="w-4 h-4 opacity-50" />
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {t('amount')}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="font-bold text-sm flex items-center gap-1">
-                                        {s.action === 'Sell' ? t('sell') : t('buy')} {t(s.category as any) || s.category}
-                                        <ArrowRight className="w-3 h-3 opacity-50" />
-                                    </div>
-                                    <div className="text-xs opacity-70">
-                                        Amount: <span className="font-mono font-semibold">${s.diff_val.toLocaleString()}</span>
-                                    </div>
+                                <div className="text-right">
+                                    <div className="text-xl font-bold font-mono tracking-tight">${s.diff_val.toLocaleString()}</div>
                                 </div>
                             </div>
                         ))}
@@ -164,7 +166,7 @@ export function RebalanceWidget() {
                 ) : (
                     <div className="flex items-center justify-center p-2 text-muted-foreground text-sm gap-2">
                         <Check className="w-5 h-5 text-emerald-500" />
-                        <span>Portfolio is perfectly balanced!</span>
+                        <span>{t('portfolio_balanced')}</span>
                     </div>
                 )}
             </div>
@@ -193,7 +195,7 @@ export function RebalanceWidget() {
                         </div>
                     ))}
                     <div className="flex justify-end pt-2 text-sm font-bold">
-                        {t('total')}: {(targets['Fluid'] || 0) + (targets['Investment'] || 0)}%
+                        {t('total')}: {(targets['Fluid'] || 0) + (targets['Stock'] || 0) + (targets['Crypto'] || 0)}%
                     </div>
                 </div>
                 <div className="flex justify-end pt-4 border-t border-border">

@@ -37,6 +37,7 @@ def reset_database(db: Session = Depends(database.get_db)):
         db.execute(text("DELETE FROM expenses"))
         db.execute(text("DELETE FROM alerts"))
         db.execute(text("DELETE FROM system_settings"))
+        db.execute(text("DELETE FROM crypto_connections"))
 
         # Re-seed default settings
         db.execute(text("INSERT INTO system_settings (key, value) VALUES ('budget_start_day', '1')"))
@@ -148,7 +149,7 @@ def seed_database(db: Session = Depends(database.get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
 
-from ..services import max_service
+from ..services import max_service, wallet_service, exchange_service
 
 @router.post("/sync/max")
 def trigger_max_sync(db: Session = Depends(database.get_db)):
@@ -157,6 +158,23 @@ def trigger_max_sync(db: Session = Depends(database.get_db)):
         return {"message": "MAX assets synced successfully"}
     else:
         # It might return False if no keys set, which isn't exactly an error
+        return {"message": "Sync attempted (Check logs or API keys)"}
+
+@router.post("/sync/pionex")
+def trigger_pionex_sync(db: Session = Depends(database.get_db)):
+    # Legacy endpoint name, now triggers generic sync for all CCXT exchanges (including Pionex)
+    success = exchange_service.sync_all_exchanges(db)
+    if success:
+        return {"message": "Exchange assets synced successfully"}
+    else:
+        return {"message": "Sync attempted (Check active connections)"}
+
+@router.post("/sync/wallet")
+def trigger_wallet_sync(db: Session = Depends(database.get_db)):
+    success = wallet_service.sync_wallets(db)
+    if success:
+        return {"message": "Wallet assets synced successfully"}
+    else:
         return {"message": "Sync attempted (Check logs or API keys)"}
 
 # --- Profile Management ---

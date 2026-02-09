@@ -43,6 +43,7 @@ class AssetBase(BaseModel):
     include_in_net_worth: Optional[bool] = True
     icon: Optional[str] = None
     manual_avg_cost: Optional[float] = None
+    payment_due_day: Optional[int] = None  # Day of month for credit card payment (1-31)
     value_twd: Optional[float] = 0.0 # Computed field
     unrealized_pl: Optional[float] = 0.0 # Computed field
     roi: Optional[float] = 0.0 # Computed field
@@ -60,12 +61,23 @@ class AssetUpdate(BaseModel):
     include_in_net_worth: Optional[bool] = None
     icon: Optional[str] = None
     manual_avg_cost: Optional[float] = None
+    payment_due_day: Optional[int] = None
+
+# Crypto Connection Schema
+class CryptoConnection(BaseModel):
+    id: int
+    name: str # e.g. "My Pionex"
+    provider: str # "pionex", "max"
+
+    class Config:
+        from_attributes = True
 
 class Asset(AssetBase):
     id: int
     current_price: float
     last_updated_at: datetime
     transactions: List[Transaction] = []
+    connection: Optional[CryptoConnection] = None
 
     class Config:
         from_attributes = True

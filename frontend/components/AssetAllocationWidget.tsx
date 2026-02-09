@@ -130,14 +130,29 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
                                     paddingAngle={2}
                                     dataKey="value"
                                 >
-                                    {data.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={colors[index % colors.length]}
-                                            stroke="var(--card)"
-                                            strokeWidth={2}
-                                        />
-                                    ))}
+                                    {data.map((entry, index) => {
+                                        let fillColor = colors[index % colors.length];
+                                        if (viewMode === 'Category') {
+                                            const semanticMap: Record<string, string> = {
+                                                'Fluid': 'var(--color-fluid)',
+                                                'Stock': 'var(--color-stock)',
+                                                'Crypto': 'var(--color-crypto)',
+                                                'Receivables': 'var(--color-receivables)',
+                                                'Liabilities': 'var(--color-liabilities)'
+                                            };
+                                            const semantic = semanticMap[entry.name];
+                                            if (semantic) fillColor = semantic;
+                                        }
+
+                                        return (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={fillColor}
+                                                stroke="var(--card)"
+                                                strokeWidth={2}
+                                            />
+                                        );
+                                    })}
                                 </Pie>
                                 <Tooltip
                                     formatter={(value: any, name: any) => {

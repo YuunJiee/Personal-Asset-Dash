@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchDashboardData } from "@/lib/api";
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, DollarSign, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, DollarSign, X, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -35,7 +35,6 @@ export default function FinancialCalendar() {
           // Filter: Exclude assets that are NOT included in Net Worth
           // Debugging exclusion
           if (asset.include_in_net_worth === false) {
-            console.log(`Excluding asset from Calendar: ${asset.name}`);
             return [];
           }
 
@@ -193,9 +192,14 @@ export default function FinancialCalendar() {
       {/* Header & Stats */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('financial_calendar')}</h1>
-            <p className="text-muted-foreground mt-1">{t('financial_calendar_desc')}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <CalendarIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('financial_calendar')}</h1>
+              <p className="text-muted-foreground mt-1">{t('financial_calendar_desc')}</p>
+            </div>
           </div>
           <div className="flex items-center gap-4 bg-card p-1 rounded-full border border-border shadow-sm self-start md:self-auto">
             <button onClick={prevMonth} className="p-2 hover:bg-muted rounded-full transition-colors text-foreground"><ChevronLeft className="w-5 h-5" /></button>

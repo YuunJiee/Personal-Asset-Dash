@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Calendar, DollarSign, RefreshCw, Layers, Pencil, Search, X } from 'lucide-react';
+import { Plus, Trash2, Calendar, DollarSign, RefreshCw, Layers, Pencil, Search, X, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { fetchExpenses, API_URL } from '@/lib/api';
 
 interface Expense {
     id: number;
@@ -42,17 +43,17 @@ export default function ExpensesPage() {
         split_with: 1
     });
 
-    const fetchExpenses = async () => {
+    const fetchExpensesList = async () => {
         try {
-            const res = await fetch('http://localhost:8000/api/expenses/');
-            if (res.ok) setExpenses(await res.json());
+            const data = await fetchExpenses();
+            setExpenses(data);
         } catch (e) {
             console.error(e);
         }
     };
 
     useEffect(() => {
-        fetchExpenses();
+        fetchExpensesList();
     }, []);
 
     const handleEdit = (expense: Expense) => {
@@ -72,8 +73,8 @@ export default function ExpensesPage() {
         e.preventDefault();
         try {
             const url = editingId
-                ? `http://localhost:8000/api/expenses/${editingId}`
-                : 'http://localhost:8000/api/expenses/';
+                ? `${API_URL}/expenses/${editingId}`
+                : `${API_URL}/expenses/`;
 
             const method = editingId ? 'PUT' : 'POST';
 
@@ -89,7 +90,7 @@ export default function ExpensesPage() {
             setIsAddOpen(false);
             setEditingId(null);
             setNewExpense({ name: '', amount: '', frequency: 'MONTHLY', due_day: 1, category: 'Subscription', split_with: 1 });
-            fetchExpenses();
+            fetchExpensesList();
         } catch (error) {
             console.error(error);
         }
@@ -97,8 +98,8 @@ export default function ExpensesPage() {
 
     const handleDelete = async (id: number) => {
         if (!confirm(t('delete_expense_confirm'))) return false;
-        await fetch(`http://localhost:8000/api/expenses/${id}`, { method: 'DELETE' });
-        fetchExpenses();
+        await fetch(`${API_URL}/expenses/${id}`, { method: 'DELETE' });
+        fetchExpensesList();
         return true;
     };
 
@@ -119,9 +120,14 @@ export default function ExpensesPage() {
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 font-sans text-foreground transition-colors duration-300">
             <header className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('expenses_title')}</h1>
-                    <p className="text-muted-foreground mt-1">{t('expenses_desc')}</p>
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500">
+                        <CreditCard className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('expenses_title')}</h1>
+                        <p className="text-muted-foreground mt-1">{t('expenses_desc')}</p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative">

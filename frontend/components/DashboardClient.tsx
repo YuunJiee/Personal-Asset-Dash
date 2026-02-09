@@ -7,17 +7,19 @@ import { AssetAccordion } from "./AssetAccordion";
 import { GoalWidget } from "./GoalWidget";
 import { GoalDialog } from "@/components/GoalDialog";
 import { AssetActionDialog } from "@/components/AssetActionDialog";
-import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, TouchSensor, MouseSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { RebalanceWidget } from "./RebalanceWidget";
-
+import { IntegrationDialog } from "./IntegrationDialog";
+import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft, Link as LinkIcon, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AssetAllocationWidget } from "./AssetAllocationWidget";
 const CATEGORY_COLORS: Record<string, string> = {
     'Fluid': 'bg-[var(--color-fluid)]',
-    'Investment': 'bg-[var(--color-investment)]',
-    'Fixed': 'bg-[var(--color-fixed)]',
+    'Crypto': 'bg-[var(--color-crypto)]',
+    'Stock': 'bg-[var(--color-stock)]',
     'Receivables': 'bg-[var(--color-receivables)]',
     'Liabilities': 'bg-[var(--color-liabilities)]',
 };
@@ -27,6 +29,7 @@ interface DashboardClientProps {
 }
 
 import { useLanguage } from "@/components/LanguageProvider";
+import { fetchSetting, API_URL } from '@/lib/api';
 
 export function DashboardClient({ data }: DashboardClientProps) {
     const { isPrivacyMode } = usePrivacy();
@@ -34,17 +37,33 @@ export function DashboardClient({ data }: DashboardClientProps) {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [addDefaultCategory, setAddDefaultCategory] = useState<string | undefined>(undefined);
 
-    const [order, setOrder] = useState<string[]>(['Fluid', 'Investment', 'Fixed', 'Receivables', 'Liabilities']);
+    const [order, setOrder] = useState<string[]>(['Fluid', 'Crypto', 'Stock', 'Receivables', 'Liabilities']);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
     const [isTransferOpen, setIsTransferOpen] = useState(false);
+
+    const [isIntegrationOpen, setIsIntegrationOpen] = useState(false);
     const [goalsRefreshTrigger, setGoalsRefreshTrigger] = useState(0);
     const [editingGoal, setEditingGoal] = useState<any>(null);
+    const router = useRouter();
 
     useEffect(() => {
         const savedOrder = localStorage.getItem('dashboard_order');
         if (savedOrder) {
-            try { setOrder(JSON.parse(savedOrder)); } catch (e) { console.error(e); }
+            try {
+                const parsed = JSON.parse(savedOrder);
+                // Check if legacy categories exist or new ones are missing
+                const hasLegacy = parsed.includes('Investment') || parsed.includes('Fixed');
+                const missingNew = !parsed.includes('Stock') && !parsed.includes('Crypto');
+
+                if (hasLegacy || missingNew) {
+                    // Reset to default
+                    localStorage.removeItem('dashboard_order');
+                    // Default state is already correct
+                } else {
+                    setOrder(parsed);
+                }
+            } catch (e) { console.error(e); }
         }
     }, []);
 
@@ -124,8 +143,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
 
     useEffect(() => {
         // Fetch visibility settings
-        fetch('http://localhost:8000/api/settings/visible_categories')
-            .then(res => res.json())
+        fetchSetting('visible_categories')
             .then(data => {
                 try {
                     setVisibleCategories(JSON.parse(data.value));
@@ -134,7 +152,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
             .catch(() => {
                 // Default all visible if fetch fails or key doesn't exist
                 const defaults: Record<string, boolean> = {};
-                ['Fluid', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].forEach(c => defaults[c] = true);
+                ['Fluid', 'Crypto', 'Stock', 'Receivables', 'Liabilities'].forEach(c => defaults[c] = true);
                 setVisibleCategories(defaults);
             });
 
@@ -173,7 +191,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                         <div className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">{t('total_assets')}</div>
                         <div className="text-2xl font-bold text-foreground">
                             {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(
-                                getCategoryTotal("Fluid") + getCategoryTotal("Investment") + getCategoryTotal("Fixed") + (getCategoryTotal("Receivables") || 0)
+                                getCategoryTotal("Fluid") + getCategoryTotal("Crypto") + getCategoryTotal("Stock") + (getCategoryTotal("Receivables") || 0)
                             )}`}
                         </div>
                     </div>
@@ -273,7 +291,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                                     // Calculate percentage based on Positive Net Worth (Total Assets)
                                     // Or Net Worth? Usually Asset Allocation is % of Assets.
                                     // Let's use Sum of Positive Assets as denominator
-                                    const totalPositiveAssets = getCategoryTotal("Fluid") + getCategoryTotal("Investment") + getCategoryTotal("Fixed") + (getCategoryTotal("Receivables") || 0);
+                                    const totalPositiveAssets = getCategoryTotal("Fluid") + getCategoryTotal("Crypto") + getCategoryTotal("Stock") + (getCategoryTotal("Receivables") || 0);
 
                                     // If category is Liabilities, do we show % of Liabilities? Or % of Assets (Debt Ratio)?
                                     // User said "50%" on Fluid card. This implies Allocation.
@@ -295,6 +313,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
                                             assets={data.assets}
                                             color={CATEGORY_COLORS[category] || 'bg-gray-500'}
                                             onAddClick={() => openAddDialog(category)}
+                                            onTitleClick={category === 'Crypto' ? () => router.push('/crypto') : undefined}
+                                            onActionClick={category === 'Crypto' ? () => setIsIntegrationOpen(true) : undefined}
+                                            actionIcon={<LinkIcon className="w-5 h-5" />}
                                             isEditMode={isEditMode}
                                             percentage={percentage}
                                             className="col-span-1"
@@ -310,8 +331,9 @@ export function DashboardClient({ data }: DashboardClientProps) {
                 <div className="w-full xl:w-[420px] space-y-6 shrink-0">
                     {/* Spacer to align with "Asset Breakdown" title on the left */}
                     <h2 className="text-xl font-bold mb-4 px-2 opacity-0 select-none hidden xl:block">Spacer</h2>
-                    {/* Allocation Chart */}
-                    <AssetPieChart data={chartData} themeName={chartTheme} />
+
+                    {/* Asset Allocation Widget */}
+                    <AssetAllocationWidget assets={assets} />
 
                     {/* Rebalancing Widget */}
                     <RebalanceWidget />
@@ -333,7 +355,12 @@ export function DashboardClient({ data }: DashboardClientProps) {
                 onClose={() => setIsTransferOpen(false)}
                 asset={null}
                 allAssets={data.assets}
+
                 initialMode='transfer'
+            />
+            <IntegrationDialog
+                isOpen={isIntegrationOpen}
+                onClose={() => setIsIntegrationOpen(false)}
             />
         </div>
     );

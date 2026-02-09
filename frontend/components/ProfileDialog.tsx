@@ -3,6 +3,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { API_URL } from '@/lib/api';
 
 interface ProfileDialogProps {
     isOpen: boolean;
@@ -22,7 +23,7 @@ export function ProfileDialog({ isOpen, onClose, onProfileCreated }: ProfileDial
         setError('');
 
         try {
-            const res = await fetch('http://localhost:8000/api/system/profiles', {
+            const res = await fetch(`${API_URL}/system/profiles`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),

@@ -77,9 +77,9 @@
 
   /* Semantic Asset Colors (Classic) */
   --color-fluid: #10b981;
-  --color-investment: #3b82f6;
-  --color-fixed: #f59e0b;
-  --color-receivables: #f97316;
+  --color-stock: #3b82f6;
+  --color-crypto: #f97316;
+  --color-receivables: #8b5cf6;
   --color-liabilities: #ef4444;
 }
 
@@ -112,9 +112,9 @@
 
   /* Semantic Asset Colors (Classic Dark) */
   --color-fluid: #34d399;
-  --color-investment: #60a5fa;
-  --color-fixed: #fbbf24;
-  --color-receivables: #fb923c;
+  --color-stock: #60a5fa;
+  --color-crypto: #fb923c;
+  --color-receivables: #a78bfa;
   --color-liabilities: #f87171;
 }
 
@@ -135,8 +135,8 @@
   --input: #e5e5e5;
 
   --color-fluid: #A4C3B2;
-  --color-investment: #8199A6;
-  --color-fixed: #E3D8C6;
+  --color-stock: #8199A6;
+  --color-crypto: #E3D8C6;
   --color-receivables: #DFA896;
   --color-liabilities: #4A4E69;
 
@@ -158,8 +158,8 @@ html.dark body[data-chart-theme="Morandi"],
   --border: #404040;
 
   --color-fluid: #6B8E7C;
-  --color-investment: #5A6F7C;
-  --color-fixed: #9E9383;
+  --color-stock: #5A6F7C;
+  --color-crypto: #9E9383;
   --color-receivables: #9E746C;
   --color-liabilities: #323548;
 
@@ -191,9 +191,9 @@ html.dark body[data-chart-theme="Morandi"],
   --ring: #00c07f;
 
   --color-fluid: #00bf7d;
-  --color-investment: #00a8e8;
-  --color-fixed: #d900d9;
-  --color-receivables: #ff4500;
+  --color-stock: #00a8e8;
+  --color-crypto: #ff4500;
+  --color-receivables: #8b5cf6;
   --color-liabilities: #ff0055;
 }
 
@@ -221,9 +221,9 @@ html.dark body[data-chart-theme="Vibrant"],
   --ring: #00FF99;
 
   --color-fluid: #00FF99;
-  --color-investment: #00CCFF;
-  --color-fixed: #fbbf24;
-  --color-receivables: #FF3300;
+  --color-stock: #00CCFF;
+  --color-crypto: #FF3300;
+  --color-receivables: #a78bfa;
   --color-liabilities: #FF0055;
 }
 
@@ -237,35 +237,38 @@ html.dark body[data-chart-theme="Vibrant"],
   }
 }
 
-/* --- Morandi Trend Colors (Global Utility) --- */
 @layer components {
+  :root {
+    --color-trend-up: #8ABF9E;
+    --color-trend-down: #D4A59A;
+  }
+
+  .dark {
+    --color-trend-up: #6B8E7C;
+    --color-trend-down: #9E746C;
+  }
+
   .text-trend-up {
-    color: #8ABF9G;
-    /* Fallback */
-    color: #8ABF9E;
-    /* Sage Green */
+    color: var(--color-trend-up);
   }
 
   .text-trend-down {
-    color: #D4A59A;
-    /* Muted Rose */
+    color: var(--color-trend-down);
   }
 
   .bg-trend-up {
-    background-color: #8ABF9E;
+    background-color: var(--color-trend-up);
   }
 
   .bg-trend-down {
-    background-color: #D4A59A;
+    background-color: var(--color-trend-down);
   }
 
-  /* Soft backgrounds for badges */
   .bg-trend-up-soft {
-    background-color: #8ABF9E20;
-    /* 12% opacity roughly */
+    background-color: color-mix(in srgb, var(--color-trend-up), transparent 85%);
   }
 
   .bg-trend-down-soft {
-    background-color: #D4A59A20;
+    background-color: color-mix(in srgb, var(--color-trend-down), transparent 85%);
   }
 }

@@ -21,13 +21,13 @@ interface AssetPieChartProps {
 }
 
 export function AssetPieChart({ data, themeName = 'Classic' }: AssetPieChartProps) {
-    const totalValue = data.reduce((acc, item) => acc + item.value, 0);
     const { isPrivacyMode } = usePrivacy();
+    const { t } = useLanguage();
 
     const colors = CHART_THEMES[themeName] || CHART_THEMES[DEFAULT_THEME];
 
-
-    const { t } = useLanguage();
+    const hasData = data && data.length > 0;
+    const totalValue = hasData ? data.reduce((acc, item) => acc + (item.value || 0), 0) : 0;
 
     return (
         <Card className="rounded-3xl border border-border shadow-sm bg-card">
@@ -39,41 +39,66 @@ export function AssetPieChart({ data, themeName = 'Classic' }: AssetPieChartProp
             </CardHeader>
             <CardContent>
                 <div className="h-[300px] w-full mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={data}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={80}
-                                outerRadius={110}
-                                paddingAngle={5}
-                                dataKey="value"
-                                label={false}
-                                labelLine={false}
-                            >
-                                {data.map((entry, index) => (
-                                    <Cell
-                                        key={`cell-${index}`}
-                                        fill={colors[index % colors.length]}
-                                        stroke="none"
-                                    />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                formatter={(value: any, name: any) => {
-                                    if (isPrivacyMode) return ['****', name];
-                                    const percent = totalValue ? (value / totalValue * 100).toFixed(1) : 0;
-                                    return [
-                                        `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)} (${percent}%)`,
-                                        name
-                                    ];
-                                }}
-                                contentStyle={{ borderRadius: '12px', borderColor: '#f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    {hasData ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={80}
+                                    outerRadius={110}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    label={false}
+                                    labelLine={false}
+                                >
+                                    {data.map((entry, index) => {
+                                        // Use category for semantic color if available
+                                        const semanticColorMap: Record<string, string> = {
+                                            'Fluid': 'var(--color-fluid)',
+                                            'Stock': 'var(--color-stock)',
+                                            'Crypto': 'var(--color-crypto)',
+                                            'Receivables': 'var(--color-receivables)',
+                                            'Liabilities': 'var(--color-liabilities)',
+                                            // Handle "Investment" legacy or "Portfolio" translations if needed
+                                            'Investment': 'var(--color-stock)'
+                                        };
+
+                                        const color = (entry.category && semanticColorMap[entry.category])
+                                            ? semanticColorMap[entry.category]
+                                            : colors[index % colors.length];
+
+                                        return (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={color}
+                                                stroke="var(--card)"
+                                                strokeWidth={2}
+                                            />
+                                        );
+                                    })}
+                                </Pie>
+                                <Tooltip
+                                    formatter={(value: any, name: any) => {
+                                        if (isPrivacyMode) return ['****', name];
+                                        const percent = totalValue ? (value / totalValue * 100).toFixed(1) : 0;
+                                        return [
+                                            `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)} (${percent}%)`,
+                                            name
+                                        ];
+                                    }}
+                                    contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
+                                />
+                                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-2">
+                            <PieChartIcon className="w-8 h-8 opacity-20" />
+                            <span className="text-sm">{t('no_data')}</span>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>

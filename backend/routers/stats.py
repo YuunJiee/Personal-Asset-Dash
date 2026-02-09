@@ -40,11 +40,11 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
     
     for asset in assets:
         # asset_map[asset.id] = asset
-        if asset.category == 'Investment' and asset.ticker:
+        if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
             t = asset.ticker
             # Heuristic checks
             if t.isdigit() and len(t) == 4: t = f"{t}.TW"
-            if "Crypto" in (asset.sub_category or "") and "-" not in t: t = f"{t}-USD"
+            if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
             
             asset.yf_ticker = t 
             tickers.append(t)
@@ -164,7 +164,7 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
             # Determine Price
             price = 1.0 # Default (Fluid/Fixed/Receivables)
             
-            if asset.category == 'Investment' and getattr(asset, 'yf_ticker', None):
+            if (asset.category == 'Stock' or asset.category == 'Crypto') and getattr(asset, 'yf_ticker', None):
                 t = asset.yf_ticker
                 # Get price from history
                 hist = price_history.get(t, {})
@@ -200,7 +200,7 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
                 else:
                     price = p * rate
             
-            elif asset.category == 'Investment':
+            elif asset.category == 'Stock' or asset.category == 'Crypto':
                  # Investment without recognized ticker (manual price)
                  price = asset.current_price
             
@@ -261,7 +261,7 @@ def get_rebalance_suggestions(db: Session = Depends(get_db)):
         # Assuming only Fluid and Investment matter for this specific request.
         
         cat = asset.category
-        if cat in ['Fluid', 'Investment']:
+        if cat in ['Fluid', 'Stock', 'Crypto']:
             current_allocation[cat] += val
             total_value += val
 
@@ -279,7 +279,7 @@ def get_rebalance_suggestions(db: Session = Depends(get_db)):
     
     # Analyze
     for category, target_pct in targets.items():
-        if category not in ['Fluid', 'Investment']: continue # Ignore old keys like "Stock"
+        if category not in ['Fluid', 'Stock', 'Crypto']: continue # Ignore old keys
         
         current_val = current_allocation.get(category, 0)
         current_pct = (current_val / total_value * 100) if total_value > 0 else 0

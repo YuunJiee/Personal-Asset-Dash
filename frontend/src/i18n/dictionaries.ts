@@ -5,12 +5,13 @@ export const translations = {
         // Sidebar
         dashboard: "Dashboard",
         assets: "Assets",
-        investments: "Investments",
+        stock: "Portfolio",
+        crypto: "Crypto",
         analytics: "Analytics",
-        fixed_expenses: "Expenses",
+        fixed_expenses: "Fixed Expenses",
+        calendar: "Calendar",
         history: "History",
         settings: "Settings",
-        calendar: "Calendar",
         collapse: "Collapse",
         dark_mode: "Dark Mode",
         light_mode: "Light Mode",
@@ -155,9 +156,11 @@ export const translations = {
         version: "Personal Asset Dashboard v1.2",
 
         // Asset Categories
-        Fluid: "Fluid",
+        Fluid: "Cash",
         Investment: "Investment",
-        Fixed: "Fixed",
+        Stock: "Stock",
+        Crypto: "Crypto",
+        Fixed: "Fixed Assets",
         Receivables: "Receivables",
         Liabilities: "Liabilities",
         Total: "Total",
@@ -173,7 +176,11 @@ export const translations = {
         no_transactions_yet: "No transactions yet",
         average_cost: "Average Cost",
         ph_average_cost: "e.g. 100",
-        avg_cost_desc: "Initial cost based on current price. Edit if different.",
+        avg_cost_desc: "Override the fetched price with a custom average cost.",
+        payment_due_day: "Payment Due Day",
+        payment_due_day_hint: "1-31",
+        payment_due_day_desc: "Day of the month when payment is due.",
+        due_on_day: "Due on day {day}",
         ph_amount: "e.g. 1000",
         balance: "Balance",
         price: "Price",
@@ -202,21 +209,37 @@ export const translations = {
         stocks: "Stocks",
         cryptocurrencies: "Cryptocurrencies",
         other_investments: "Other Investments",
+        allocation_by_asset: "Allocation by Asset",
+        allocation_by_platform: "Allocation by Platform",
+        platform: "Platform",
+        view_analytics: "View Analytics",
+        view_portfolio: "View Portfolio",
+        manage_investments: "Manage Investments",
 
-        // Table Headers
-        price_twd: "Price (TWD)",
-        holdings: "Holdings",
-        avg_cost_twd: "Avg Cost (TWD)",
-        value_twd: "Value (TWD)",
-        pl_twd: "P/L (TWD)",
-        return_pct: "Return (%)",
+        // Crypto Dashboard
+        crypto_dashboard_title: "Crypto Dashboard",
+        crypto_dashboard_desc: "Track your decentralized assets and exchange balances.",
+        total_crypto_value: "Total Crypto Value",
+        active_assets: "Active Assets",
+        coins: "Coins",
+        top_holding: "Top Holding",
+        of_portfolio: "of Portfolio",
+        crypto_holdings: "Crypto Holdings",
+        crypto_holdings_desc: "Detailed view of your crypto assets across all chains and exchanges.",
 
-        // Sidebar / Favorites
-        favorites: "Favorites",
-        no_favorites: "No favorites yet",
+        // Rebalance Widget
+        portfolio_balanced: "Portfolio is perfectly balanced!",
 
-        // Mobile Card Labels
-        avg_cost: "Avg Cost",
+        // Integration Dialog
+        add_integration: "Add Integration",
+        provider_type: "Provider Type",
+        name_optional: "Name (Optional)",
+        placeholder_account: "e.g. Main Account",
+        wallet_address: "Wallet Address (0x...)",
+        placeholder_wallet: "0x...",
+        adding: "Adding...",
+        add_connection: "Add Connection",
+        no_integrations: "No integrations connected. Add one to track your crypto.",
 
         // Settings - Extra
         network_updates: "Network & Updates",
@@ -229,6 +252,14 @@ export const translations = {
         sc_ewallet: "E-Wallet",
         sc_debit_card: "Debit Card",
         sc_other: "Other",
+        sc_coin: "Coin",
+        sc_token: "Token",
+        sc_stablecoin: "Stablecoin",
+        sc_defi: "DeFi",
+        sc_nft: "NFT",
+        sc_tw_stock: "TW Stock",
+        sc_us_stock: "US Stock",
+        sc_mutual_fund: "Mutual Fund",
         sc_fund: "Fund",
         sc_stock: "Stock",
         sc_crypto: "Crypto",
@@ -244,6 +275,7 @@ export const translations = {
         // Dialogs & Forms
         subcategory: "Sub Category",
         include_in_net_worth: "Include in Net Worth",
+
         initial_balance: "Initial Balance",
         current_shares: "Current Shares",
         current_holdings: "Current Holdings",
@@ -317,11 +349,14 @@ export const translations = {
         range_1y: "1Y",
         range_all: "ALL",
 
-        // Short Labels for Mobile
+        // Short Labels for Mobile and Charts
         cat_Total: "All",
         cat_Investment: "Invest",
         cat_Fluid: "Cash",
+        cat_Stock: "Stock",
+        cat_Crypto: "Crypto",
         cat_Fixed: "Fixed",
+        cat_Receivables: "Receivable",
         cat_Liabilities: "Debt",
 
         lbl_Category: "Cat.",
@@ -427,13 +462,14 @@ export const translations = {
     "zh-TW": {
         // Sidebar
         dashboard: "儀表板",
-        assets: "所有資產",
-        investments: "投資組合",
+        assets: "資產",
+        stock: "投資組合",
+        crypto: "加密貨幣",
         analytics: "分析報表",
-        fixed_expenses: "支出",
+        fixed_expenses: "固定支出",
+        calendar: "行事曆",
         history: "歷史紀錄",
         settings: "設定",
-        calendar: "行事曆",
         collapse: "收起選單",
         dark_mode: "深色模式",
         light_mode: "淺色模式",
@@ -581,6 +617,8 @@ export const translations = {
         // Asset Categories
         Fluid: "流動資產",
         Investment: "投資",
+        Stock: "股票",
+        Crypto: "加密貨幣",
         Fixed: "固定資產",
         Receivables: "應收帳款",
         Liabilities: "負債",
@@ -598,6 +636,10 @@ export const translations = {
         average_cost: "平均成本",
         ph_average_cost: "例如：100",
         avg_cost_desc: "依照目前市價計算，若不同請修改。",
+        payment_due_day: "繳費日期",
+        payment_due_day_hint: "1-31",
+        payment_due_day_desc: "每月需繳費的日期。",
+        due_on_day: "每月 {day} 日繳費",
         ph_amount: "例如：1000",
         balance: "餘額",
         price: "價格",
@@ -626,6 +668,39 @@ export const translations = {
         stocks: "股票",
         cryptocurrencies: "加密貨幣",
         other_investments: "其他投資",
+        allocation_by_asset: "資產配置 (依項目)",
+        allocation_by_platform: "資產配置 (依平台)",
+        platform: "平台",
+        view_analytics: "查看分析報表",
+        view_portfolio: "查看投資組合",
+        manage_investments: "管理投資",
+
+        // Crypto Dashboard
+        crypto_dashboard_title: "加密貨幣儀表板",
+        crypto_dashboard_desc: "追蹤您的去中心化資產和交易所餘額。",
+        total_crypto_value: "加密貨幣總值",
+        active_assets: "持有資產",
+        coins: "幣種",
+        top_holding: "最大持倉",
+        of_portfolio: "佔比",
+        crypto_holdings: "加密貨幣持倉",
+        crypto_holdings_desc: "跨鏈和交易所的加密貨幣資產詳細視圖。",
+
+        // Rebalance Widget
+        portfolio_balanced: "投資組合已完美平衡！",
+        increase: "增加",
+        decrease: "減少",
+
+        // Integration Dialog
+        add_integration: "新增整合",
+        provider_type: "提供者類型",
+        name_optional: "名稱（可選）",
+        placeholder_account: "例如：主要帳戶",
+        wallet_address: "錢包地址 (0x...)",
+        placeholder_wallet: "0x...",
+        adding: "新增中...",
+        add_connection: "新增連線",
+        no_integrations: "尚未連接任何整合。新增一個來追蹤您的加密貨幣。",
 
         // Table Headers
         price_twd: "價格 (TWD)",
@@ -668,6 +743,7 @@ export const translations = {
         // Dialogs & Forms
         subcategory: "子類別",
         include_in_net_worth: "計入淨值計算",
+
         initial_balance: "初始餘額",
         current_shares: "目前股數",
         current_holdings: "目前持倉",
@@ -741,11 +817,14 @@ export const translations = {
         range_1y: "1年",
         range_all: "全部",
 
-        // Short Labels for Mobile
+        // Short Labels for Mobile and Charts
         cat_Total: "總計",
         cat_Investment: "投資",
         cat_Fluid: "流動",
+        cat_Stock: "股票",
+        cat_Crypto: "加密貨幣",
         cat_Fixed: "固定",
+        cat_Receivables: "應收",
         cat_Liabilities: "負債",
 
         lbl_Category: "類別",

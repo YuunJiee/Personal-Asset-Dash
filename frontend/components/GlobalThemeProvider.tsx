@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { updateSetting } from '@/lib/api';
 
 type ThemeName = 'Classic' | 'Morandi' | 'Vibrant';
 
@@ -34,11 +35,7 @@ export function GlobalThemeProvider({ children }: { children: React.ReactNode })
         applyTheme(newTheme);
         // Persist to backend
         try {
-            await fetch('http://localhost:8000/api/settings/chart_theme', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: 'chart_theme', value: newTheme })
-            });
+            await updateSetting('chart_theme', newTheme);
         } catch (e) {
             console.error("Failed to save theme setting", e);
         }

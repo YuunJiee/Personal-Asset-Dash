@@ -29,7 +29,8 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         initialBalance: '',
         includeInNetWorth: true,
         icon: '',
-        manualAvgCost: ''
+        manualAvgCost: '',
+        paymentDueDay: ''
     });
     const [market, setMarket] = useState('TW'); // Default to Taiwan market
     const [fetchedPrice, setFetchedPrice] = useState<number | null>(null);
@@ -40,16 +41,16 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
     const categories = [
         { value: 'Fluid', label: t('Fluid') },
-        { value: 'Investment', label: t('Investment') },
-        { value: 'Fixed', label: t('Fixed') },
+        { value: 'Crypto', label: t('Crypto') },
+        { value: 'Stock', label: t('Stock') },
         { value: 'Receivables', label: t('Receivables') },
         { value: 'Liabilities', label: t('Liabilities') },
     ];
 
     const subCategories: Record<string, string[]> = {
         'Fluid': ['Cash', 'E-Wallet', 'Debit Card', 'Other'],
-        'Investment': ['Fund', 'Stock', 'Crypto', 'Other Investment'],
-        'Fixed': ['Real Estate', 'Car', 'Other Fixed Asset'],
+        'Crypto': ['Coin', 'Token', 'Stablecoin', 'DeFi', 'NFT'],
+        'Stock': ['TW Stock', 'US Stock', 'Mutual Fund'],
         'Receivables': [],
         'Liabilities': ['Credit Card', 'Loan', 'Payable', 'Other Liability']
     };
@@ -60,6 +61,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
             'E-Wallet': t('sc_ewallet'),
             'Debit Card': t('sc_debit_card'),
             'Other': t('sc_other'),
+            'Coin': t('sc_coin'),
+            'Token': t('sc_token'),
+            'Stablecoin': t('sc_stablecoin'),
+            'DeFi': t('sc_defi'),
+            'NFT': t('sc_nft'),
+            'TW Stock': t('sc_tw_stock'),
+            'US Stock': t('sc_us_stock'),
+            'Mutual Fund': t('sc_mutual_fund'),
             'Fund': t('sc_fund'),
             'Stock': t('sc_stock'),
             'Crypto': t('sc_crypto'),
@@ -88,7 +97,8 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 initialBalance: '',
                 includeInNetWorth: true,
                 icon: '',
-                manualAvgCost: ''
+                manualAvgCost: '',
+                paymentDueDay: ''
             });
             setTags([]);
             setNewTag('');
@@ -101,21 +111,21 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
     useEffect(() => {
         const fetchTickerInfo = async () => {
             if (!formData.ticker || formData.ticker.trim().length < 2) return;
-            if (formData.category !== 'Investment') return;
-            if (!formData.subCategory.includes('Stock') && !formData.subCategory.includes('Crypto')) return;
+            // Only Stock and Crypto have tickers
+            if (formData.category !== 'Stock' && formData.category !== 'Crypto') return;
 
             try {
                 let tickerToLookup = formData.ticker;
 
                 // Add market suffix for Taiwan stocks
-                if (formData.subCategory.includes('Stock') && market === 'TW') {
+                if (formData.category === 'Stock' && market === 'TW') {
                     if (!tickerToLookup.endsWith('.TW')) {
                         tickerToLookup = `${tickerToLookup}.TW`;
                     }
                 }
 
                 // Add -USD for crypto
-                if (formData.subCategory.includes('Crypto') && !tickerToLookup.includes('-')) {
+                if (formData.category === 'Crypto' && !tickerToLookup.includes('-')) {
                     tickerToLookup = `${tickerToLookup}-USD`;
                 }
 
@@ -169,14 +179,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
             let finalTicker = formData.ticker;
 
             // Handle Taiwan Stocks
-            if (formData.category === 'Investment' && formData.subCategory.includes('Stock') && market === 'TW') {
+            if (formData.category === 'Stock' && market === 'TW') {
                 if (finalTicker && !finalTicker.endsWith('.TW')) {
                     finalTicker = `${finalTicker}.TW`;
                 }
             }
 
             // Handle Crypto (Append -USD)
-            if (formData.category === 'Investment' && formData.subCategory.includes('Crypto')) {
+            if (formData.category === 'Crypto') {
                 if (finalTicker && !finalTicker.includes('-')) {
                     finalTicker = `${finalTicker}-USD`;
                 }
@@ -195,7 +205,8 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 include_in_net_worth: formData.includeInNetWorth,
                 icon: finalIcon,
                 tags: tags.map(tag => ({ name: tag })),
-                current_price: fetchedPrice
+                current_price: fetchedPrice,
+                payment_due_day: formData.paymentDueDay ? parseInt(formData.paymentDueDay) : null
             });
 
             const initialBalance = parseFloat(formData.initialBalance);
@@ -211,7 +222,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
             router.refresh();
             onClose();
-            setFormData({ name: '', ticker: '', category: 'Fluid', subCategory: '', initialBalance: '', includeInNetWorth: true, icon: '', manualAvgCost: '' });
+            setFormData({ name: '', ticker: '', category: 'Fluid', subCategory: '', initialBalance: '', includeInNetWorth: true, icon: '', manualAvgCost: '', paymentDueDay: '' });
             setTags([]);
             setMarket('TW');
         } catch (error) {
@@ -228,13 +239,13 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         if (!currentTicker) return;
 
         // Auto-fix Crypto Ticker
-        if (formData.subCategory.includes('Crypto') && !currentTicker.includes('-')) {
+        if (formData.category === 'Crypto' && !currentTicker.includes('-')) {
             currentTicker = `${currentTicker}-USD`;
             setFormData(prev => ({ ...prev, ticker: currentTicker }));
         }
 
         // Auto-fix TW Stock Ticker if it's 4 digits
-        if (formData.subCategory.includes('Stock') && market === 'TW' && /^\d{4}$/.test(currentTicker)) {
+        if (formData.category === 'Stock' && market === 'TW' && /^\d{4}$/.test(currentTicker)) {
             setFormData(prev => ({ ...prev, ticker: `${currentTicker}.TW` }));
         }
     };
@@ -263,7 +274,8 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             placeholder={
                                 formData.category === 'Fluid' ? t('ph_bank_account') :
-                                    formData.category === 'Investment' ? t('ph_stock') : t('ph_asset_name')
+                                    formData.category === 'Stock' ? t('ph_stock') :
+                                        formData.category === 'Crypto' ? 'Bitcoin' : t('ph_asset_name')
                             }
                         />
                     </div>
@@ -275,11 +287,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('asset')}</Label>
                         <CustomSelect
                             value={formData.category}
-                            onChange={(val) => setFormData({
-                                ...formData,
-                                category: val,
-                                subCategory: subCategories[val]?.[0] || ''
-                            })}
+                            onChange={(val) => {
+                                setFormData({
+                                    ...formData,
+                                    category: val,
+                                    subCategory: subCategories[val]?.[0] || ''
+                                });
+                                // Reset Market based on default subcategory if needed
+                            }}
                             options={categories}
                         />
                     </div>
@@ -288,7 +303,12 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('subcategory')}</Label>
                             <CustomSelect
                                 value={formData.subCategory}
-                                onChange={(val) => setFormData({ ...formData, subCategory: val })}
+                                onChange={(val) => {
+                                    setFormData({ ...formData, subCategory: val });
+                                    // Auto-set market based on subcategory
+                                    if (val === 'TW Stock') setMarket('TW');
+                                    if (val === 'US Stock' || val === 'Mutual Fund') setMarket('US');
+                                }}
                                 options={(subCategories[formData.category] || []).map(sub => ({ value: sub, label: getSubCategoryLabel(sub) }))}
                             />
                         </div>
@@ -296,29 +316,11 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 </div>
 
                 {/* Row 3: Investment Specifics */}
-                {formData.category === 'Investment' && (
+                {(formData.category === 'Stock' || formData.category === 'Crypto') && (
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('ticker')}</Label>
-                            {/* Market Selection for Stocks */}
-                            {formData.subCategory.includes('Stock') && (
-                                <div className="flex bg-secondary/50 p-1 rounded-lg text-xs font-medium">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMarket('TW')}
-                                        className={`px-3 py-1 rounded-md transition-all ${market === 'TW' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        TW
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setMarket('US')}
-                                        className={`px-3 py-1 rounded-md transition-all ${market === 'US' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                                    >
-                                        US
-                                    </button>
-                                </div>
-                            )}
+
                         </div>
                         <div className="relative">
                             <Input
@@ -344,10 +346,10 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
                 {/* Row 4: Holdings & Valuation */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className={`space-y-2 ${formData.category !== 'Investment' ? 'col-span-2' : ''}`}>
+                    <div className={`space-y-2 ${formData.category !== 'Stock' && formData.category !== 'Crypto' ? 'col-span-2' : ''}`}>
                         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            {formData.subCategory.includes('Stock') ? t('current_shares') :
-                                formData.subCategory.includes('Crypto') ? t('current_holdings') :
+                            {formData.category === 'Stock' ? t('current_shares') :
+                                formData.category === 'Crypto' ? t('current_holdings') :
                                     t('initial_balance')}
                         </Label>
                         <Input
@@ -369,7 +371,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                     </div>
 
                     {/* Average Cost Input (Only for Investments) */}
-                    {formData.category === 'Investment' && (
+                    {(formData.category === 'Stock' || formData.category === 'Crypto') && (
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('average_cost')}</Label>
                             <Input
@@ -381,6 +383,23 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                                 className="font-mono"
                             />
                             <p className="text-[10px] text-muted-foreground pt-1">{t('avg_cost_desc')}</p>
+                        </div>
+                    )}
+
+                    {/* Payment Due Day (Only for Liabilities - Credit Cards) */}
+                    {formData.category === 'Liabilities' && (
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('payment_due_day')}</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={formData.paymentDueDay}
+                                onChange={(e) => setFormData({ ...formData, paymentDueDay: e.target.value })}
+                                placeholder={t('payment_due_day_hint')}
+                                className="font-mono"
+                            />
+                            <p className="text-[10px] text-muted-foreground pt-1">{t('payment_due_day_desc')}</p>
                         </div>
                     )}
                 </div>

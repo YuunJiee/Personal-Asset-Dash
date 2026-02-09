@@ -3,6 +3,20 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 
+class CryptoConnection(Base):
+    __tablename__ = "crypto_connections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String) # e.g. "My Pionex", "Main Wallet"
+    provider = Column(String) # "pionex", "max", "wallet"
+    api_key = Column(String, nullable=True)
+    api_secret = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+    assets = relationship("Asset", back_populates="connection", cascade="all, delete-orphan")
+
 class Asset(Base):
     __tablename__ = "assets"
 
@@ -17,8 +31,17 @@ class Asset(Base):
     include_in_net_worth = Column(Boolean, default=True)
     icon = Column(String, nullable=True)
     manual_avg_cost = Column(Float, nullable=True)
+    payment_due_day = Column(Integer, nullable=True)  # Day of month for credit card payment (1-31)
     source = Column(String, default="manual") # manual, max, binance
-    external_id = Column(String, nullable=True) # ID from external API for syncing
+    
+    # Pro Features
+    network = Column(String, nullable=True) # e.g. "Scroll", "Ethereum", "BSC"
+    contract_address = Column(String, nullable=True) # 0x...
+    decimals = Column(Integer, default=18) # for Web3 precision
+
+    # Multi-Integration
+    connection_id = Column(Integer, ForeignKey("crypto_connections.id"), nullable=True)
+    connection = relationship("CryptoConnection", back_populates="assets")
 
     transactions = relationship("Transaction", back_populates="asset")
 
@@ -59,7 +82,6 @@ class Alert(Base):
     asset = relationship("Asset", back_populates="alerts")
 
 # Add back_populates to Asset
-# Add back_populates to Asset
 Asset.alerts = relationship("Alert", back_populates="asset", cascade="all, delete-orphan")
 
 # Tag Association Table
@@ -98,4 +120,3 @@ class SystemSetting(Base):
     __tablename__ = "system_settings"
     key = Column(String, primary_key=True, index=True)
     value = Column(String)
-

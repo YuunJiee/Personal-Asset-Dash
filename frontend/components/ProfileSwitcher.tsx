@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/LanguageProvider';
 import { ProfileDialog } from './ProfileDialog';
+import { API_URL } from '@/lib/api';
 
 export function ProfileSwitcher() {
     const { t } = useLanguage();
@@ -21,7 +22,7 @@ export function ProfileSwitcher() {
 
     const fetchProfiles = async () => {
         try {
-            const res = await fetch('http://localhost:8000/api/system/profiles');
+            const res = await fetch(`${API_URL}/system/profiles`);
             if (res.ok) {
                 const data = await res.json();
                 setProfiles(data.profiles);
@@ -37,7 +38,7 @@ export function ProfileSwitcher() {
     const handleSwitch = async (name: string) => {
         if (name === current) return;
         try {
-            const res = await fetch('http://localhost:8000/api/system/switch_profile', {
+            const res = await fetch(`${API_URL}/system/switch_profile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name }),

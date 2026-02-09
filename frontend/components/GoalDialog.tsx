@@ -9,6 +9,8 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from 'next/navigation';
 import { useLanguage } from "@/components/LanguageProvider";
 
+import { API_URL } from '@/lib/api';
+
 interface GoalDialogProps {
     isOpen: boolean;
     onClose: () => void;
@@ -51,8 +53,8 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
 
         try {
             const url = initialGoal
-                ? `http://localhost:8000/api/goals/${initialGoal.id}`
-                : 'http://localhost:8000/api/goals/';
+                ? `${API_URL}/goals/${initialGoal.id}`
+                : `${API_URL}/goals/`;
 
             const method = initialGoal ? 'PUT' : 'POST';
 

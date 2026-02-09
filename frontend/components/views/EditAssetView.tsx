@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { updateAsset, deleteAsset } from '@/lib/api';
+import { updateAsset, deleteAsset, API_URL } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Trash2, X, Plus, Tag as TagIcon, ArrowLeft } from 'lucide-react';
 import { IconPicker, AssetIcon, getDefaultIcon } from '../IconPicker';
@@ -30,7 +30,8 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
         subCategory: '',
         includeInNetWorth: true,
         icon: '',
-        manualAvgCost: 0
+        manualAvgCost: 0,
+        paymentDueDay: ''
     });
 
     // Tag State
@@ -75,7 +76,8 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                 subCategory: asset.sub_category || '',
                 includeInNetWorth: asset.include_in_net_worth !== undefined ? asset.include_in_net_worth : true,
                 icon: asset.icon || '',
-                manualAvgCost: asset.manual_avg_cost || ''
+                manualAvgCost: asset.manual_avg_cost || '',
+                paymentDueDay: asset.payment_due_day || ''
             });
             setTags(asset.tags || []);
         }
@@ -98,7 +100,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
     const handleAddTag = async () => {
         if (!newTag.trim()) return;
         try {
-            const res = await fetch(`http://localhost:8000/api/assets/${asset.id}/tags`, {
+            const res = await fetch(`${API_URL}/assets/${asset.id}/tags`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newTag.trim(), color: 'blue' })
@@ -116,7 +118,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
 
     const handleRemoveTag = async (tagId: number) => {
         try {
-            const res = await fetch(`http://localhost:8000/api/assets/${asset.id}/tags/${tagId}`, {
+            const res = await fetch(`${API_URL}/assets/${asset.id}/tags/${tagId}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
@@ -144,7 +146,8 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                 sub_category: formData.subCategory || null,
                 include_in_net_worth: formData.includeInNetWorth,
                 icon: finalIcon,
-                manual_avg_cost: formData.manualAvgCost || null
+                manual_avg_cost: formData.manualAvgCost || null,
+                payment_due_day: formData.category === 'Liabilities' && formData.paymentDueDay ? parseInt(formData.paymentDueDay as string) : null
             });
 
 
@@ -224,6 +227,22 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                                     placeholder="Optional"
                                 />
                             </div>
+                        </div>
+                    )}
+
+                    {formData.category === 'Liabilities' && (
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('payment_due_day')}</Label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="31"
+                                value={formData.paymentDueDay}
+                                onChange={(e) => setFormData({ ...formData, paymentDueDay: e.target.value })}
+                                placeholder={t('payment_due_day_hint')}
+                                className="font-mono h-11 rounded-xl"
+                            />
+                            <p className="text-[10px] text-muted-foreground pt-1">{t('payment_due_day_desc')}</p>
                         </div>
                     )}
 
