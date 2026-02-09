@@ -1,46 +1,73 @@
 import sqlite3
 import os
+import sys
 
-DB_FILE = "sql_app.db"
+# Ensure we can import from local modules
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from database import engine, Base
+from profile_manager import get_db_url, get_current_profile
 
 def fix_database():
-    if not os.path.exists(DB_FILE):
-        print(f"❌ Database file {DB_FILE} not found in current directory.")
-        print("Please make sure you are in the 'backend' directory.")
+    # 1. Resolve DB Path using App Logic
+    # This ensures we are looking at the EXACT same file the app uses
+    current_profile = get_current_profile()
+    db_url = get_db_url(current_profile)
+    
+    # Extract file path from sqlite URL (sqlite:////absolute/path/to/db)
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url.replace("sqlite:///", "")
+    else:
+        print(f"❌ Unexpected DB URL format: {db_url}")
         return
 
-    print(f"🔧 Checking database: {DB_FILE}...")
-    conn = sqlite3.connect(DB_FILE)
+    print(f"🎯 Target Database: {db_path}")
+
+    # 2. If Database Doesn't Exist -> Create it
+    if not os.path.exists(db_path):
+        print(f"⚠️ Database file not found.")
+        print("🚀 Initializing new database with latest schema...")
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("✅ Database created successfully!")
+            return # Fresh DB needs no patches
+        except Exception as e:
+            print(f"❌ Failed to create database: {e}")
+            return
+
+    # 3. If Database Exists -> Patch it
+    print(f"🔧 Analyzing existing database schema...")
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # 1. Check for payment_due_day in assets
+    # Check/Add 'payment_due_day'
     try:
         cursor.execute("SELECT payment_due_day FROM assets LIMIT 1")
-        print("✅ Column 'payment_due_day' already exists in 'assets'.")
+        print("✅ Column 'payment_due_day' exists.")
     except sqlite3.OperationalError:
-        print("⚠️ Column 'payment_due_day' missing in 'assets'. Adding it...")
+        print("⚠️ Missing 'payment_due_day'. Adding...")
         try:
             cursor.execute("ALTER TABLE assets ADD COLUMN payment_due_day INTEGER DEFAULT NULL")
             conn.commit()
-            print("✅ Added 'payment_due_day' column.")
+            print("✅ Fixed: Added 'payment_due_day'.")
         except Exception as e:
-            print(f"❌ Failed to add column: {e}")
+            print(f"❌ Fix Failed: {e}")
 
-    # 2. Check for sub_category in assets (just in case)
+    # Check/Add 'sub_category'
     try:
         cursor.execute("SELECT sub_category FROM assets LIMIT 1")
-        print("✅ Column 'sub_category' already exists in 'assets'.")
+        print("✅ Column 'sub_category' exists.")
     except sqlite3.OperationalError:
-        print("⚠️ Column 'sub_category' missing in 'assets'. Adding it...")
+        print("⚠️ Missing 'sub_category'. Adding...")
         try:
             cursor.execute("ALTER TABLE assets ADD COLUMN sub_category VARCHAR DEFAULT NULL")
             conn.commit()
-            print("✅ Added 'sub_category' column.")
+            print("✅ Fixed: Added 'sub_category'.")
         except Exception as e:
-            print(f"❌ Failed to add column: {e}")
+            print(f"❌ Fix Failed: {e}")
 
     conn.close()
-    print("🎉 Database fix complete! Please restart the application.")
+    print("🎉 Database verification complete! Please restart the application.")
 
 if __name__ == "__main__":
     fix_database()
