@@ -178,6 +178,9 @@ ingress:
   - hostname: yuunjiee.com
     service: http://localhost:80
   
+  - hostname: www.yuunjiee.com
+    service: http://localhost:80
+  
   - hostname: assets.yuunjiee.com
     service: http://localhost:3001
   
