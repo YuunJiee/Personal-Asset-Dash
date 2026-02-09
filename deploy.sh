@@ -36,6 +36,21 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
+# Check Node.js version
+print_step "Checking Node.js version..."
+NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 20 ]; then
+    print_error "Node.js version 20 or higher is required (current: $(node --version))"
+    echo ""
+    echo "Please upgrade Node.js first:"
+    echo "  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+    echo "  sudo apt-get install -y nodejs"
+    echo ""
+    exit 1
+else
+    echo -e "${GREEN}✓${NC} Node.js $(node --version) detected"
+fi
+
 # Step 1: Create app directory
 print_step "Creating application directory..."
 mkdir -p "$APP_DIR"
