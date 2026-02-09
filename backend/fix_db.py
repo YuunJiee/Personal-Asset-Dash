@@ -23,29 +23,25 @@ def fix_database():
 
     print(f"🎯 Target Database: {db_path}")
 
-    # 2. If Database Doesn't Exist -> Create it
-    if not os.path.exists(db_path):
-        print(f"⚠️ Database file not found.")
-        print("🚀 Initializing new database with latest schema...")
-        try:
-            Base.metadata.create_all(bind=engine)
-            print("✅ Database created successfully!")
-            return # Fresh DB needs no patches
-        except Exception as e:
-            print(f"❌ Failed to create database: {e}")
-            return
+    # 2. Ensure Schema Exists (Create Missing Tables)
+    print("🚀 Verifying schema (creating missing tables)...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Schema verification passed.")
+    except Exception as e:
+        print(f"❌ Schema verification failed: {e}")
 
-    # 3. If Database Exists -> Patch it
-    print(f"🔧 Analyzing existing database schema...")
+    # 3. Patch Existing Tables (Add Missing Columns)
+    print(f"🔧 Checking for missing columns...")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Check/Add 'payment_due_day'
     try:
         cursor.execute("SELECT payment_due_day FROM assets LIMIT 1")
-        print("✅ Column 'payment_due_day' exists.")
+        print("✅ Column 'payment_due_day' exists in 'assets'.")
     except sqlite3.OperationalError:
-        print("⚠️ Missing 'payment_due_day'. Adding...")
+        print("⚠️ Missing 'payment_due_day' in 'assets'. Adding...")
         try:
             cursor.execute("ALTER TABLE assets ADD COLUMN payment_due_day INTEGER DEFAULT NULL")
             conn.commit()
@@ -56,15 +52,22 @@ def fix_database():
     # Check/Add 'sub_category'
     try:
         cursor.execute("SELECT sub_category FROM assets LIMIT 1")
-        print("✅ Column 'sub_category' exists.")
+        print("✅ Column 'sub_category' exists in 'assets'.")
     except sqlite3.OperationalError:
-        print("⚠️ Missing 'sub_category'. Adding...")
+        print("⚠️ Missing 'sub_category' in 'assets'. Adding...")
         try:
             cursor.execute("ALTER TABLE assets ADD COLUMN sub_category VARCHAR DEFAULT NULL")
             conn.commit()
             print("✅ Fixed: Added 'sub_category'.")
         except Exception as e:
             print(f"❌ Fix Failed: {e}")
+            
+    # Verify crypto_connections table explicitly
+    try:
+        cursor.execute("SELECT count(*) FROM crypto_connections")
+        print("✅ Table 'crypto_connections' verified.")
+    except Exception as e:
+        print(f"❌ Table 'crypto_connections' check failed: {e}")
 
     conn.close()
     print("🎉 Database verification complete! Please restart the application.")
