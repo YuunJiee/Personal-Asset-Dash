@@ -2,11 +2,19 @@ import sqlite3
 import os
 import sys
 
-# Ensure we can import from local modules
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Get the directory containing this script (backend/)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Get the project root (parent of backend/)
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-from database import engine, Base
-from profile_manager import get_db_url, get_current_profile
+# Add PROJECT_ROOT to sys.path so we can import 'backend' as a package
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+# Now import using the full package path
+# This allows 'from . import profile_manager' in database.py to work
+from backend.database import engine, Base
+from backend.profile_manager import get_db_url, get_current_profile
 
 def fix_database():
     # 1. Resolve DB Path using App Logic
