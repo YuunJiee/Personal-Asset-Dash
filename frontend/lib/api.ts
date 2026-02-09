@@ -1,4 +1,8 @@
-export const API_URL = "http://localhost:8000/api";
+// Use relative path '/api' which works with Next.js Rewrites (proxy)
+// This avoids CORS and Mixed Content issues when deployed
+export const API_URL = typeof window === 'undefined'
+    ? (process.env.INTERNAL_API_URL || "http://127.0.0.1:8000/api") // Server-side: Direct to backend
+    : "/api"; // Client-side: Relative path (proxied by Next.js)
 
 export async function fetchDashboardData() {
     try {
