@@ -138,8 +138,8 @@ export const translations = {
 
         // MAX Integration
         max_integration: "MAX Exchange Integration",
-        api_key: "MAX API Key",
-        api_secret: "MAX API Secret",
+        api_key: "API Key",
+        api_secret: "API Secret",
         api_key_desc: "Read-only access to convert balances.",
         enter_api_key: "Enter API Key...",
         enter_api_secret: "Enter Secret...",
@@ -599,8 +599,8 @@ export const translations = {
 
         // MAX Integration
         max_integration: "MAX 交易所串接",
-        api_key: "MAX API Key",
-        api_secret: "MAX API Secret",
+        api_key: "API Key",
+        api_secret: "API Secret",
         api_key_desc: "僅需讀取權限以同步餘額。",
         enter_api_key: "輸入 API Key...",
         enter_api_secret: "輸入 Secret...",

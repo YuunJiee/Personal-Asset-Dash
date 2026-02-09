@@ -185,11 +185,11 @@ export function IntegrationManager() {
                         <>
                             <div className="space-y-2">
                                 <Label>{t('api_key')}</Label>
-                                <Input placeholder={t('placeholder_api_key')} value={apiKey} onChange={e => setApiKey(e.target.value)} className="font-mono" />
+                                <Input placeholder={t('enter_api_key')} value={apiKey} onChange={e => setApiKey(e.target.value)} className="font-mono" />
                             </div>
                             <div className="space-y-2">
                                 <Label>{t('api_secret')}</Label>
-                                <Input type="password" placeholder={t('placeholder_api_secret')} value={apiSecret} onChange={e => setApiSecret(e.target.value)} className="font-mono" />
+                                <Input type="password" placeholder={t('enter_api_secret')} value={apiSecret} onChange={e => setApiSecret(e.target.value)} className="font-mono" />
                             </div>
                         </>
                     )}
