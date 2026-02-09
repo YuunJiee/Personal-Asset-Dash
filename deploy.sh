@@ -111,9 +111,10 @@ After=network.target
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=$APP_DIR/backend
+WorkingDirectory=$APP_DIR
 Environment="PATH=$APP_DIR/backend/venv/bin"
-ExecStart=$APP_DIR/backend/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Environment="PYTHONPATH=$APP_DIR"
+ExecStart=$APP_DIR/backend/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=10
 
