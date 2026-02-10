@@ -28,6 +28,9 @@ export function Dialog({ isOpen, onClose, title, children, className }: DialogPr
                         <DialogPrimitive.Title className="text-lg font-semibold leading-none tracking-tight">
                             {title}
                         </DialogPrimitive.Title>
+                        <DialogPrimitive.Description className="sr-only">
+                            {title}
+                        </DialogPrimitive.Description>
                     </div>
 
                     {children}
