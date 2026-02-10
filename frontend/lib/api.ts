@@ -11,7 +11,9 @@ if (!isServer) {
 
 export async function fetchDashboardData() {
     try {
-        const res = await fetch(`${API_URL}/dashboard/`, { cache: 'no-store' });
+        const url = `${API_URL}/dashboard/`;
+        console.log("Fetching dashboard URL:", url);
+        const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
         }
