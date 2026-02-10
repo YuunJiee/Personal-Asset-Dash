@@ -9,6 +9,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+@router.get("", include_in_schema=False)
 @router.get("/", response_model=List[schemas.Goal])
 def read_goals(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     goals = crud.get_goals(db, skip=skip, limit=limit)

@@ -8,6 +8,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+@router.get("", include_in_schema=False)
 @router.get("/", response_model=schemas.DashboardData)
 def read_dashboard(db: Session = Depends(database.get_db)):
     return service.calculate_dashboard_metrics(db)

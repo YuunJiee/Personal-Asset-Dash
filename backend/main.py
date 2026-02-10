@@ -25,6 +25,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Personal Asset Dashboard API")
 
+# Trust Cloudflare Tunnel / Nginx Headers
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"]) # Trust all upstream proxies (Cloudflare)
+
 # CORS setup - use environment variable or default to localhost
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001,https://assets.yuunjiee.com").split(",")
 

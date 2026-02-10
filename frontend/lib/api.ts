@@ -5,14 +5,9 @@ export const API_URL = isServer
     ? (process.env.INTERNAL_API_URL || "http://127.0.0.1:8000/api") // Server-side: Direct to backend
     : "/api"; // Client-side: Relative path (proxied by Next.js)
 
-if (!isServer) {
-    console.log("Client-side API_URL:", API_URL);
-}
-
 export async function fetchDashboardData() {
     try {
         const url = `${API_URL}/dashboard/`;
-        console.log("Fetching dashboard URL:", url);
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);

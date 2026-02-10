@@ -10,6 +10,7 @@ router = APIRouter(
 )
 
 # Get all assets
+@router.get("", include_in_schema=False)
 @router.get("/", response_model=List[schemas.Asset])
 def read_assets(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     assets = crud.get_assets(db, skip=skip, limit=limit)

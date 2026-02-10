@@ -15,7 +15,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Yantage",
   description: "Advanced Asset Intelligence",
-  manifest: "/manifest.json",
 };
 
 import { ClientLayout } from "@/components/ClientLayout";
