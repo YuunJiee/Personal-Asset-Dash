@@ -201,35 +201,41 @@ export default function FinancialCalendar() {
               <p className="text-muted-foreground mt-1">{t('financial_calendar_desc')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 bg-card p-1 rounded-full border border-border shadow-sm self-start md:self-auto">
+          <div className="flex items-center justify-between gap-4 bg-card p-1 rounded-full border border-border shadow-sm w-full md:w-auto">
             <button onClick={prevMonth} className="p-2 hover:bg-muted rounded-full transition-colors text-foreground"><ChevronLeft className="w-5 h-5" /></button>
-            <span className="text-lg font-medium w-40 text-center tabular-nums text-foreground">
+            <span className="text-lg font-medium text-center tabular-nums text-foreground flex-1 md:w-40 md:flex-none">
               {getMonthName(currentDate)}
             </span>
             <button onClick={nextMonth} className="p-2 hover:bg-muted rounded-full transition-colors text-foreground"><ChevronRight className="w-5 h-5" /></button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
-            <div className="text-sm text-muted-foreground font-medium mb-1">{t('total_inflow')}</div>
-            <div className="text-2xl font-bold text-trend-up flex items-center">
-              <DollarSign className="w-5 h-5 text-muted-foreground mr-1" />
-              {isPrivacyMode ? '****' : monthlyInflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+        <div className="grid grid-cols-3 gap-2 md:gap-4">
+          <div className="bg-card p-3 md:p-5 rounded-3xl border border-border shadow-sm min-w-0">
+            <div className="text-xs md:text-sm text-muted-foreground font-medium mb-1 truncate">{t('total_inflow')}</div>
+            <div className="text-lg md:text-2xl font-bold text-trend-up flex items-center min-w-0" title={monthlyInflow.toLocaleString()}>
+              <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground mr-1 shrink-0" />
+              <span className="truncate">
+                {isPrivacyMode ? '****' : monthlyInflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
             </div>
           </div>
-          <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
-            <div className="text-sm text-muted-foreground font-medium mb-1">{t('total_outflow')}</div>
-            <div className="text-2xl font-bold text-trend-down flex items-center">
-              <DollarSign className="w-5 h-5 text-muted-foreground mr-1" />
-              {isPrivacyMode ? '****' : monthlyOutflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          <div className="bg-card p-3 md:p-5 rounded-3xl border border-border shadow-sm min-w-0">
+            <div className="text-xs md:text-sm text-muted-foreground font-medium mb-1 truncate">{t('total_outflow')}</div>
+            <div className="text-lg md:text-2xl font-bold text-trend-down flex items-center min-w-0" title={monthlyOutflow.toLocaleString()}>
+              <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground mr-1 shrink-0" />
+              <span className="truncate">
+                {isPrivacyMode ? '****' : monthlyOutflow.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
             </div>
           </div>
-          <div className="bg-card p-5 rounded-3xl border border-border shadow-sm">
-            <div className="text-sm text-muted-foreground font-medium mb-1">{t('net_flow')}</div>
-            <div className={cn("text-2xl font-bold flex items-center", monthlyNetFlow >= 0 ? "text-trend-up" : "text-trend-down")}>
-              <DollarSign className="w-5 h-5 opacity-50 mr-1" />
-              {isPrivacyMode ? '****' : ((monthlyNetFlow > 0 ? '+' : '') + monthlyNetFlow.toLocaleString(undefined, { maximumFractionDigits: 0 }))}
+          <div className="bg-card p-3 md:p-5 rounded-3xl border border-border shadow-sm min-w-0">
+            <div className="text-xs md:text-sm text-muted-foreground font-medium mb-1 truncate">{t('net_flow')}</div>
+            <div className={cn("text-lg md:text-2xl font-bold flex items-center min-w-0", monthlyNetFlow >= 0 ? "text-trend-up" : "text-trend-down")} title={monthlyNetFlow.toLocaleString()}>
+              <DollarSign className="w-4 h-4 md:w-5 md:h-5 opacity-50 mr-1 shrink-0" />
+              <span className="truncate">
+                {isPrivacyMode ? '****' : ((monthlyNetFlow > 0 ? '+' : '') + monthlyNetFlow.toLocaleString(undefined, { maximumFractionDigits: 0 }))}
+              </span>
             </div>
           </div>
         </div>

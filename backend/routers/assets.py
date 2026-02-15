@@ -17,6 +17,7 @@ def read_assets(skip: int = 0, limit: int = 100, db: Session = Depends(database.
     return assets
 
 # Create new asset
+@router.post("", include_in_schema=False)
 @router.post("/", response_model=schemas.Asset)
 def create_asset(asset: schemas.AssetCreate, db: Session = Depends(database.get_db)):
     return crud.create_asset(db=db, asset=asset)

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
-import { Trash2, Plus, Key, Wallet, Globe, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Key, Wallet, Globe, RefreshCw, Bitcoin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "./LanguageProvider";
 import { API_URL } from '@/lib/api';
@@ -53,6 +53,7 @@ export function IntegrationManager() {
             let defaultName = `${newType} Connection`;
             if (newType === 'max') defaultName = 'MAX';
             else if (newType === 'pionex') defaultName = 'Pionex';
+            else if (newType === 'binance') defaultName = 'Binance';
             else if (newType === 'wallet') defaultName = 'Wallet';
 
             const payload = {
@@ -128,7 +129,8 @@ export function IntegrationManager() {
                             <div className="p-2 bg-muted rounded-lg shrink-0">
                                 {conn.provider === 'pionex' ? <Key className="w-5 h-5 text-orange-500" /> :
                                     conn.provider === 'max' ? <Globe className="w-5 h-5 text-blue-500" /> :
-                                        <Wallet className="w-5 h-5 text-purple-500" />}
+                                        conn.provider === 'binance' ? <Bitcoin className="w-5 h-5 text-yellow-500" /> :
+                                            <Wallet className="w-5 h-5 text-purple-500" />}
                             </div>
                             <div className="min-w-0">
                                 <div className="font-semibold text-sm truncate">{conn.name}</div>
@@ -166,6 +168,7 @@ export function IntegrationManager() {
                         <Label>{t('provider_type')}</Label>
                         <Select value={newType} onChange={(e) => setNewType(e.target.value)}>
                             <option value="pionex">Pionex</option>
+                            <option value="binance">Binance</option>
                             <option value="max">MAX Exchange</option>
                             <option value="wallet">Web3 Wallet (EVM)</option>
                         </Select>

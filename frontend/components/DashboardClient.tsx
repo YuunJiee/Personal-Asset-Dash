@@ -20,6 +20,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     'Fluid': 'bg-[var(--color-fluid)]',
     'Crypto': 'bg-[var(--color-crypto)]',
     'Stock': 'bg-[var(--color-stock)]',
+    'Fixed': 'bg-[var(--color-fixed)]',
     'Receivables': 'bg-[var(--color-receivables)]',
     'Liabilities': 'bg-[var(--color-liabilities)]',
 };
@@ -37,7 +38,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [addDefaultCategory, setAddDefaultCategory] = useState<string | undefined>(undefined);
 
-    const [order, setOrder] = useState<string[]>(['Fluid', 'Crypto', 'Stock', 'Receivables', 'Liabilities']);
+    const [order, setOrder] = useState<string[]>(['Fluid', 'Crypto', 'Stock', 'Fixed', 'Receivables', 'Liabilities']);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
     const [isTransferOpen, setIsTransferOpen] = useState(false);
@@ -53,8 +54,8 @@ export function DashboardClient({ data }: DashboardClientProps) {
             try {
                 const parsed = JSON.parse(savedOrder);
                 // Check if legacy categories exist or new ones are missing
-                const hasLegacy = parsed.includes('Investment') || parsed.includes('Fixed');
-                const missingNew = !parsed.includes('Stock') && !parsed.includes('Crypto');
+                const hasLegacy = parsed.includes('Investment');
+                const missingNew = !parsed.includes('Stock') || !parsed.includes('Crypto') || !parsed.includes('Fixed');
 
                 if (hasLegacy || missingNew) {
                     // Reset to default
@@ -152,7 +153,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
             .catch(() => {
                 // Default all visible if fetch fails or key doesn't exist
                 const defaults: Record<string, boolean> = {};
-                ['Fluid', 'Crypto', 'Stock', 'Receivables', 'Liabilities'].forEach(c => defaults[c] = true);
+                ['Fluid', 'Crypto', 'Stock', 'Fixed', 'Receivables', 'Liabilities'].forEach(c => defaults[c] = true);
                 setVisibleCategories(defaults);
             });
 
@@ -176,7 +177,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
                         <div className="text-sm font-medium text-muted-foreground mb-1">{t('net_worth')}</div>
                         <div className="text-4xl font-bold tracking-tight text-foreground flex items-baseline gap-2">
                             {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(data.net_worth)}`}
-                            <span className="text-lg text-muted-foreground font-normal">TWD</span>
                         </div>
                         <div className={cn("text-sm font-medium mt-1 flex items-center gap-1.5", data.total_pl >= 0 ? "text-trend-up" : "text-trend-down")}>
                             {data.total_pl >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}

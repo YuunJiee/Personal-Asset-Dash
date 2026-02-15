@@ -15,6 +15,7 @@ def read_goals(skip: int = 0, limit: int = 100, db: Session = Depends(database.g
     goals = crud.get_goals(db, skip=skip, limit=limit)
     return goals
 
+@router.post("", include_in_schema=False)
 @router.post("/", response_model=schemas.Goal)
 def create_goal(goal: schemas.GoalCreate, db: Session = Depends(database.get_db)):
     return crud.create_goal(db=db, goal=goal)

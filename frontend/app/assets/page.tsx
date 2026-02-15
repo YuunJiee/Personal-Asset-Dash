@@ -42,6 +42,7 @@ export default function AssetsPage() {
     const [sortDesc, setSortDesc] = useState(true);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
+    const [groupBy, setGroupBy] = useState<'category' | 'source'>('category');
 
     useEffect(() => {
         fetchAssets().then(setAssets).catch(console.error);
@@ -97,26 +98,40 @@ export default function AssetsPage() {
                         <p className="text-muted-foreground mt-1">{t('all_assets_desc')}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 bg-card p-2 rounded-xl border border-border shadow-sm w-full md:w-auto">
-                    <Search className="w-4 h-4 text-muted-foreground ml-2" />
-                    <Input
-                        placeholder={t('search')}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border-none shadow-none focus-visible:ring-0 w-full md:w-64 bg-transparent"
-                    />
+                <div className="flex-1"></div>
+                {/* Group Toggle */}
+                <div className="flex bg-muted p-1 rounded-lg">
+                    <button
+                        onClick={() => setGroupBy('category')}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded-md transition-all", groupBy === 'category' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+                    >
+                        {t('category')}
+                    </button>
+                    <button
+                        onClick={() => setGroupBy('source')}
+                        className={cn("px-3 py-1.5 text-xs font-medium rounded-md transition-all", groupBy === 'source' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+                    >
+                        {t('source') || 'Source'}
+                    </button>
                 </div>
             </header>
 
             {/* Mobile List View */}
             <div className="md:hidden space-y-6">
-                {['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
-                    const categoryAssets = filteredAssets.filter(a => a.category === category);
+                {(groupBy === 'category'
+                    ? ['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities']
+                    : Array.from(new Set(filteredAssets.map(a => a.source || 'manual'))).sort()
+                ).map(groupKey => {
+                    const categoryAssets = filteredAssets.filter(a =>
+                        groupBy === 'category' ? a.category === groupKey : (a.source || 'manual') === groupKey
+                    );
                     if (categoryAssets.length === 0) return null;
 
                     return (
-                        <div key={category} className="space-y-3">
-                            <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground px-1">{t(category as any)}</h3>
+                        <div key={groupKey} className="space-y-3">
+                            <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground px-1">
+                                {groupBy === 'category' ? t(groupKey as any) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
+                            </h3>
                             <div className="space-y-3">
                                 {categoryAssets.map(asset => {
                                     const quantity = asset.transactions ? asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0;
@@ -187,17 +202,22 @@ export default function AssetsPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities'].map(category => {
-                            const categoryAssets = filteredAssets.filter(a => a.category === category);
+                        {(groupBy === 'category'
+                            ? ['Fluid', 'Crypto', 'Stock', 'Investment', 'Fixed', 'Receivables', 'Liabilities']
+                            : Array.from(new Set(filteredAssets.map(a => a.source || 'manual'))).sort()
+                        ).map(groupKey => {
+                            const categoryAssets = filteredAssets.filter(a =>
+                                groupBy === 'category' ? a.category === groupKey : (a.source || 'manual') === groupKey
+                            );
                             if (categoryAssets.length === 0) return null;
 
                             return (
 
-                                <React.Fragment key={category}>
-                                    {/* Category Separator */}
+                                <React.Fragment key={groupKey}>
+                                    {/* Group Separator */}
                                     <tr className="bg-muted/20 border-b border-border">
                                         <td colSpan={3} className="py-2 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pl-4">
-                                            {t(category as any)}
+                                            {groupBy === 'category' ? t(groupKey as any) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
                                         </td>
                                     </tr>
                                     {categoryAssets.map(asset => {

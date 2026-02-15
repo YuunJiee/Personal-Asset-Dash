@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/LanguageProvider';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, ArrowRightLeft, Pencil, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowRightLeft, Pencil, Wallet, BarChart3 } from 'lucide-react';
+import { AssetHistoryChart } from '../AssetHistoryChart';
 
 interface Transaction {
     id: number;
@@ -86,6 +87,17 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
                 )}
             </div>
 
+            {/* Chart */}
+            <div className="bg-card rounded-2xl p-4 border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                    <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                        {t('history')}
+                    </h3>
+                </div>
+                <AssetHistoryChart assetId={asset.id} color={isCrypto ? "#f59e0b" : "#10b981"} />
+            </div>
+
             {/* Transaction History */}
             <div>
                 <div className="flex items-center justify-between mb-3">
@@ -102,7 +114,7 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
                         {t('no_transactions_yet')}
                     </div>
                 ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-2 max-h-[35vh] md:max-h-96 overflow-y-auto">
                         {transactionsWithBalance.map((tx) => {
                             const isPositive = tx.amount > 0;
                             const isTransfer = tx.is_transfer;
@@ -168,9 +180,9 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-4 border-t border-border">
-                {asset['source'] === 'max' ? (
+                {['max', 'pionex', 'binance'].includes(asset['source'] || '') ? (
                     <div className="flex items-center text-xs text-muted-foreground mr-auto bg-muted/50 px-3 py-1 rounded-full">
-                        Managed by MAX Integration
+                        {t('managed_by_integration')}
                     </div>
                 ) : (
                     <>

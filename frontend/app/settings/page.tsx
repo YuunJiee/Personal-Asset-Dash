@@ -17,6 +17,11 @@ import { fetchSetting, updateSetting, fetchDashboardData, API_URL } from '@/lib/
 export default function SettingsPage() {
     // Mock States for now (would be Context in real implementation)
     const [currency, setCurrency] = useState('TWD');
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const [budgetStartDay, setBudgetStartDay] = useState('1');
     const [updateInterval, setUpdateInterval] = useState('60');
@@ -124,14 +129,14 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex gap-2 mt-auto">
                                 <Button
-                                    variant={language === 'en' ? 'default' : 'outline'}
+                                    variant={mounted && language === 'en' ? 'default' : 'outline'}
                                     onClick={() => setLanguage('en')}
                                     className="flex-1"
                                 >
                                     English
                                 </Button>
                                 <Button
-                                    variant={language === 'zh-TW' ? 'default' : 'outline'}
+                                    variant={mounted && language === 'zh-TW' ? 'default' : 'outline'}
                                     onClick={() => setLanguage('zh-TW')}
                                     className="flex-1"
                                 >
@@ -147,14 +152,14 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex gap-2 mt-auto">
                                 <Button
-                                    variant={theme === 'light' ? 'default' : 'outline'}
+                                    variant={mounted && theme === 'light' ? 'default' : 'outline'}
                                     onClick={() => setTheme('light')}
                                     className="flex-1"
                                 >
                                     <Sun className="w-4 h-4 mr-2" /> Light
                                 </Button>
                                 <Button
-                                    variant={theme === 'dark' ? 'default' : 'outline'}
+                                    variant={mounted && theme === 'dark' ? 'default' : 'outline'}
                                     onClick={() => setTheme('dark')}
                                     className="flex-1"
                                 >
@@ -242,9 +247,17 @@ export default function SettingsPage() {
                             <div>
                                 <h3 className="font-medium">{t('backup_data')}</h3>
                             </div>
-                            <Button variant="outline" onClick={handleExport}>
-                                <Download className="w-4 h-4 mr-2" /> {t('backup_json')}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={handleExport}>
+                                    <Download className="w-4 h-4 mr-2" /> {t('backup_json')}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => window.open(`${API_URL}/system/export/csv`, '_blank')}
+                                >
+                                    <Download className="w-4 h-4 mr-2" /> {t('export_csv') || 'Export CSV'}
+                                </Button>
+                            </div>
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t border-border/50">
                             <div>
@@ -260,10 +273,10 @@ export default function SettingsPage() {
                 <div className="text-center text-xs text-muted-foreground pt-8">
                     <p>{t('version')}</p>
                 </div>
-            </div>
+            </div >
 
 
-        </div>
+        </div >
 
     );
 }

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PieChart, Settings, Menu, TrendingUp, CreditCard, Sun, Moon, ChevronLeft, ChevronRight, Eye, EyeOff, Download, Wallet, Calendar, Star, Bitcoin, History } from 'lucide-react';
+import { LayoutDashboard, PieChart, Settings, Menu, TrendingUp, CreditCard, Sun, Moon, ChevronLeft, ChevronRight, Eye, EyeOff, Download, Wallet, Calendar, Star, Bitcoin, History, ArrowRightLeft, LogOut, X, Languages, UserCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
@@ -88,8 +88,8 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
 
             {/* Sidebar Container */}
             <aside className={cn(
-                "fixed top-0 left-0 z-50 h-screen transition-all duration-300 transform bg-card border-r border-border flex flex-col shadow-2xl md:shadow-none",
-                isCollapsed ? "w-[60px] px-2 py-6" : "w-64 p-6",
+                "fixed top-0 left-0 z-50 h-[100dvh] transition-transform duration-300 ease-in-out bg-card border-r border-border flex flex-col shadow-2xl md:shadow-none",
+                isCollapsed ? "w-[60px] px-2 py-6" : "w-[280px] p-6",
                 mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Header */}
@@ -118,6 +118,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                         </div>
                     )}
                 </div>
+
 
                 {/* Nav */}
                 <nav className="space-y-1 shrink-0">
@@ -219,10 +220,6 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
 
 
 
-
-
-
-
                     {/* Settings Link */}
                     <Link
                         href="/settings"
@@ -237,7 +234,21 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                         {!isCollapsed && <span>{t('settings')}</span>}
                     </Link>
 
-
+                    {/* Export Data (Footer) - Moved to Settings
+                    <button
+                        onClick={() => {
+                            window.open(`${API_URL}/system/export/csv`, '_blank');
+                        }}
+                        className={cn(
+                            "flex items-center justify-center gap-2 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-all text-muted-foreground hover:text-foreground font-medium text-sm",
+                            isCollapsed && "px-0"
+                        )}
+                        title={t('export_csv')}
+                    >
+                        <Download className="w-5 h-5" />
+                        {!isCollapsed && <span>{t('export_csv') || 'Export CSV'}</span>}
+                    </button>
+                    */}
                 </div>
             </aside >
             <AssetActionDialog

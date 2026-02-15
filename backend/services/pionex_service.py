@@ -134,18 +134,11 @@ def sync_pionex_assets(db: Session):
                  
             # 3. Fetch Prices (Global)
             try:
-                # 3a. Get USDT/TWD rate from MAX (Public API) for conversion
-                usdt_twd_rate = 32.0 # Fallback
-                try:
-                     max_resp = requests.get("https://max-api.maicoin.com/api/v3/tickers?markets[]=usdttwd")
-                     if max_resp.status_code == 200:
-                         max_data = max_resp.json()
-                         for m in max_data:
-                             if m['market'] == 'usdttwd':
-                                 usdt_twd_rate = float(m['last'])
-                                 logger.info(f"  USDT/TWD Rate: {usdt_twd_rate}")
-                except Exception as ex:
-                    logger.warning(f"  Failed to fetch USDT/TWD rate: {ex}")
+                # 3a. Get USDT/TWD rate from Shared Service
+                # Import here to avoid circular dependency if any (though structured well it should be fine)
+                from .exchange_rate_service import get_usdt_twd_rate
+                usdt_twd_rate = get_usdt_twd_rate(db)
+                logger.info(f"  USDT/TWD Rate: {usdt_twd_rate}")
 
                 # 3b. Pionex V1 Tickers
                 t_path = "/api/v1/market/tickers"

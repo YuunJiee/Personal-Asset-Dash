@@ -79,6 +79,7 @@
   --color-fluid: #10b981;
   --color-stock: #3b82f6;
   --color-crypto: #f97316;
+  --color-fixed: #0d9488;
   --color-receivables: #8b5cf6;
   --color-liabilities: #ef4444;
 }
@@ -114,6 +115,7 @@
   --color-fluid: #34d399;
   --color-stock: #60a5fa;
   --color-crypto: #fb923c;
+  --color-fixed: #14b8a6;
   --color-receivables: #a78bfa;
   --color-liabilities: #f87171;
 }
@@ -137,6 +139,7 @@
   --color-fluid: #A4C3B2;
   --color-stock: #8199A6;
   --color-crypto: #E3D8C6;
+  --color-fixed: #6EA09A;
   --color-receivables: #DFA896;
   --color-liabilities: #4A4E69;
 
@@ -160,6 +163,7 @@ html.dark body[data-chart-theme="Morandi"],
   --color-fluid: #6B8E7C;
   --color-stock: #5A6F7C;
   --color-crypto: #9E9383;
+  --color-fixed: #6EA09A;
   --color-receivables: #9E746C;
   --color-liabilities: #323548;
 
@@ -193,6 +197,7 @@ html.dark body[data-chart-theme="Morandi"],
   --color-fluid: #00bf7d;
   --color-stock: #00a8e8;
   --color-crypto: #ff4500;
+  --color-fixed: #0d9488;
   --color-receivables: #8b5cf6;
   --color-liabilities: #ff0055;
 }
@@ -223,6 +228,7 @@ html.dark body[data-chart-theme="Vibrant"],
   --color-fluid: #00FF99;
   --color-stock: #00CCFF;
   --color-crypto: #FF3300;
+  --color-fixed: #2DD4BF;
   --color-receivables: #a78bfa;
   --color-liabilities: #FF0055;
 }

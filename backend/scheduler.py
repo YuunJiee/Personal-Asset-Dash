@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from . import service, models
-from .services import max_service, pionex_service, wallet_service
+from .services import max_service, pionex_service, wallet_service, binance_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -57,6 +57,18 @@ def run_wallet_sync():
     finally:
         db.close()
 
+def run_binance_sync():
+    logger.info("Running Binance exchange sync...")
+    db: Session = SessionLocal()
+    try:
+        success = binance_service.sync_binance_assets(db)
+        if success:
+            logger.info("Binance exchange sync completed.")
+    except Exception as e:
+        logger.error(f"Error in Binance sync: {e}")
+    finally:
+        db.close()
+
 def start_scheduler():
     # Helper to get interval from DB
     db = SessionLocal()
@@ -74,6 +86,7 @@ def start_scheduler():
         scheduler.add_job(run_price_updates, 'interval', minutes=interval_minutes, id='price_update_job')
         scheduler.add_job(run_max_sync, 'interval', minutes=60, id='max_sync_job') # Default 1 hour
         scheduler.add_job(run_pionex_sync, 'interval', minutes=60, id='pionex_sync_job')
+        scheduler.add_job(run_binance_sync, 'interval', minutes=60, id='binance_sync_job')
         scheduler.add_job(run_wallet_sync, 'interval', minutes=10, id='wallet_sync_job') # Low cost RPC, higher freq
         scheduler.start()
         logger.info(f"Scheduler started with interval: {interval_minutes} minutes")

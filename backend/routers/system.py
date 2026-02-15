@@ -21,6 +21,66 @@ def download_backup():
 
 from sqlalchemy.orm import Session
 from fastapi import Depends
+from .. import database, models
+from sqlalchemy import text
+
+@router.get("/export/csv")
+def export_assets_csv(db: Session = Depends(database.get_db)):
+    import csv
+    import io
+    from datetime import datetime
+    
+    # Fetch Assets
+    assets = db.query(models.Asset).all()
+    
+    # Prepare CSV Data
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Headers
+    writer.writerow(['ID', 'Name', 'Ticker', 'Category', 'Sub-Category', 'Source', 'Quantity', 'Current Price', 'Value (approx)', 'Include in NW'])
+    
+    for asset in assets:
+        quantity = sum(t.amount for t in asset.transactions)
+        value = quantity * (asset.current_price or 0)
+        
+        writer.writerow([
+            asset.id,
+            asset.name,
+            asset.ticker or '',
+            asset.category,
+            asset.sub_category or '',
+            asset.source or 'manual',
+            quantity,
+            asset.current_price,
+            round(value, 2),
+            asset.include_in_net_worth
+        ])
+        
+    output.seek(0)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"ymoney_assets_{timestamp}.csv"
+    
+    return FileResponse(
+        path=None, # Not using physical file
+        content=output.getvalue(),
+        filename=filename,
+        media_type='text/csv'
+    )
+    # Note: FileResponse expects a path or bytes-like object? 
+    # Actually FileResponse is for files on disk. 
+    # For in-memory, use StreamingResponse or Response with media_type.
+    
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+from sqlalchemy.orm import Session
+from fastapi import Depends
 from .. import database
 from sqlalchemy import text
 
@@ -53,6 +113,9 @@ from .. import models
 
 @router.post("/seed")
 def seed_database(db: Session = Depends(database.get_db)):
+    import random
+    from datetime import timedelta
+
     # 1. Reset first
     try:
         db.execute(text("DELETE FROM transactions"))
@@ -63,7 +126,6 @@ def seed_database(db: Session = Depends(database.get_db)):
         db.execute(text("DELETE FROM expenses"))
         db.execute(text("DELETE FROM alerts"))
         db.execute(text("DELETE FROM system_settings"))
-        # Reset sequences if using Postgres, but for SQLite it's auto.
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
@@ -73,77 +135,148 @@ def seed_database(db: Session = Depends(database.get_db)):
         db.add(models.SystemSetting(key='budget_start_day', value='1'))
         
         # 3. Create Tags
-        tags = [
-            models.Tag(name="Emergency Fund", color="red"),
-            models.Tag(name="Tech", color="blue"),
-            models.Tag(name="Dividend", color="green"),
-            models.Tag(name="Vacation", color="yellow"),
-        ]
+        tag_names = ["Emergency Fund", "Tech", "Dividend", "Vacation", "High Risk", "Safe", "Retirement", "Short Term"]
+        tags = []
+        colors = ["red", "blue", "green", "yellow", "orange", "purple", "indigo", "pink"]
+        for i, name in enumerate(tag_names):
+            t = models.Tag(name=name, color=colors[i % len(colors)])
+            tags.append(t)
         db.add_all(tags)
         db.commit() # Commit to get IDs
         
-        # 4. Create Assets
-        # Cash
-        ctbc = models.Asset(name="CTBC Bank", category="Fluid", sub_category="Cash", is_favorite=True, icon="Wallet")
-        chase = models.Asset(name="Chase Bank", category="Fluid", sub_category="Cash", is_favorite=False, icon="Landmark")
-        
-        # Stocks
-        tsmc = models.Asset(name="TSMC", ticker="2330", category="Investment", sub_category="Stock", is_favorite=True, include_in_net_worth=True, icon="TrendingUp")
-        nvda = models.Asset(name="NVIDIA", ticker="NVDA", category="Investment", sub_category="Stock", is_favorite=True, include_in_net_worth=True, icon="Cpu")
-        
-        # Crypto
-        btc = models.Asset(name="Bitcoin", ticker="BTC", category="Investment", sub_category="Crypto", is_favorite=False, include_in_net_worth=True, icon="Bitcoin")
-        
-        # Liability
-        amex = models.Asset(name="Amex Gold", category="Liabilities", sub_category="Credit Card", is_favorite=True, include_in_net_worth=True, icon="CreditCard")
-        
-        db.add_all([ctbc, chase, tsmc, nvda, btc, amex])
-        db.commit()
-        
-        # 5. Add Tags to Assets
-        tsmc.tags.append(tags[1]) # Tech
-        tsmc.tags.append(tags[2]) # Dividend
-        nvda.tags.append(tags[1]) # Tech
-        ctbc.tags.append(tags[0]) # Emergency
-        
-        # 6. Create Transactions (History)
+        # 4. Create Assets & Transactions
         today = datetime.now()
+        assets = []
         
-        # Initial Deposits (3 months ago)
-        date_3m = today - timedelta(days=90)
-        db.add(models.Transaction(asset_id=ctbc.id, amount=50000, buy_price=1, date=date_3m))
-        db.add(models.Transaction(asset_id=chase.id, amount=2000, buy_price=32, date=date_3m)) 
+        # --- Cash ---
+        ctbc = models.Asset(name="CTBC Bank", category="Fluid", sub_category="Cash", is_favorite=True, icon="Wallet", source="manual")
+        chase = models.Asset(name="Chase Bank", category="Fluid", sub_category="Cash", is_favorite=False, icon="Landmark", source="manual")
+        wallet = models.Asset(name="Cash Wallet", category="Fluid", sub_category="Cash", is_favorite=False, icon="Banknote", source="manual")
+        assets.extend([ctbc, chase, wallet])
         
-        # Stock Buys (2 months ago)
-        date_2m = today - timedelta(days=60)
-        db.add(models.Transaction(asset_id=tsmc.id, amount=1000, buy_price=600, date=date_2m)) # Cost 600,000
-        db.add(models.Transaction(asset_id=ctbc.id, amount=-600000, buy_price=1, date=date_2m)) # Pay from CTBC
-        
-        # Crypto Buy (1 month ago)
-        date_1m = today - timedelta(days=30)
-        db.add(models.Transaction(asset_id=btc.id, amount=0.1, buy_price=60000, date=date_1m)) # Cost 6,000 USD
-        
-        # Current Month Expenses (Smart Budgeting Test)
-        # Assuming budget start day is 1st.
-        curr_month_start = today.replace(day=1)
-        db.add(models.Transaction(asset_id=amex.id, amount=5000, buy_price=1, date=curr_month_start + timedelta(days=2))) # Expense 5000 TWD
-        db.add(models.Transaction(asset_id=amex.id, amount=3000, buy_price=1, date=curr_month_start + timedelta(days=5))) # Expense 3000 TWD
+        # --- Stocks (TW & US) ---
+        tsmc = models.Asset(name="TSMC", ticker="2330", category="Stock", sub_category="Stock", is_favorite=True, include_in_net_worth=True, icon="TrendingUp", source="manual", current_price=1080)
+        nvda = models.Asset(name="NVIDIA", ticker="NVDA", category="Stock", sub_category="Stock", is_favorite=True, include_in_net_worth=True, icon="Cpu", source="manual", current_price=135)
+        aapl = models.Asset(name="Apple", ticker="AAPL", category="Stock", sub_category="Stock", is_favorite=False, include_in_net_worth=True, icon="Smartphone", source="manual", current_price=220)
+        vti = models.Asset(name="Vanguard Total Stock", ticker="VTI", category="Stock", sub_category="Stock", is_favorite=True, include_in_net_worth=True, icon="Globe", source="manual", current_price=270)
+        assets.extend([tsmc, nvda, aapl, vti])
 
-        
+        # --- Crypto ---
+        btc = models.Asset(name="Bitcoin", ticker="BTC", category="Crypto", sub_category="Crypto", is_favorite=True, include_in_net_worth=True, icon="Bitcoin", source="binance", current_price=98000)
+        eth = models.Asset(name="Ethereum", ticker="ETH", category="Crypto", sub_category="Crypto", is_favorite=False, include_in_net_worth=True, icon="Zap", source="binance", current_price=2800)
+        sol = models.Asset(name="Solana", ticker="SOL", category="Crypto", sub_category="Crypto", is_favorite=False, include_in_net_worth=True, icon="Activity", source="pionex", current_price=180)
+        usdt_earn = models.Asset(name="USDT Earn", ticker="USDT", category="Crypto", sub_category="Crypto", is_favorite=False, include_in_net_worth=True, icon="DollarSign", source="pionex", current_price=1)
+        assets.extend([btc, eth, sol, usdt_earn])
+
+        # --- Fixed Assets ---
+        car = models.Asset(name="Tesla Model 3", category="Fixed", sub_category="Car", is_favorite=False, include_in_net_worth=True, icon="Car", source="manual", current_price=1200000)
+        rolex = models.Asset(name="Rolex Submariner", category="Fixed", sub_category="Other Fixed Asset", is_favorite=False, include_in_net_worth=True, icon="Watch", source="manual", current_price=350000)
+        assets.extend([car, rolex])
+
+        # --- Liabilities ---
+        amex = models.Asset(name="Amex Gold", category="Liabilities", sub_category="Credit Card", is_favorite=True, include_in_net_worth=True, icon="CreditCard", source="manual")
+        mortgage = models.Asset(name="Apartment Mortgage", category="Liabilities", sub_category="Loan", is_favorite=False, include_in_net_worth=True, icon="Home", source="manual")
+        assets.extend([amex, mortgage])
+
+        db.add_all(assets)
+        db.commit()
+
+        # 5. Add Tags
+        tsmc.tags.extend([tags[1], tags[2], tags[5]]) # Tech, Dividend, Safe
+        nvda.tags.extend([tags[1], tags[4]]) # Tech, High Risk
+        aapl.tags.extend([tags[1], tags[5]]) # Tech, Safe
+        vti.tags.extend([tags[5], tags[6]]) # Safe, Retirement
+        btc.tags.extend([tags[4]]) # High Risk
+        ctbc.tags.extend([tags[0]]) # Emergency Fund
+        usdt_earn.tags.extend([tags[7]]) # Short Term
+
+        # 6. Generate History (Transactions)
+        transactions = []
+
+        # Cash History
+        # Initial large deposit 1 year ago
+        transactions.append(models.Transaction(asset_id=ctbc.id, amount=500000, buy_price=1, date=today - timedelta(days=365)))
+        transactions.append(models.Transaction(asset_id=chase.id, amount=10000, buy_price=32, date=today - timedelta(days=365)))
+        # Random spending/salary
+        for i in range(12):
+            date_entry = today - timedelta(days=30 * (12 - i))
+            # Salary
+            transactions.append(models.Transaction(asset_id=ctbc.id, amount=80000, buy_price=1, date=date_entry))
+            # Credit Card Payoff
+            transactions.append(models.Transaction(asset_id=ctbc.id, amount=-40000, buy_price=1, date=date_entry + timedelta(days=5)))
+            transactions.append(models.Transaction(asset_id=amex.id, amount=-40000, buy_price=1, date=date_entry + timedelta(days=5))) # Paying off liability is negative amount? No, liability balance implies positive amount usually? 
+            # Wait, Liability implementation: usually positive balance = debt.
+            # So "Paying off" means reducing the balance (negative amount transaction).
+            # "Spending" on card means increasing the balance (positive amount transaction).
+
+        # Spending on Card
+        for i in range(20):
+             days_ago = random.randint(1, 60)
+             amount = random.randint(500, 5000)
+             transactions.append(models.Transaction(asset_id=amex.id, amount=amount, buy_price=1, date=today - timedelta(days=days_ago)))
+
+        # Stock DCA
+        for stock in [tsmc, nvda, aapl, vti]:
+            # Initial buy
+            transactions.append(models.Transaction(asset_id=stock.id, amount=random.randint(100, 1000), buy_price=stock.current_price * 0.7, date=today - timedelta(days=365)))
+            # Monthly DCA
+            for i in range(12):
+                date_entry = today - timedelta(days=30 * (12 - i))
+                price_fluctuation = random.uniform(0.8, 1.2)
+                transactions.append(models.Transaction(asset_id=stock.id, amount=random.randint(10, 50), buy_price=stock.current_price * price_fluctuation, date=date_entry))
+
+        # Crypto Volatility
+        for coin in [btc, eth, sol]:
+             # Initial buy
+            transactions.append(models.Transaction(asset_id=coin.id, amount=random.uniform(0.01, 1.0), buy_price=coin.current_price * 0.5, date=today - timedelta(days=365)))
+            # Random trades
+            for i in range(5):
+                 days_ago = random.randint(1, 300)
+                 is_buy = random.choice([True, True, False]) # More buys
+                 amount = random.uniform(0.01, 0.5)
+                 price = coin.current_price * random.uniform(0.6, 1.1)
+                 transactions.append(models.Transaction(
+                     asset_id=coin.id, 
+                     amount=amount if is_buy else -amount, 
+                     buy_price=price, 
+                     date=today - timedelta(days=days_ago)
+                 ))
+
+        # Fixed Assets
+        transactions.append(models.Transaction(asset_id=car.id, amount=1, buy_price=1200000, date=today - timedelta(days=200)))
+        transactions.append(models.Transaction(asset_id=rolex.id, amount=1, buy_price=350000, date=today - timedelta(days=100)))
+
+        # Mortgage
+        transactions.append(models.Transaction(asset_id=mortgage.id, amount=8000000, buy_price=1, date=today - timedelta(days=600)))
+        # Monthly payments
+        for i in range(20):
+             date_entry = today - timedelta(days=30 * (20 - i))
+             transactions.append(models.Transaction(asset_id=mortgage.id, amount=-25000, buy_price=1, date=date_entry))
+
+        db.add_all(transactions)
+
         # 7. Create Goals
-        fire_goal = models.Goal(name="FIRE Target", target_amount=30000000, goal_type="NET_WORTH", currency="TWD")
-        budget_goal = models.Goal(name="Monthly Budget", target_amount=40000, goal_type="MONTHLY_SPENDING", currency="TWD")
+        fire_goal = models.Goal(name="FIRE Target", target_amount=30000000, goal_type="NET_WORTH", currency="TWD", description="Financial Independence, Retire Early")
+        car_goal = models.Goal(name="Buy Porsche 911", target_amount=8000000, goal_type="NET_WORTH", currency="TWD", description="Dream Car Fund")
+        budget_goal = models.Goal(name="Monthly Spending Limit", target_amount=60000, goal_type="MONTHLY_SPENDING", currency="TWD")
         
-        db.add_all([fire_goal, budget_goal])
+        db.add_all([fire_goal, car_goal, budget_goal])
         
         # 8. Create Recuring Expenses
-        netflix = models.Expense(name="Netflix", amount=390, currency="TWD", frequency="MONTHLY", due_day=15, category="Subscription")
-        spotify = models.Expense(name="Spotify", amount=190, currency="TWD", frequency="MONTHLY", due_day=5, category="Subscription")
+        expenses = [
+            models.Expense(name="Netflix", amount=390, currency="TWD", frequency="MONTHLY", due_day=15, category="Subscription"),
+            models.Expense(name="Spotify", amount=190, currency="TWD", frequency="MONTHLY", due_day=5, category="Subscription"),
+            models.Expense(name="Rent", amount=25000, currency="TWD", frequency="MONTHLY", due_day=1, category="Housing"),
+            models.Expense(name="Gym", amount=1200, currency="TWD", frequency="MONTHLY", due_day=10, category="Health"),
+            models.Expense(name="Internet", amount=900, currency="TWD", frequency="MONTHLY", due_day=20, category="Utilities"),
+            models.Expense(name="Car Insurance", amount=12000, currency="TWD", frequency="YEARLY", due_day=1, category="Insurance"),
+            models.Expense(name="AWS", amount=50, currency="USD", frequency="MONTHLY", due_day=3, category="Tech"),
+        ]
         
-        db.add_all([netflix, spotify])
+        db.add_all(expenses)
         
         db.commit()
-        return {"message": "Database seeded with demo data successfully"}
+        return {"message": "Database seeded with comprehensive fake data successfully"}
         
     except Exception as e:
         db.rollback()

@@ -135,7 +135,7 @@ export function MonthlyChangeChart() {
                             )}
                         >
                             {/* Use Mobile Short Keys */}
-                            {t(`cat_${cat}` as any) || cat}
+                            {cat === 'Crypto' && language === 'zh-TW' ? '加密' : (t(`cat_${cat}` as any) || cat)}
                         </button>
                     ))}
                 </div>
@@ -153,7 +153,7 @@ export function MonthlyChangeChart() {
                             <p className="text-xs mt-1 opacity-70">{t('add_assets_to_see_trends')}</p>
                         </div>
                     ) : (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
                             <BarChart data={data}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
                                 <XAxis

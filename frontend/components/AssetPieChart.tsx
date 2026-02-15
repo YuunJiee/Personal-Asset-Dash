@@ -40,7 +40,7 @@ export function AssetPieChart({ data, themeName = 'Classic' }: AssetPieChartProp
             <CardContent>
                 <div className="h-[300px] w-full mt-4">
                     {hasData ? (
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={50}>
                             <PieChart>
                                 <Pie
                                     data={data}
@@ -59,6 +59,7 @@ export function AssetPieChart({ data, themeName = 'Classic' }: AssetPieChartProp
                                             'Fluid': 'var(--color-fluid)',
                                             'Stock': 'var(--color-stock)',
                                             'Crypto': 'var(--color-crypto)',
+                                            'Fixed': 'var(--color-fixed)',
                                             'Receivables': 'var(--color-receivables)',
                                             'Liabilities': 'var(--color-liabilities)',
                                             // Handle "Investment" legacy or "Portfolio" translations if needed

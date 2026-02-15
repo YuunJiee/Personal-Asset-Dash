@@ -100,7 +100,8 @@ def get_exchange_rate(db: Session = None) -> float:
 
 def calculate_dashboard_metrics(db: Session) -> schemas.DashboardData:
     # update_prices(db) # Moved to background scheduler
-    usdtwd = get_exchange_rate(db)
+    from .services.exchange_rate_service import get_usdt_twd_rate
+    usdtwd = get_usdt_twd_rate(db)
     
     assets = crud.get_assets(db)
     total_market_value = 0.0

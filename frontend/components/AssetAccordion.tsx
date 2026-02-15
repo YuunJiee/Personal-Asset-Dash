@@ -174,10 +174,9 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                     </div>
                 </div>
 
-                <span className={cn("text-3xl font-bold tracking-tighter", isOpen ? "text-gray-900" : "text-white")}>
+                <span className={cn("text-2xl md:text-3xl font-bold tracking-tighter", isOpen ? "text-gray-900" : "text-white")}>
                     {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(totalAmount)}`}
                 </span>
-                <span className={cn("text-sm", isOpen ? "text-gray-500" : "text-white/80")}>TWD</span>
 
                 {/* Percentage Display */}
                 {percentage !== undefined && percentage > 0 && (
@@ -213,29 +212,29 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                 asset.include_in_net_worth === false ? "bg-muted/30 opacity-60 grayscale-[0.5]" : "bg-card hover:border-primary/50 hover:shadow-md"
                                             )}
                                         >
-                                            <div className="flex items-center gap-5">
+                                            <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
                                                 {/* Icon */}
-                                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors",
+                                                <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors",
                                                     asset.include_in_net_worth === false ? "bg-muted" : "bg-muted/50 text-foreground"
                                                 )}>
                                                     {asset.icon ? (
-                                                        <AssetIcon icon={asset.icon} className="w-6 h-6" />
+                                                        <AssetIcon icon={asset.icon} className="w-5 h-5 md:w-6 md:h-6" />
                                                     ) : (
-                                                        <AssetIcon icon={getCategoryIconName(asset.category, asset.sub_category)} className="w-6 h-6" />
+                                                        <AssetIcon icon={getCategoryIconName(asset.category, asset.sub_category)} className="w-5 h-5 md:w-6 md:h-6" />
                                                     )}
                                                 </div>
 
                                                 {/* Info */}
-                                                <div className="space-y-1">
+                                                <div className="space-y-0.5 md:space-y-1 min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="text-base font-bold text-foreground leading-none">{asset.name}</div>
+                                                        <div className="text-sm md:text-base font-bold text-foreground leading-none truncate">{asset.name}</div>
                                                         {asset.include_in_net_worth === false && (
-                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium whitespace-nowrap">Excluded</span>
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium whitespace-nowrap">{t('excluded')}</span>
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {(asset.ticker || asset.sub_category) && (
-                                                            <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                                                            <div className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate max-w-[80px] md:max-w-none">
                                                                 {asset.ticker || asset.sub_category}
                                                             </div>
                                                         )}
@@ -244,8 +243,9 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                                 {(asset.ticker || asset.sub_category) && (
                                                                     <span className="text-muted-foreground/40">•</span>
                                                                 )}
-                                                                <div className="text-[10px] text-muted-foreground/60">
-                                                                    {t('updated_label')}: {new Date(asset.last_updated_at).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
+                                                                <div className="text-[10px] text-muted-foreground/60 whitespace-nowrap">
+                                                                    <span className="hidden md:inline">{t('updated_label')}: </span>
+                                                                    {new Date(asset.last_updated_at).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
                                                                 </div>
                                                             </>
                                                         )}
@@ -259,9 +259,9 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                 </div>
                                             </div>
 
-                                            {/* Tags Display */}
+                                            {/* Tags Display - Hidden on Mobile to save space */}
                                             {asset.tags && asset.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                <div className="hidden md:flex flex-wrap gap-1 mt-1 mx-2">
                                                     {asset.tags.map((tag: any) => (
                                                         <span key={tag.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground opacity-80">
                                                             #{tag.name}
@@ -271,13 +271,13 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                             )}
 
                                             {/* Right Side */}
-                                            <div className="flex flex-col items-end gap-1">
+                                            <div className="flex flex-col items-end gap-0.5 md:gap-1 shrink-0 ml-1">
                                                 {/* Favorite Star - Always visible */}
                                                 <button
                                                     onClick={(e) => toggleFavorite(e, asset)}
-                                                    className="p-2 hover:bg-yellow-500/10 rounded-full transition-colors mb-1"
+                                                    className="p-1.5 md:p-2 hover:bg-yellow-500/10 rounded-full transition-colors mb-0.5"
                                                 >
-                                                    <Star className={cn("w-5 h-5 transition-colors",
+                                                    <Star className={cn("w-4 h-4 md:w-5 md:h-5 transition-colors",
                                                         asset.is_favorite
                                                             ? "fill-current text-yellow-500"
                                                             : "text-muted-foreground hover:text-yellow-500"
@@ -286,15 +286,14 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
 
                                                 {/* Amount & Percentage */}
                                                 <div className="text-right">
-                                                    <div className="font-bold text-foreground text-xl tracking-tight flex items-center justify-end gap-2">
+                                                    <div className="font-bold text-foreground text-lg md:text-xl tracking-tight flex items-center justify-end gap-1 md:gap-2">
                                                         {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)}`}
-                                                        <span className="text-xs font-normal text-muted-foreground">TWD</span>
                                                     </div>
 
                                                     {/* Percentage Badge */}
                                                     {totalAmount > 0 && asset.include_in_net_worth !== false && (
-                                                        <div className="mt-1 flex justify-end">
-                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground">
+                                                        <div className="mt-0.5 md:mt-1 flex justify-end">
+                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] md:text-[11px] font-medium bg-muted text-muted-foreground">
                                                                 {Math.round((value / totalAmount) * 100)}%
                                                             </span>
                                                         </div>

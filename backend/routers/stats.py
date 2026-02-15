@@ -13,6 +13,109 @@ router = APIRouter(
     tags=["stats"],
 )
 
+@router.get("/asset/{asset_id}/history")
+def get_asset_history(asset_id: int, range: str = "1y", db: Session = Depends(get_db)):
+    # Determine start date
+    today = datetime.now().date()
+    if range == "30d": start_date = today - timedelta(days=30)
+    elif range == "3mo": start_date = today - timedelta(days=90)
+    elif range == "6mo": start_date = today - timedelta(days=180)
+    elif range == "1y": start_date = today - timedelta(days=365)
+    elif range == "ytd": start_date = date(today.year, 1, 1)
+    elif range == "all": start_date = date(2020, 1, 1) # Arbitrary old date
+    else: start_date = today - timedelta(days=365)
+
+    asset = crud.get_asset(db, asset_id)
+    if not asset:
+        return []
+
+    # 1. Fetch Price History if applicable
+    price_history = {}
+    usdtwd_history = {}
+    
+    # Check if stock/crypto for price fetching
+    ticker = None
+    if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
+        t = asset.ticker
+        if t.isdigit() and len(t) == 4: t = f"{t}.TW"
+        if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
+        ticker = t
+
+    if ticker:
+        # Fetch Price History similar to get_net_worth_history
+        # We can refactor fetch_yahoo_history to be shared, but for now inline or copy is safer for this tool usage.
+        # Minimal fetch logic
+        try:
+             fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
+             # Fetch Ticker
+             p_data = yf.download(ticker, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
+             if not p_data.empty:
+                 series = p_data.ffill().bfill()
+                 price_history = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
+             
+             # Fetch FX
+             fx_data = yf.download("USDTWD=X", start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
+             if not fx_data.empty:
+                 fx_series = fx_data.ffill().bfill()
+                 usdtwd_history = {d.strftime("%Y-%m-%d"): val for d, val in fx_series.items()}
+                 
+        except Exception as e:
+            print(f"Error fetching hisotry for asset {asset_id}: {e}")
+
+    # 2. Replay Transactions
+    transactions = sorted(asset.transactions, key=lambda x: x.date)
+    
+    current_qty = 0.0
+    # Calculate initial quantity before start_date
+    tx_idx = 0
+    while tx_idx < len(transactions) and transactions[tx_idx].date.date() < start_date:
+        current_qty += transactions[tx_idx].amount
+        tx_idx += 1
+        
+    history = []
+    curr_date = start_date
+    current_usdtwd = 32.0 # Fallback
+    
+    while curr_date <= today:
+        d_str = curr_date.strftime("%Y-%m-%d")
+        
+        # Apply daily transactions
+        while tx_idx < len(transactions) and transactions[tx_idx].date.date() == curr_date:
+            current_qty += transactions[tx_idx].amount
+            tx_idx += 1
+            
+        # Determine Value
+        price = 1.0 # Default
+        if ticker:
+            p = price_history.get(d_str)
+            rate = usdtwd_history.get(d_str, current_usdtwd)
+            
+            if p is not None:
+                if asset.source == 'max': # MAX usually TWD
+                     if p is not None: price = p # Assuming fallback logic handled
+                elif ticker.endswith('.TW'):
+                     price = p
+                else:
+                     price = p * rate
+            else:
+                 # Fallback to current price if history missing
+                 price = asset.current_price
+        else:
+             price = asset.current_price
+             
+        val = current_qty * price
+        
+        history.append({
+            "date": d_str,
+            "quantity": current_qty,
+            "value": round(val, 2),
+            "price": round(price, 2)
+        })
+        
+        curr_date += timedelta(days=1)
+        
+    return history
+
 @router.get("/history")
 def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
     # Determine start date

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-02-15
+
+### ✨ Enhanced
+- **Visual Polish**:
+  - Updated **Fixed Assets** color to Teal/Cyan (`#0d9488`) for better distinction.
+  - Refined **Currency Display** by removing redundant "TWD" labels in Asset Cards and Dashboard.
+  - Shortened "Cryptocurrency" label to "Crypto" (加密) in mobile charts for better fit.
+- **UI/UX Improvements**:
+  - **Full Width Calendar**: Month navigation now spans full width on mobile for easier access.
+  - **Theme Stability**: Fixed "Flash of Unstyled Content" (FOUC) on page refresh.
+  - **Dialog Scroll**: Added `max-height` constraints to Transaction History and other dialogs to prevent overflow on small screens.
+
+### 🛡️ Security & Integrity
+- **Synced Assets Protection**: Disabled manual "Edit" and "Adjust Balance" for assets managed by integrations (MAX, Pionex, Binance) to prevent sync conflicts.
+
 ## [2.1.0] - 2026-02-10
 
 ### ✨ Added

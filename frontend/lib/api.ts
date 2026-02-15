@@ -5,6 +5,18 @@ export const API_URL = isServer
     ? (process.env.INTERNAL_API_URL || "http://127.0.0.1:8000/api") // Server-side: Direct to backend
     : "/api"; // Client-side: Relative path (proxied by Next.js)
 
+// Asset History
+export async function fetchAssetHistory(assetId: number, range: string = '1y') {
+    try {
+        const res = await fetch(`${API_URL}/stats/asset/${assetId}/history?range=${range}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return await res.json();
+    } catch (error) {
+        console.error("fetchAssetHistory failed:", error);
+        throw error;
+    }
+}
+
 export async function fetchDashboardData() {
     try {
         const url = `${API_URL}/dashboard/`;

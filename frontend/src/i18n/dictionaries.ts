@@ -132,12 +132,14 @@ export const translations = {
 
         language: "Language",
         language_desc: "Interface language.",
+        source: "Source",
 
         appearance: "Appearance",
         appearance_desc: "Appearance settings for the application.",
 
         // MAX Integration
         max_integration: "MAX Exchange Integration",
+        managed_by_integration: "Managed by Integration",
         api_key: "API Key",
         api_secret: "API Secret",
         api_key_desc: "Read-only access to convert balances.",
@@ -148,6 +150,10 @@ export const translations = {
         sync_success: "Synced!",
         save_keys: "Save Keys",
 
+        // Binance Integration
+        binance_integration: "Binance Integration",
+        binance_desc: "Sync your Binance spot wallet assets.",
+
         // Data Management
         backup_data: "Backup Data",
         backup_desc: "Download a backup file of all your assets and transaction history.",
@@ -155,8 +161,9 @@ export const translations = {
         reset_system: "System Reset",
         reset_desc: "Permanently delete all data. This action cannot be undone.",
         reset_button: "Reset All Data",
+        export_csv: "Export CSV",
 
-        version: "Yantage v2.1",
+        version: "Yantage v2.2",
 
         // Asset Categories
         Fluid: "Cash",
@@ -243,6 +250,10 @@ export const translations = {
         adding: "Adding...",
         add_connection: "Add Connection",
         no_integrations: "No integrations connected. Add one to track your crypto.",
+        binance: "Binance",
+        max: "MAX Exchange",
+        pionex: "Pionex",
+        wallet: "Web3 Wallet",
 
         // Settings - Extra
         network_updates: "Network & Updates",
@@ -277,6 +288,7 @@ export const translations = {
 
         // Dialogs & Forms
         subcategory: "Sub Category",
+        excluded: "Excluded",
         include_in_net_worth: "Include in Net Worth",
 
         initial_balance: "Initial Balance",
@@ -593,12 +605,14 @@ export const translations = {
 
         language: "語言",
         language_desc: "介面語言。",
+        source: "來源",
 
         appearance: "外觀設定",
         appearance_desc: "應用程式的深淺色主題。",
 
         // MAX Integration
         max_integration: "MAX 交易所串接",
+        managed_by_integration: "由整合自動管理",
         api_key: "API Key",
         api_secret: "API Secret",
         api_key_desc: "僅需讀取權限以同步餘額。",
@@ -616,8 +630,9 @@ export const translations = {
         reset_system: "系統重置",
         reset_desc: "永久刪除所有資料。此操作無法復原。",
         reset_button: "重置所有資料",
+        export_csv: "匯出 CSV",
 
-        version: "Yantage v2.1",
+        version: "Yantage v2.2",
 
         // Asset Categories
         Fluid: "流動資產",
@@ -747,6 +762,7 @@ export const translations = {
 
         // Dialogs & Forms
         subcategory: "子類別",
+        excluded: "不計入",
         include_in_net_worth: "計入淨值計算",
 
         initial_balance: "初始餘額",

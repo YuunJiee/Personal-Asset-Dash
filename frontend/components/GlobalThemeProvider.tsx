@@ -20,9 +20,20 @@ export const useGlobalTheme = () => useContext(GlobalThemeContext);
 export function GlobalThemeProvider({ children }: { children: React.ReactNode }) {
     const [themeName, setThemeName] = useState<ThemeName>('Morandi');
 
+    // Use a script to set the attribute before hydration if possible, or useLayoutEffect
+    // Since this is a client component, the best we can do without blocking is ensuring the default matches.
+    // However, to avoid the "flash", we can try to set the attribute immediately if we are in the browser.
+
+    if (typeof window !== 'undefined' && !document.body.getAttribute('data-chart-theme')) {
+        document.body.setAttribute('data-chart-theme', 'Morandi');
+    }
+
     useEffect(() => {
         // Enforce Morandi theme
-        applyTheme('Morandi');
+        // Check if already set to avoid double-set
+        if (document.body.getAttribute('data-chart-theme') !== 'Morandi') {
+            applyTheme('Morandi');
+        }
     }, []);
 
     const applyTheme = (theme: ThemeName) => {
