@@ -96,6 +96,16 @@ def transfer_funds(db: Session, transfer: schemas.TransferCreate):
     
     # 2. Add to Destination (Net Amount)
     deposit_amount = transfer.amount - (transfer.fee or 0.0)
+    
+    # Logic Fix: If destination is Liability, a "Transfer" is a Payment (reducing debt/balance).
+    # Since Liabilities usually have positive balance = debt.
+    # Reducing debt = Negative Amount transaction.
+    # So if we transfer 1000 to Credit Card, we want -1000 transaction.
+    
+    to_asset = get_asset(db, transfer.to_asset_id)
+    if to_asset and to_asset.category == 'Liabilities':
+        deposit_amount = -deposit_amount
+        
     deposit_tx = schemas.TransactionCreate(
         amount=deposit_amount,
         buy_price=1.0, 

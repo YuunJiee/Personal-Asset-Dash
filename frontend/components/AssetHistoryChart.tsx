@@ -44,17 +44,20 @@ export function AssetHistoryChart({ assetId, color = "#8884d8" }: AssetHistoryCh
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
-                <select
-                    value={range}
-                    onChange={(e) => setRange(e.target.value)}
-                    className="text-xs bg-muted border border-border rounded-md px-2 py-1 outline-none"
-                >
-                    <option value="30d">30 Days</option>
-                    <option value="3mo">3 Months</option>
-                    <option value="6mo">6 Months</option>
-                    <option value="1y">1 Year</option>
-                    <option value="all">All Time</option>
-                </select>
+                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+                    {['30d', '3mo', '6mo', '1y', 'all'].map((r) => (
+                        <button
+                            key={r}
+                            onClick={() => setRange(r)}
+                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap ${range === r
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                        >
+                            {t(`range_${r}` as any)}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="h-[250px] w-full">

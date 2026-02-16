@@ -120,215 +120,219 @@ def get_asset_history(asset_id: int, range: str = "1y", db: Session = Depends(ge
 
 @router.get("/history")
 def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
-    # Determine start date
-    today = datetime.now().date()
-    if range == "30d":
-        start_date = today - timedelta(days=30)
-    elif range == "3mo":
-        start_date = today - timedelta(days=90)
-    elif range == "6mo":
-        start_date = today - timedelta(days=180)
-    elif range == "1y":
-        start_date = today - timedelta(days=365)
-    elif range == "ytd":
-        start_date = date(today.year, 1, 1)
-    else:
-        start_date = today - timedelta(days=30)
-
-    # 1. Fetch all assets and transactions
-    assets = crud.get_assets(db)
+    try:
+        # Determine start date
+        today = datetime.now().date()
+        if range == "30d":
+            start_date = today - timedelta(days=30)
+        elif range == "3mo":
+            start_date = today - timedelta(days=90)
+        elif range == "6mo":
+            start_date = today - timedelta(days=180)
+        elif range == "1y":
+            start_date = today - timedelta(days=365)
+        elif range == "ytd":
+            start_date = date(today.year, 1, 1)
+        else:
+            start_date = today - timedelta(days=30)
     
-    # 2. Identify Investable Assets (Stocks/Crypto) to fetch history
-    tickers = []
-    # asset_map = {} # id -> Asset
-    # txn_map = defaultdict(list)
-    
-    for asset in assets:
-        # asset_map[asset.id] = asset
-        if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
-            t = asset.ticker
-            # Heuristic checks
-            if t.isdigit() and len(t) == 4: t = f"{t}.TW"
-            if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
-            
-            asset.yf_ticker = t 
-            tickers.append(t)
-
-    # 3. Fetch Historical Data (Prices and FX)
-    price_history = {} # ticker -> {date_str ('YYYY-MM-DD') -> close_price}
-    usdtwd_history = {} # date_str -> rate
-
-    # Helper to download and process
-    def fetch_yahoo_history(symbols):
-        try:
-            # Buffer start date by 7 days to ensure we have previous close for weekends/holidays
-            fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
-            data = yf.download(symbols, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
-            
-            history_map = {}
-            
-            # Normalize to dict: ticker -> {date_str -> price}
-            if isinstance(data, pd.DataFrame) and not data.empty:
-                 # If MultiIndex columns (when multiple tickers)
-                 if isinstance(data.columns, pd.MultiIndex): 
-                     # Should not happen with just 'Close' usually, unless yfinance version differs. 
-                     # Newer yfinance might return MultiIndex if asking for multiple fields.
-                     # But ['Close'] returns DataFrame with tickers as columns.
-                     pass
-                 
-                 for col in data.columns:
-                     # Fill NaN with forward fill (ffill) then backward fill (bfill)
-                     # to handle weekends/holidays seamlessly
-                     series = data[col].ffill().bfill()
-                     history_map[col] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
-                     
-            elif isinstance(data, pd.Series) and not data.empty:
-                 # Single symbol
-                 symbol = symbols[0] if isinstance(symbols, list) else symbols
-                 series = data.ffill().bfill()
-                 history_map[symbol] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
-            
-            return history_map
-        except Exception as e:
-            print(f"Error fetching history for {symbols}: {e}")
-            return {}
-
-    if tickers:
-        price_history = fetch_yahoo_history(tickers)
-
-    # Fetch USDTWD History
-    fx_map = fetch_yahoo_history("USDTWD=X")
-    usdtwd_history = fx_map.get("USDTWD=X", {})
-
-    # Default FX if missing
-    current_usdtwd = 32.0 # fallback
-
-    # 4. Reconstruct Daily Net Worth
-    result = []
-    
-    # Pre-calculate asset quantities over time
-    # This is O(Assets * Days * Transactions). 
-    # Since transactions are likely few, we can iterate forward.
-    
-    # Initial State (Balances BEFORE start_date)
-    # Map: asset_id -> quantity
-    balances = defaultdict(float)
-    
-    # Pre-process transactions into a timeline?
-    # Or just iterate all transactions for every day? (Inefficient but robust)
-    # Better: Sort transactions by date.
-    
-    # Flatten transactions: (date, asset_id, amount)
-    all_txns = []
-    for asset in assets:
-        for txn in asset.transactions:
-            # txn.date is likely datetime, convert to date
-            t_date = txn.date.date() if isinstance(txn.date, datetime) else txn.date
-            all_txns.append((t_date, asset.id, txn.amount))
-    
-    all_txns.sort(key=lambda x: x[0])
-    
-    # Calculate balances up to start_date
-    txn_idx = 0
-    while txn_idx < len(all_txns) and all_txns[txn_idx][0] < start_date:
-        d, aid, amt = all_txns[txn_idx]
-        balances[aid] += amt
-        txn_idx += 1
-    
-    # Iterate Day by Day
-    current_date = start_date
-    while current_date <= today:
-        date_str = current_date.strftime("%Y-%m-%d")
+        # 1. Fetch all assets and transactions
+        assets = crud.get_assets(db)
         
-        # Apply transactions for this day
-        while txn_idx < len(all_txns) and all_txns[txn_idx][0] == current_date:
+        # 2. Identify Investable Assets (Stocks/Crypto) to fetch history
+        tickers = []
+        # asset_map = {} # id -> Asset
+        # txn_map = defaultdict(list)
+        
+        for asset in assets:
+            # asset_map[asset.id] = asset
+            if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
+                t = asset.ticker
+                # Heuristic checks
+                if t.isdigit() and len(t) == 4: t = f"{t}.TW"
+                if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
+                
+                asset.yf_ticker = t 
+                tickers.append(t)
+    
+        # 3. Fetch Historical Data (Prices and FX)
+        price_history = {} # ticker -> {date_str ('YYYY-MM-DD') -> close_price}
+        usdtwd_history = {} # date_str -> rate
+    
+        # Helper to download and process
+        def fetch_yahoo_history(symbols):
+            try:
+                # Buffer start date by 7 days to ensure we have previous close for weekends/holidays
+                fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
+                data = yf.download(symbols, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
+                
+                history_map = {}
+                
+                # Normalize to dict: ticker -> {date_str -> price}
+                if isinstance(data, pd.DataFrame) and not data.empty:
+                     # If MultiIndex columns (when multiple tickers)
+                     if isinstance(data.columns, pd.MultiIndex): 
+                         # Should not happen with just 'Close' usually, unless yfinance version differs. 
+                         # Newer yfinance might return MultiIndex if asking for multiple fields.
+                         # But ['Close'] returns DataFrame with tickers as columns.
+                         pass
+                     
+                     for col in data.columns:
+                         # Fill NaN with forward fill (ffill) then backward fill (bfill)
+                         # to handle weekends/holidays seamlessly
+                         series = data[col].ffill().bfill()
+                         history_map[col] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
+                         
+                elif isinstance(data, pd.Series) and not data.empty:
+                     # Single symbol
+                     symbol = symbols[0] if isinstance(symbols, list) else symbols
+                     series = data.ffill().bfill()
+                     history_map[symbol] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
+                
+                return history_map
+            except Exception as e:
+                print(f"Error fetching history for {symbols}: {e}")
+                traceback.print_exc()
+                return {}
+    
+        if tickers:
+            price_history = fetch_yahoo_history(tickers)
+    
+        # Fetch USDTWD History
+        fx_map = fetch_yahoo_history("USDTWD=X")
+        usdtwd_history = fx_map.get("USDTWD=X", {})
+    
+        # Default FX if missing
+        current_usdtwd = 32.0 # fallback
+    
+        # 4. Reconstruct Daily Net Worth
+        result = []
+        
+        # Pre-calculate asset quantities over time
+        # This is O(Assets * Days * Transactions). 
+        # Since transactions are likely few, we can iterate forward.
+        
+        # Initial State (Balances BEFORE start_date)
+        # Map: asset_id -> quantity
+        balances = defaultdict(float)
+        
+        # Pre-process transactions into a timeline?
+        # Or just iterate all transactions for every day? (Inefficient but robust)
+        # Better: Sort transactions by date.
+        
+        # Flatten transactions: (date, asset_id, amount)
+        all_txns = []
+        for asset in assets:
+            for txn in asset.transactions:
+                # txn.date is likely datetime, convert to date
+                t_date = txn.date.date() if isinstance(txn.date, datetime) else txn.date
+                all_txns.append((t_date, asset.id, txn.amount))
+        
+        all_txns.sort(key=lambda x: x[0])
+        
+        # Calculate balances up to start_date
+        txn_idx = 0
+        while txn_idx < len(all_txns) and all_txns[txn_idx][0] < start_date:
             d, aid, amt = all_txns[txn_idx]
             balances[aid] += amt
             txn_idx += 1
-            
-        # Calculate Total Net Worth for this day
-        day_total = 0.0
-        cat_totals = defaultdict(float)
         
-        # Get FX for this day (or fallback to latest known)
-        # Since we used ffill, key should exist if within range. 
-        # If not, use fallback.
-        rate = usdtwd_history.get(date_str)
-        if not rate:
-             # Try finding last available date? (Already done via ffill mostly)
-             # Fallback to hardcoded
-             rate = current_usdtwd
-        
-        for asset in assets:
-            if not asset.include_in_net_worth:
-                continue
-                
-            qty = balances[asset.id]
-            if qty == 0: continue
+        # Iterate Day by Day
+        current_date = start_date
+        while current_date <= today:
+            date_str = current_date.strftime("%Y-%m-%d")
             
-            # Determine Price
-            price = 1.0 # Default (Fluid/Fixed/Receivables)
+            # Apply transactions for this day
+            while txn_idx < len(all_txns) and all_txns[txn_idx][0] == current_date:
+                d, aid, amt = all_txns[txn_idx]
+                balances[aid] += amt
+                txn_idx += 1
+                
+            # Calculate Total Net Worth for this day
+            day_total = 0.0
+            cat_totals = defaultdict(float)
             
-            if (asset.category == 'Stock' or asset.category == 'Crypto') and getattr(asset, 'yf_ticker', None):
-                t = asset.yf_ticker
-                # Get price from history
-                hist = price_history.get(t, {})
-                p = hist.get(date_str)
-                
-                if p is None:
-                    # Fallback to current asset price if history missing completely?
-                    # Or 0?
-                    # Let's use asset.current_price as last resort
-                    p = asset.current_price
-                
-                # Check Currency (Heuristic: Stocks.TW -> TWD, Crypto -> USD, US Stocks -> USD)
-                # If ticker ends with .TW, no FX. Else x Rate.
-                # FIX: If Asset Source is 'max', price is already TWD (from DB Fallback or Manual).
-                # Actually, MAX assets fallback to `current_price` which is TWD.
-                # If YF fetch succeeds, it returns USD for BTC-USD. 
-                # But YF fails in 2026 -> Fallback to TWD Price -> Mistakenly * 32.
-                
-                if asset.source == 'max':
-                    # Special case: If we used Fallback (p == current_price), it is TWD.
-                    # If we used YF (p == hist), it is likely USD (e.g. BTC-USD).
-                    # How to know if p came from YF or Fallback?
-                    # Check if p (hist) was None.
+            # Get FX for this day (or fallback to latest known)
+            # Since we used ffill, key should exist if within range. 
+            # If not, use fallback.
+            rate = usdtwd_history.get(date_str)
+            if not rate:
+                 # Try finding last available date? (Already done via ffill mostly)
+                 # Fallback to hardcoded
+                 rate = current_usdtwd
+            
+            for asset in assets:
+                if not asset.include_in_net_worth:
+                    continue
                     
-                    if hist.get(date_str) is None:
-                         # Fallback used -> TWD
-                         price = p
+                qty = balances[asset.id]
+                if qty == 0: continue
+                
+                # Determine Price
+                price = 1.0 # Default (Fluid/Fixed/Receivables)
+                
+                if (asset.category == 'Stock' or asset.category == 'Crypto') and getattr(asset, 'yf_ticker', None):
+                    t = asset.yf_ticker
+                    # Get price from history
+                    hist = price_history.get(t, {})
+                    p = hist.get(date_str)
+                    
+                    if p is None:
+                        # Fallback to current asset price if history missing completely?
+                        # Or 0?
+                        # Let's use asset.current_price as last resort
+                        p = asset.current_price
+                    
+                    # Check Currency (Heuristic: Stocks.TW -> TWD, Crypto -> USD, US Stocks -> USD)
+                    # If ticker ends with .TW, no FX. Else x Rate.
+                    # FIX: If Asset Source is 'max', price is already TWD (from DB Fallback or Manual).
+                    # Actually, MAX assets fallback to `current_price` which is TWD.
+                    # If YF fetch succeeds, it returns USD for BTC-USD. 
+                    # But YF fails in 2026 -> Fallback to TWD Price -> Mistakenly * 32.
+                    
+                    if asset.source == 'max':
+                        # Special case: If we used Fallback (p == current_price), it is TWD.
+                        # If we used YF (p == hist), it is likely USD (e.g. BTC-USD).
+                        # How to know if p came from YF or Fallback?
+                        # Check if p (hist) was None.
+                        
+                        if hist.get(date_str) is None:
+                             # Fallback used -> TWD
+                             price = p
+                        else:
+                             # YF used -> USD (assuming BTC-USD)
+                             price = p * rate
+                    elif t.endswith('.TW'):
+                        price = p
                     else:
-                         # YF used -> USD (assuming BTC-USD)
-                         price = p * rate
-                elif t.endswith('.TW'):
-                    price = p
+                        price = p * rate
+                
+                elif asset.category == 'Stock' or asset.category == 'Crypto':
+                     # Investment without recognized ticker (manual price)
+                     price = asset.current_price
+                
+                val = qty * price
+    
+                if asset.category == 'Liabilities':
+                    day_total -= val
+                    cat_totals[asset.category] -= val
                 else:
-                    price = p * rate
+                    day_total += val
+                    cat_totals[asset.category] += val
+                
+            result.append({
+                "date": date_str,
+                "value": round(day_total, 0),
+                "breakdown": {k: round(v, 0) for k, v in cat_totals.items()}
+            })
             
-            elif asset.category == 'Stock' or asset.category == 'Crypto':
-                 # Investment without recognized ticker (manual price)
-                 price = asset.current_price
+            current_date += timedelta(days=1)
             
-            val = qty * price
-
-            if asset.category == 'Liabilities':
-                day_total -= val
-                cat_totals[asset.category] -= val
-            else:
-                day_total += val
-                cat_totals[asset.category] += val
-            
-
-
-        result.append({
-            "date": date_str,
-            "value": round(day_total, 0),
-            "breakdown": {k: round(v, 0) for k, v in cat_totals.items()}
-        })
-        
-        current_date += timedelta(days=1)
-        
-    return result
+        return result
+    except Exception as e:
+        print(f"Error in get_net_worth_history: {e}")
+        traceback.print_exc()
+        return []
 
 @router.get("/rebalance")
 def get_rebalance_suggestions(db: Session = Depends(get_db)):

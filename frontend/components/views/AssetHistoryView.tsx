@@ -60,6 +60,47 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
 
     return (
         <div className="space-y-4">
+            {/* Actions Toolbar */}
+            <div className="flex justify-end gap-2">
+                {['max', 'pionex', 'binance'].includes(asset['source'] || '') ? (
+                    <div className="flex items-center text-xs text-muted-foreground mr-auto bg-muted/50 px-3 py-1 rounded-full">
+                        {t('managed_by_integration')}
+                    </div>
+                ) : (
+                    <>
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                if (onAdjustBalance) onAdjustBalance();
+                            }}
+                            className="w-10 h-10 p-0 hover:bg-green-500/10 hover:text-green-600"
+                            title={t('adjust_balance')}
+                        >
+                            <Wallet className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                if (onTransfer) onTransfer();
+                            }}
+                            className="w-10 h-10 p-0 hover:bg-blue-500/10 hover:text-blue-600"
+                            title={t('transfer')}
+                        >
+                            <ArrowRightLeft className="w-5 h-5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                if (onEdit) onEdit();
+                            }}
+                            className="w-10 h-10 p-0 hover:bg-primary/10"
+                            title={t('edit')}
+                        >
+                            <Pencil className="w-5 h-5" />
+                        </Button>
+                    </>
+                )}
+            </div>
             {/* Asset Summary */}
             <div className="bg-muted/50 rounded-2xl p-4 space-y-2">
                 <div className="flex items-center justify-between">
@@ -178,63 +219,7 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
                 )}
             </div>
 
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4 border-t border-border">
-                {['max', 'pionex', 'binance'].includes(asset['source'] || '') ? (
-                    <div className="flex items-center text-xs text-muted-foreground mr-auto bg-muted/50 px-3 py-1 rounded-full">
-                        {t('managed_by_integration')}
-                    </div>
-                ) : (
-                    <>
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                if (onAdjustBalance) onAdjustBalance();
-                            }}
-                            className="w-10 h-10 p-0 hover:bg-green-500/10 hover:text-green-600"
-                            title={t('adjust_balance')}
-                        >
-                            <Wallet className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                if (onTransfer) onTransfer();
-                            }}
-                            className="w-10 h-10 p-0 hover:bg-blue-500/10 hover:text-blue-600"
-                            title={t('transfer')}
-                        >
-                            <ArrowRightLeft className="w-5 h-5" />
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                if (onEdit) onEdit();
-                            }}
-                            className="w-10 h-10 p-0 hover:bg-primary/10"
-                            title={t('edit')}
-                        >
-                            <Pencil className="w-5 h-5" />
-                        </Button>
-                    </>
-                )}
-                {/* Allow Transfer for MAX? Yes, user might move funds OUT. But 'balance' is auto-synced. */}
-                {/* If user transfers out, MAX balance decreases on next sync. */}
-                {/* BUT internal transfer logic reduces balance immediately. */}
-                {/* If we allow transfer, next sync might 'correct' it back if MAX hasn't updated or vice versa. */}
-                {/* Let's keep Transfer enabled but maybe warn? Or just disable for consistency with "Auto-Sync" paradigm. */}
-                {/* User said "Lock it". Let's lock everything for now to be safe. */}
-                {/* Actually, let me just add the MAX lock block above. */}
-                {/* Re-adding Transfer button for MAX? Maybe not if fully managed. */}
-                {/* Wait, if I transfer 1 BTC from MAX to Wallet, MAX balance decreases. My App needs to reflect that. */}
-                {/* If I do it in App, App decreases MAX asset, increases Wallet asset. */}
-                {/* 1 hour later, Sync runs. MAX API says "1 BTC less". App sees DB has "1 BTC less". Matches. */}
-                {/* So Transfer IS valid. But Adjust Balance (arbitrary change) is NOT valid. */}
-                {/* Edit (rename/ticker) IS NOT valid. */}
-
-                {/* Modified Plan: Allow Transfer, Disable Adjust/Edit. */}
-
-                {/* Transfer button removed for MAX as per user request */}
-            </div>
+            {/* Actions moved to top */}
         </div>
     );
 }
