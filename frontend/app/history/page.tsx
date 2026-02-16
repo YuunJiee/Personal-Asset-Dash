@@ -15,6 +15,8 @@ import { TransactionEditDialog } from "@/components/TransactionEditDialog";
 
 export default function HistoryPage() {
     const [transactions, setTransactions] = useState<any[]>([]);
+    const [stats, setStats] = useState({ total_in: 0, total_out: 0 });
+    const [range, setRange] = useState<string>('all');
     const [selectedTx, setSelectedTx] = useState<any | null>(null);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
@@ -57,6 +59,23 @@ export default function HistoryPage() {
         setSelectedTx(txn);
     };
 
+    // Filter Logic
+    const filteredTransactions = transactions.filter(txn => {
+        if (range === 'all') return true;
+        const txnDate = new Date(txn.date);
+        const now = new Date();
+        let limit = new Date();
+
+        switch (range) {
+            case '30d': limit.setDate(now.getDate() - 30); break;
+            case '3mo': limit.setMonth(now.getMonth() - 3); break;
+            case '6mo': limit.setMonth(now.getMonth() - 6); break;
+            case '1y': limit.setFullYear(now.getFullYear() - 1); break;
+            default: return true;
+        }
+        return txnDate >= limit;
+    });
+
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
             <header className="mb-8 flex items-center gap-3">
@@ -69,9 +88,29 @@ export default function HistoryPage() {
                 </div>
             </header>
 
+            {/* Range Selector */}
+            <div className="flex justify-end mb-6">
+                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+                    {['30d', '3mo', '6mo', '1y', 'all'].map((r) => (
+                        <button
+                            key={r}
+                            onClick={() => setRange(r)}
+                            className={cn(
+                                "px-3 py-1 text-xs font-medium rounded-md transition-all whitespace-nowrap",
+                                range === r
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {t(`range_${r}` as any)}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* Mobile Card List */}
             <div className="md:hidden space-y-4">
-                {transactions.map((txn, idx) => (
+                {filteredTransactions.map((txn, idx) => (
                     <div
                         key={idx}
                         className={cn(
@@ -121,7 +160,7 @@ export default function HistoryPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {transactions.map((txn, idx) => (
+                        {filteredTransactions.map((txn, idx) => (
                             <tr
                                 key={idx}
                                 className={cn(

@@ -286,6 +286,10 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
                     hist = price_history.get(t, {})
                     p = hist.get(date_str)
                     
+                    # Treat NaN as None to trigger fallback
+                    if p is not None and (math.isnan(p) or math.isinf(p)):
+                         p = None
+                    
                     if p is None:
                         # Fallback to current asset price if history missing completely?
                         # Or 0?
