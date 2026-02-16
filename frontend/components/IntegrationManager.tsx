@@ -103,7 +103,7 @@ export function IntegrationManager() {
         try {
             // Endpoints map 1:1 with provider names (max, pionex, wallet)
             const endpoint = provider;
-            const res = await fetch(`${API_URL}/system/sync/${endpoint}`, { method: 'POST' });
+            const res = await fetch(`${API_URL}/integrations/sync/${endpoint}`, { method: 'POST' });
             if (res.ok) {
                 alert(`Synced ${provider} successfully!`);
                 router.refresh();

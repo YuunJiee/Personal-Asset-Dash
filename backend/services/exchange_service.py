@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .. import models
-from . import max_service, pionex_service
+from . import max_service, pionex_service, binance_service
 
 logger = logging.getLogger(__name__)
 
@@ -48,5 +48,11 @@ def sync_all_exchanges(db: Session):
         pionex_service.sync_pionex_assets(db)
     except Exception as e:
         logger.error(f"Pionex Sync Failed: {e}")
+        
+    # 3. Binance Sync
+    try:
+        binance_service.sync_binance_assets(db)
+    except Exception as e:
+        logger.error(f"Binance Sync Failed: {e}")
         
     return True

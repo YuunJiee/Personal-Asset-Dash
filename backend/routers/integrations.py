@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from .. import models, service
 from ..database import get_db
-from ..services import max_service, pionex_service, binance_service
+from ..services import max_service, pionex_service, binance_service, wallet_service
 from pydantic import BaseModel
 from typing import Optional
 
@@ -104,6 +104,10 @@ def sync_provider(provider: str, db: Session = Depends(get_db)):
              raise HTTPException(status_code=400, detail="Sync failed or no active connections")
     elif provider == 'binance':
         success = binance_service.sync_binance_assets(db)
+        if not success:
+             raise HTTPException(status_code=400, detail="Sync failed or no active connections")
+    elif provider == 'wallet':
+        success = wallet_service.sync_wallets(db)
         if not success:
              raise HTTPException(status_code=400, detail="Sync failed or no active connections")
     else:

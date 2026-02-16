@@ -8,6 +8,8 @@ import pandas as pd
 from collections import defaultdict
 import math
 
+import traceback
+
 router = APIRouter(
     prefix="/api/stats",
     tags=["stats"],
@@ -411,67 +413,75 @@ def get_rebalance_suggestions(db: Session = Depends(get_db)):
 
 @router.get("/forecast")
 def get_goal_forecast(db: Session = Depends(get_db)):
-    # 1. Calculate Average Monthly Growth (last 6 months)
-    # We can use the existing `get_net_worth_history` logic but simplified
-    # Or just fetch 2 data points: Today and 6 months ago.
-    
-    today = datetime.now().date()
-    six_months_ago = today - timedelta(days=180)
-    
-    # Re-use logic to get net worth for specific dates is hard without refactoring.
-    # Let's call the internal function if possible, or copy logic.
-    # Ideally, refactor `get_net_worth_history` to `calculate_net_worth(date, db)`.
-    # For now, let's just fetch history for 6mo and calculate slope.
-    
-    history_data = get_net_worth_history(range="6mo", db=db)
-    
-    avg_growth = 0
-    if len(history_data) > 10: # Need enough data
-        start_val = history_data[0]['value']
-        end_val = history_data[-1]['value']
+    try:
+        # 1. Calculate Average Monthly Growth (last 6 months)
+        # We can use the existing `get_net_worth_history` logic but simplified
+        # Or just fetch 2 data points: Today and 6 months ago.
         
-        # Simple Linear Growth: (End - Start) / Months
-        diff = end_val - start_val
-        # 6 months roughly
-        avg_growth = diff / 6.0
-    
-    # 2. Get Net Worth Goals
-    goals = crud.get_goals(db)
-    nw_goals = [g for g in goals if g.goal_type == 'NET_WORTH']
-    
-    # Current Net Worth
-    # Reuse `dashboard` logic or fetch from history
-    current_nw = history_data[-1]['value'] if history_data else 0
-    
-    forecasts = []
-    
-    for goal in nw_goals:
-        remaining = goal.target_amount - current_nw
+        today = datetime.now().date()
+        six_months_ago = today - timedelta(days=180)
         
-        if remaining <= 0:
-            prediction = "Achieved"
-            months_to_go = 0
-        elif avg_growth <= 0:
-            prediction = "N/A (No Growth)"
-            months_to_go = 999
-        else:
-            months_to_go = remaining / avg_growth
-            years = months_to_go / 12
+        # Re-use logic to get net worth for specific dates is hard without refactoring.
+        # Let's call the internal function if possible, or copy logic.
+        # Ideally, refactor `get_net_worth_history` to `calculate_net_worth(date, db)`.
+        # For now, let's just fetch history for 6mo and calculate slope.
+        
+        history_data = get_net_worth_history(range="6mo", db=db)
+        
+        avg_growth = 0
+        if history_data and len(history_data) > 10: # Need enough data
+            start_val = history_data[0]['value']
+            end_val = history_data[-1]['value']
             
-            # Date prediction
-            future_date = today + timedelta(days=int(months_to_go * 30))
-            prediction = future_date.strftime("%b %Y")
-            
-        forecasts.append({
-            "goal_id": goal.id,
-            "current_amount": current_nw,
-            "target_amount": goal.target_amount,
-            "avg_monthly_growth": round(avg_growth, 0),
-            "months_to_reach": round(months_to_go, 1),
-            "predicted_date": prediction
-        })
+            # Simple Linear Growth: (End - Start) / Months
+            diff = end_val - start_val
+            # 6 months roughly
+            avg_growth = diff / 6.0
         
-    return {
-        "growth_rate_6mo": round(avg_growth, 0),
-        "forecasts": forecasts
-    }
+        # 2. Get Net Worth Goals
+        goals = crud.get_goals(db)
+        nw_goals = [g for g in goals if g.goal_type == 'NET_WORTH']
+        
+        # Current Net Worth
+        # Reuse `dashboard` logic or fetch from history
+        current_nw = history_data[-1]['value'] if history_data else 0
+    
+        forecasts = []
+        
+        for goal in nw_goals:
+            remaining = goal.target_amount - current_nw
+            
+            if remaining <= 0:
+                prediction = "Achieved"
+                months_to_go = 0
+            elif avg_growth <= 0:
+                prediction = "N/A (No Growth)"
+                months_to_go = 999
+            else:
+                months_to_go = remaining / avg_growth
+                years = months_to_go / 12
+                
+                # Date prediction
+                future_date = today + timedelta(days=int(months_to_go * 30))
+                prediction = future_date.strftime("%b %Y")
+                
+            forecasts.append({
+                "goal_id": goal.id,
+                "current_amount": current_nw,
+                "target_amount": goal.target_amount,
+                "avg_monthly_growth": round(avg_growth, 0),
+                "months_to_reach": round(months_to_go, 1),
+                "predicted_date": prediction
+            })
+            
+        return {
+            "growth_rate_6mo": round(avg_growth, 0),
+            "forecasts": forecasts
+        }
+    except Exception as e:
+        print(f"Error in get_goal_forecast: {e}")
+        traceback.print_exc()
+        return {
+             "growth_rate_6mo": 0,
+             "forecasts": []
+        }
