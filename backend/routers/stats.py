@@ -10,6 +10,15 @@ import math
 
 import traceback
 
+import math
+
+def safe_float(val):
+    if val is None: return 0.0
+    if isinstance(val, (int, float)):
+        if math.isnan(val) or math.isinf(val):
+            return 0.0
+    return val
+
 router = APIRouter(
     prefix="/api/stats",
     tags=["stats"],
@@ -322,8 +331,8 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
                 
             result.append({
                 "date": date_str,
-                "value": round(day_total, 0),
-                "breakdown": {k: round(v, 0) for k, v in cat_totals.items()}
+                "value": safe_float(round(day_total, 0)),
+                "breakdown": {k: safe_float(round(v, 0)) for k, v in cat_totals.items()}
             })
             
             current_date += timedelta(days=1)
