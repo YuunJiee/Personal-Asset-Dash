@@ -8,13 +8,13 @@ def get_asset(db: Session, asset_id: int):
     if asset:
         usdt_rate = get_usdt_twd_rate(db)
         is_usd = False
-        if asset.category == 'Crypto':
+        if asset.source == 'max':
+             is_usd = False
+        elif asset.category == 'Crypto':
              is_usd = True
         elif asset.category == 'Stock':
              if asset.ticker:
                  if asset.ticker.endswith('.TW') or (asset.ticker.isdigit() and len(asset.ticker) == 4):
-                     is_usd = False
-                 elif asset.source == 'max': 
                      is_usd = False
                  else:
                      is_usd = True
@@ -48,13 +48,13 @@ def get_assets(db: Session, skip: int = 0, limit: int = 100):
     for asset in assets:
         # Determine if asset is USD based
         is_usd = False
-        if asset.category == 'Crypto':
+        if asset.source == 'max':
+             is_usd = False
+        elif asset.category == 'Crypto':
              is_usd = True
         elif asset.category == 'Stock':
              if asset.ticker:
                  if asset.ticker.endswith('.TW') or (asset.ticker.isdigit() and len(asset.ticker) == 4):
-                     is_usd = False
-                 elif asset.source == 'max': 
                      is_usd = False
                  else:
                      is_usd = True # US Stocks
