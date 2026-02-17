@@ -346,6 +346,17 @@ def sync_wallets(db: Session):
                                     decimals=decimals,
                                     icon=token.get('symbol').lower()
                                 )
+                                
+                                # Try to fetch initial price immediately
+                                try:
+                                    from .. import service
+                                    price = service.fetch_crypto_price(new_asset.ticker)
+                                    if price > 0:
+                                        new_asset.current_price = price
+                                        # We might need to handle alerts or other logic, but for now just setting price is enough
+                                except Exception as e:
+                                    logger.error(f"Failed to fetch initial price for {asset_name}: {e}")
+
                                 db.add(new_asset)
                                 db.commit()
                                 db.refresh(new_asset)
