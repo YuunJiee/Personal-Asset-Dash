@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { createAsset, createTransaction, lookupTicker } from '@/lib/api';
+import { createAsset, createTransaction, lookupTicker, fetchIntegrations } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { IconPicker, AssetIcon, getDefaultIcon } from './IconPicker';
 import { X, Tag as TagIcon } from 'lucide-react';
@@ -34,6 +34,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
     });
     const [market, setMarket] = useState('TW'); // Default to Taiwan market
     const [fetchedPrice, setFetchedPrice] = useState<number | null>(null);
+
+    // Web3 / Wallet State
+    const [source, setSource] = useState('manual'); // manual, wallet
+    const [connections, setConnections] = useState<any[]>([]);
+    const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
+    const [network, setNetwork] = useState('Ethereum');
+    const [contractAddress, setContractAddress] = useState('');
+    const [decimals, setDecimals] = useState('18');
 
     // Local Tags State
     const [tags, setTags] = useState<string[]>([]);
@@ -104,6 +112,18 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
             setNewTag('');
             setMarket('TW');
             setFetchedPrice(null);
+
+            // Web3 Reset
+            setSource('manual');
+            setSelectedConnectionId('');
+            setNetwork('Ethereum');
+            setContractAddress('');
+            setDecimals('18');
+
+            // Fetch integrations
+            fetchIntegrations().then(data => {
+                setConnections(data.filter((c: any) => c.provider === 'wallet'));
+            }).catch(console.error);
         }
     }, [isOpen, defaultCategory]);
 
@@ -206,7 +226,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 icon: finalIcon,
                 tags: tags.map(tag => ({ name: tag })),
                 current_price: fetchedPrice,
-                payment_due_day: formData.paymentDueDay ? parseInt(formData.paymentDueDay) : null
+                payment_due_day: formData.paymentDueDay ? parseInt(formData.paymentDueDay) : null,
+
+                // Web3 Fields
+                source: source,
+                connection_id: source === 'wallet' && selectedConnectionId ? parseInt(selectedConnectionId) : undefined,
+                network: source === 'wallet' ? network : undefined,
+                contract_address: source === 'wallet' ? contractAddress : undefined,
+                decimals: source === 'wallet' ? parseInt(decimals) : 18
             });
 
             const initialBalance = parseFloat(formData.initialBalance);
@@ -248,6 +275,8 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         if (formData.category === 'Stock' && market === 'TW' && /^\d{4}$/.test(currentTicker)) {
             setFormData(prev => ({ ...prev, ticker: `${currentTicker}.TW` }));
         }
+
+        // Auto-set name if empty using Contract Address (Simple heuristic or just allow user)
     };
 
     // Calc default icon for preview
@@ -317,29 +346,103 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
                 {/* Row 3: Investment Specifics */}
                 {(formData.category === 'Stock' || formData.category === 'Crypto') && (
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('ticker')}</Label>
+                    <div className="space-y-4">
 
-                        </div>
-                        <div className="relative">
-                            <Input
-                                value={formData.ticker}
-                                onChange={(e) => {
-                                    setFormData({ ...formData, ticker: e.target.value });
-                                    if (!e.target.value) setFetchedPrice(null);
-                                }}
-                                onBlur={handleTickerBlur}
-                                placeholder={market === 'TW' ? t('ph_ticker_tw') : t('ph_ticker_us')}
-                                className="pr-24 font-mono uppercase"
-                            />
-                            {fetchedPrice !== null && (
-                                <div className="absolute right-3 bottom-0 top-0 flex items-center">
-                                    <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md border border-emerald-500/20">
-                                        ${fetchedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
-                                    </span>
+                        {/* Source Selection for Crypto */}
+                        {formData.category === 'Crypto' && (
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('source') || 'Source'}</Label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSource('manual')}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md border ${source === 'manual' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-input'}`}
+                                    >
+                                        Manual
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSource('wallet')}
+                                        disabled={connections.length === 0}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md border ${source === 'wallet' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-input'} ${connections.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        Web3 Wallet
+                                    </button>
                                 </div>
-                            )}
+                                {connections.length === 0 && formData.category === 'Crypto' && (
+                                    <p className="text-[10px] text-muted-foreground">Go to Integrations to add a Web3 Wallet.</p>
+                                )}
+                            </div>
+                        )}
+
+                        {source === 'wallet' && (
+                            <div className="grid grid-cols-2 gap-4 border-l-2 border-primary/20 pl-3">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Connection</Label>
+                                    <CustomSelect
+                                        value={selectedConnectionId}
+                                        onChange={setSelectedConnectionId}
+                                        options={connections.map(c => ({ value: c.id.toString(), label: c.name }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Network</Label>
+                                    <CustomSelect
+                                        value={network}
+                                        onChange={setNetwork}
+                                        options={[
+                                            { value: 'Ethereum', label: 'Ethereum' },
+                                            { value: 'BSC', label: 'BSC' },
+                                            { value: 'Scroll', label: 'Scroll' },
+                                            { value: 'Arbitrum', label: 'Arbitrum' },
+                                        ]}
+                                    />
+                                </div>
+                                <div className="space-y-2 col-span-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contract Address</Label>
+                                    <Input
+                                        value={contractAddress}
+                                        onChange={(e) => setContractAddress(e.target.value)}
+                                        placeholder="0x..."
+                                        className="font-mono text-xs"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Decimals</Label>
+                                    <Input
+                                        value={decimals}
+                                        onChange={(e) => setDecimals(e.target.value)}
+                                        placeholder="18"
+                                        type="number"
+                                        className="font-mono"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('ticker')}</Label>
+                            </div>
+                            <div className="relative">
+                                <Input
+                                    value={formData.ticker}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, ticker: e.target.value });
+                                        if (!e.target.value) setFetchedPrice(null);
+                                    }}
+                                    onBlur={handleTickerBlur}
+                                    placeholder={market === 'TW' ? t('ph_ticker_tw') : t('ph_ticker_us')}
+                                    className="pr-24 font-mono uppercase"
+                                />
+                                {fetchedPrice !== null && (
+                                    <div className="absolute right-3 bottom-0 top-0 flex items-center">
+                                        <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-md border border-emerald-500/20">
+                                            ${fetchedPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

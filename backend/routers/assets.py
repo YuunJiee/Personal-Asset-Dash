@@ -149,17 +149,4 @@ def delete_asset(asset_id: int, db: Session = Depends(database.get_db)):
     db.commit()
     return None
 
-# Tag Endpoints
-@router.post("/{asset_id}/tags", response_model=schemas.Asset)
-def add_tag(asset_id: int, tag: schemas.TagCreate, db: Session = Depends(database.get_db)):
-    db_asset = crud.add_tag_to_asset(db, asset_id, tag.name, tag.color)
-    if not db_asset:
-        raise HTTPException(status_code=404, detail="Asset not found")
-    return db_asset
 
-@router.delete("/{asset_id}/tags/{tag_id}", response_model=schemas.Asset)
-def remove_tag(asset_id: int, tag_id: int, db: Session = Depends(database.get_db)):
-    db_asset = crud.remove_tag_from_asset(db, asset_id, tag_id)
-    if not db_asset:
-         raise HTTPException(status_code=404, detail="Asset not found")
-    return db_asset

@@ -359,29 +359,37 @@ def get_rebalance_suggestions(db: Session = Depends(get_db)):
     total_value = 0.0
     current_allocation = defaultdict(float)
     
+    # Fetch Exchange Rate ONCE
+    from ..services.exchange_rate_service import get_usdt_twd_rate
+    usdt_rate = get_usdt_twd_rate(db)
+
     for asset in assets:
         if not asset.include_in_net_worth:
             continue
             
-        qty = 0
-        for t in asset.transactions:
-            qty += t.amount
-            
+        qty = sum(t.amount for t in asset.transactions)
         if qty <= 0: continue
         
-        # Price
         price = asset.current_price if asset.current_price else 1.0
         
-        # FX
-        if "USD" in (asset.ticker or "") or "USD" in (asset.name or ""): 
-             val = qty * price * 32
-        else:
-             val = qty * price
-             
-        # SIMPLIFIED: Top Level Category Only (Fluid or Investment)
-        # Any other category (Liabilities) we ignore for rebalancing or map?
-        # Assuming only Fluid and Investment matter for this specific request.
+        # Conversion Logic
+        val = qty * price # Default Native Value
         
+        is_usd = False
+        if asset.category == 'Crypto':
+             is_usd = True
+        elif asset.category == 'Stock':
+             if asset.ticker:
+                 if asset.ticker.endswith('.TW') or (asset.ticker.isdigit() and len(asset.ticker) == 4):
+                     is_usd = False
+                 elif asset.source == 'max': # MAX assumes TWD fallback
+                     is_usd = False
+                 else:
+                     is_usd = True # US Stocks
+        
+        if is_usd:
+            val = val * usdt_rate
+
         cat = asset.category
         if cat in ['Fluid', 'Stock', 'Crypto']:
             current_allocation[cat] += val

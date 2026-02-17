@@ -84,23 +84,7 @@ class Alert(Base):
 # Add back_populates to Asset
 Asset.alerts = relationship("Alert", back_populates="asset", cascade="all, delete-orphan")
 
-# Tag Association Table
-from sqlalchemy import Table
-asset_tags = Table('asset_tags', Base.metadata,
-    Column('asset_id', Integer, ForeignKey('assets.id')),
-    Column('tag_id', Integer, ForeignKey('tags.id'))
-)
 
-class Tag(Base):
-    __tablename__ = "tags"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    color = Column(String, default="blue") # e.g. blue, red, green
-    
-    assets = relationship("Asset", secondary=asset_tags, back_populates="tags")
-
-Asset.tags = relationship("Tag", secondary=asset_tags, back_populates="assets")
 
 class Expense(Base):
     __tablename__ = "expenses"

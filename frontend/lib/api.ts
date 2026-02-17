@@ -123,7 +123,23 @@ export async function fetchExpenses() {
     }
 }
 
-export async function createAsset(assetData: { name: string; ticker: string | null; category: string; sub_category?: string | null; include_in_net_worth?: boolean; icon?: string | null, tags?: { name: string }[], current_price?: number | null, payment_due_day?: number | null }) {
+export async function createAsset(assetData: {
+    name: string;
+    ticker: string | null;
+    category: string;
+    sub_category?: string | null;
+    include_in_net_worth?: boolean;
+    icon?: string | null;
+    tags?: { name: string }[];
+    current_price?: number | null;
+    payment_due_day?: number | null;
+    // Web3 Fields
+    source?: string;
+    network?: string;
+    contract_address?: string;
+    decimals?: number;
+    connection_id?: number | null;
+}) {
     const res = await fetch(`${API_URL}/assets/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -200,4 +216,32 @@ export async function deleteTransaction(id: number) {
     });
     if (!res.ok) throw new Error('Failed to delete transaction');
     return res.json();
+}
+
+export async function fetchIntegrations() {
+    try {
+        const res = await fetch(`${API_URL}/integrations/`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return await res.json();
+    } catch (error) {
+        console.error("fetchIntegrations failed:", error);
+        throw error;
+    }
+}
+
+export async function discoverWalletAssets(connectionId: number) {
+    try {
+        const res = await fetch(`${API_URL}/integrations/discover/${connectionId}`, {
+            method: 'POST',
+            cache: 'no-store'
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || `HTTP error! status: ${res.status}`);
+        }
+        return await res.json();
+    } catch (error) {
+        console.error("discoverWalletAssets failed:", error);
+        throw error;
+    }
 }

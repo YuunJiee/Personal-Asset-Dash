@@ -78,8 +78,10 @@ def sync_binance_assets(db: Session):
                         # try BUSD or BTC pair? explicit check for now
                         pass
 
-                # Convert to TWD
-                current_price = current_price_usd * usdt_twd_rate
+                # Convert to TWD - REMOVED to avoid double multiplication
+                # We store native USD price. Dashboard/Frontend handles conversion.
+                current_price = current_price_usd 
+                # * usdt_twd_rate
 
                 # DB Logic
                 db_asset = db.query(models.Asset).filter(

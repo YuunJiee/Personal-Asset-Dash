@@ -130,13 +130,29 @@ export function DashboardClient({ data }: DashboardClientProps) {
 
     // Prepare data for Chart
     // Prepare data for Chart: Top 5 Assets by Value
-    const chartData = assets
-        .filter((a: any) => a.include_in_net_worth !== false && (a.value_twd > 0 || (a.current_price * (a.quantity || 0)) > 0))
-        .map((a: any) => ({
-            name: a.name,
-            value: a.value_twd || (a.current_price * (a.transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0))
-        }))
-        .sort((a: any, b: any) => b.value - a.value)
+    // Prepare data for Chart: Top 5 Assets by Value
+    const aggregatedChartData: Record<string, number> = {};
+    assets.forEach((a: any) => {
+        if (a.include_in_net_worth === false) return;
+
+        let val = 0;
+        if (a.value_twd !== undefined) val = a.value_twd;
+        else {
+            // Fallback calc
+            const qty = a.transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0;
+            val = a.current_price * qty;
+        }
+
+        if (val > 0) {
+            // Aggregate by Name
+            const key = a.name;
+            aggregatedChartData[key] = (aggregatedChartData[key] || 0) + val;
+        }
+    });
+
+    const chartData = Object.entries(aggregatedChartData)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
         .slice(0, 6); // Top 6
 
     const [visibleCategories, setVisibleCategories] = useState<Record<string, boolean>>({});
@@ -312,7 +328,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                                             totalAmount={catTotal}
                                             assets={data.assets}
                                             color={CATEGORY_COLORS[category] || 'bg-gray-500'}
-                                            onAddClick={() => openAddDialog(category)}
+                                            onAddClick={category === 'Crypto' ? undefined : () => openAddDialog(category)}
                                             onTitleClick={category === 'Crypto' ? () => router.push('/crypto') : undefined}
                                             onActionClick={category === 'Crypto' ? () => setIsIntegrationOpen(true) : undefined}
                                             actionIcon={<LinkIcon className="w-5 h-5" />}

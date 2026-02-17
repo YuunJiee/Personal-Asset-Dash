@@ -458,6 +458,7 @@ export const translations = {
         delete_transaction_confirm: "Are you sure you want to delete this transaction? This cannot be undone.",
         failed_update_txn: "Failed to update transaction",
         failed_delete_txn: "Failed to delete transaction",
+        sync_includes_scan: "Includes Auto-Scan",
 
         // Goal Widget
         goal_complete: "Complete",
@@ -668,6 +669,8 @@ export const translations = {
         close: "關閉",
         back: "返回",
         confirm: "確認",
+        'confirm_delete': '確定要刪除嗎？',
+        'sync_includes_scan': '包含自動掃描',
         cancel: "取消",
         add_button: "新增",
         add_to_favorites: "加入我的最愛",

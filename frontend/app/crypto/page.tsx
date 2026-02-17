@@ -35,7 +35,11 @@ export default function CryptoPage() {
 
     // 1. Allocation by Coin (Ticker)
     const coinAlloc = assets.reduce((acc: any, a) => {
-        const ticker = a.ticker || a.name;
+        let ticker = a.ticker || a.name;
+        // Normalize: Remove -USD suffix if present to merge duplicate symbols
+        if (ticker && ticker.endsWith('-USD')) {
+            ticker = ticker.replace('-USD', '');
+        }
         acc[ticker] = (acc[ticker] || 0) + (a.value_twd || 0);
         return acc;
     }, {});
@@ -43,7 +47,13 @@ export default function CryptoPage() {
 
     // 2. Allocation by Platform (Source)
     const platformAlloc = assets.reduce((acc: any, a) => {
-        const source = a.source === 'max' ? 'MAX' : a.source === 'pionex' ? 'Pionex' : a.source === 'manual_wallet' || a.source === 'web3_wallet' ? 'Wallet' : 'Other';
+        let source = 'Other';
+        if (a.source === 'max') source = 'MAX';
+        else if (a.source === 'pionex') source = 'Pionex';
+        else if (a.source === 'binance') source = 'Binance';
+        else if (a.source === 'manual') source = 'Manual';
+        else if (a.source === 'manual_wallet' || a.source === 'web3_wallet') source = 'Wallet';
+
         acc[source] = (acc[source] || 0) + (a.value_twd || 0);
         return acc;
     }, {});

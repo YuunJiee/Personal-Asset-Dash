@@ -154,19 +154,22 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                         )}
 
                         {/* Quick Add Button in Header */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (onAddClick) onAddClick();
-                            }}
-                            className={cn(
-                                "p-2 rounded-full backdrop-blur-sm transition-colors hover:bg-white hover:text-black",
-                                isOpen ? "bg-gray-100 text-gray-500" : "bg-white/20 text-white"
-                            )}
-                            title="Add Asset"
-                        >
-                            <Plus className="w-5 h-5" />
-                        </button>
+                        {/* Quick Add Button in Header */}
+                        {onAddClick && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddClick();
+                                }}
+                                className={cn(
+                                    "p-2 rounded-full backdrop-blur-sm transition-colors hover:bg-white hover:text-black",
+                                    isOpen ? "bg-gray-100 text-gray-500" : "bg-white/20 text-white"
+                                )}
+                                title="Add Asset"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        )}
 
                         <div className={cn("p-2 rounded-full backdrop-blur-sm", isOpen ? "bg-gray-100 text-gray-900" : "bg-white/20 text-white")}>
                             {isOpen ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -259,16 +262,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                 </div>
                                             </div>
 
-                                            {/* Tags Display - Hidden on Mobile to save space */}
-                                            {asset.tags && asset.tags.length > 0 && (
-                                                <div className="hidden md:flex flex-wrap gap-1 mt-1 mx-2">
-                                                    {asset.tags.map((tag: any) => (
-                                                        <span key={tag.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground opacity-80">
-                                                            #{tag.name}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            )}
+
 
                                             {/* Right Side */}
                                             <div className="flex flex-col items-end gap-0.5 md:gap-1 shrink-0 ml-1">

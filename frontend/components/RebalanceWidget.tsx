@@ -104,72 +104,7 @@ export function RebalanceWidget() {
                 })}
             </div>
 
-            {/* Suggestions */}
-            <div className="pt-4 border-t border-border/50">
-                {(data.suggestions && data.suggestions.length === 2 && Math.abs(data.suggestions[0].diff_val - data.suggestions[1].diff_val) < 5) ? (
-                    (() => {
-                        const sell = data.suggestions.find((s: any) => s.action === 'Sell');
-                        const buy = data.suggestions.find((s: any) => s.action === 'Buy');
-                        if (!sell || !buy) return null;
 
-                        return (
-                            <div className="p-4 rounded-2xl bg-muted/30 border border-border flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full">
-                                        <ArrowRight className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                                            {t('transfer_funds')}
-                                        </div>
-                                        <div className="font-bold text-lg flex items-center gap-2 mt-0.5">
-                                            <span>{t(sell.category as any) || sell.category}</span>
-                                            <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                                            <span>{t(buy.category as any) || buy.category}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-xs text-muted-foreground mb-1">Amount</div>
-                                    <div className="text-xl font-bold font-mono tracking-tight">${sell.diff_val.toLocaleString()}</div>
-                                </div>
-                            </div>
-                        );
-                    })()
-                ) : data.suggestions && data.suggestions.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-3">
-                        {data.suggestions.map((s: any, i: number) => (
-                            <div key={i} className={cn(
-                                "p-3 rounded-xl border flex items-center justify-between",
-                                s.action === 'Sell' ? "bg-[#D4A59A]/10 border-[#D4A59A]/30" : "bg-[#A4C3B2]/10 border-[#A4C3B2]/30"
-                            )}>
-                                <div className="flex items-center gap-3">
-                                    <div className={cn("p-2 rounded-full shrink-0", s.action === 'Sell' ? "bg-[#D4A59A]/20 text-[#a87e72] dark:text-[#E0D5C3]" : "bg-[#A4C3B2]/20 text-[#6e8c7c] dark:text-[#E0D5C3]")}>
-                                        <AlertTriangle className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-base flex items-center gap-1.5">
-                                            {s.action === 'Sell' ? t('decrease') : t('increase')} {t(s.category as any) || s.category}
-                                            <ArrowRight className="w-4 h-4 opacity-50" />
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {t('amount')}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-xl font-bold font-mono tracking-tight">${s.diff_val.toLocaleString()}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center p-2 text-muted-foreground text-sm gap-2">
-                        <Check className="w-5 h-5 text-emerald-500" />
-                        <span>{t('portfolio_balanced')}</span>
-                    </div>
-                )}
-            </div>
 
             {/* Settings Dialog */}
             <Dialog

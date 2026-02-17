@@ -47,8 +47,14 @@ class AssetBase(BaseModel):
     value_twd: Optional[float] = 0.0 # Computed field
     unrealized_pl: Optional[float] = 0.0 # Computed field
     roi: Optional[float] = 0.0 # Computed field
-    tags: List['Tag'] = []
+
     source: Optional[str] = "manual"
+    
+    # Web3 / Wallet Fields
+    network: Optional[str] = None
+    contract_address: Optional[str] = None
+    decimals: Optional[int] = 18
+    connection_id: Optional[int] = None
 
 class AssetCreate(AssetBase):
     current_price: Optional[float] = None
@@ -134,23 +140,7 @@ class Goal(GoalBase):
     class Config:
         from_attributes = True
 
-# Tag Schemas
-class TagBase(BaseModel):
-    name: str
-    color: Optional[str] = "blue"
 
-class TagCreate(TagBase):
-    pass
-
-    class Config:
-        from_attributes = True
-
-class Tag(TagBase):
-    id: int
-    # assets: List[AssetBase] = [] # Removed to prevent recursion
-
-    class Config:
-        from_attributes = True
 
 # Expense Schemas
 class ExpenseBase(BaseModel):

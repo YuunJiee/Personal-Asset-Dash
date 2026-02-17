@@ -34,9 +34,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
         paymentDueDay: ''
     });
 
-    // Tag State
-    const [tags, setTags] = useState<any[]>([]);
-    const [newTag, setNewTag] = useState('');
+    // Tag Removal: Tag items removed.
 
     const subCategories: Record<string, string[]> = {
         'Fluid': ['Cash', 'E-Wallet', 'Debit Card', 'Other'],
@@ -79,7 +77,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                 manualAvgCost: asset.manual_avg_cost || '',
                 paymentDueDay: asset.payment_due_day || ''
             });
-            setTags(asset.tags || []);
+            // setTags(asset.tags || []);
         }
     }, [asset]);
 
@@ -97,39 +95,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
         }
     };
 
-    const handleAddTag = async () => {
-        if (!newTag.trim()) return;
-        try {
-            const res = await fetch(`${API_URL}/assets/${asset.id}/tags`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newTag.trim(), color: 'blue' })
-            });
-            if (res.ok) {
-                const updatedAsset = await res.json();
-                setTags(updatedAsset.tags);
-                setNewTag('');
-                router.refresh();
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    };
 
-    const handleRemoveTag = async (tagId: number) => {
-        try {
-            const res = await fetch(`${API_URL}/assets/${asset.id}/tags/${tagId}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                const updatedAsset = await res.json();
-                setTags(updatedAsset.tags);
-                router.refresh();
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -246,30 +212,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                         </div>
                     )}
 
-                    {/* Tags Section */}
-                    <div className="space-y-2 pt-2 border-t border-border">
-                        <Label className="flex items-center gap-2">
-                            <TagIcon className="w-4 h-4" /> {t('tags')}
-                        </Label>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                            {tags.map((tag) => (
-                                <span key={tag.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                                    #{tag.name}
-                                    <button type="button" onClick={() => handleRemoveTag(tag.id)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                                </span>
-                            ))}
-                        </div>
-                        <div className="flex gap-2">
-                            <Input
-                                value={newTag}
-                                onChange={(e) => setNewTag(e.target.value)}
-                                placeholder={t('add_tag')}
-                                className="h-9 text-sm"
-                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                            />
-                            <Button type="button" onClick={handleAddTag} disabled={!newTag} className="h-9 px-3 whitespace-nowrap shrink-0">{t('add_button')}</Button>
-                        </div>
-                    </div>
+
 
                     <div className="pt-2 border-t border-border">
                         <div className="flex items-center space-x-3 py-2">

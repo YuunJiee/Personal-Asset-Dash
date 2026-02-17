@@ -9,7 +9,7 @@ import { ArrowUpDown, Search, Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchAssets, deleteAsset } from "@/lib/api";
+import { fetchAssets, deleteAsset, fetchDashboardData } from "@/lib/api";
 
 import { Pencil, Trash2 } from "lucide-react";
 import { AssetIcon } from "@/components/IconPicker";
@@ -45,14 +45,16 @@ export default function AssetsPage() {
     const [groupBy, setGroupBy] = useState<'category' | 'source'>('category');
 
     useEffect(() => {
-        fetchAssets().then(setAssets).catch(console.error);
+        // Use fetchDashboardData to get assets with calculated value_twd (including FX)
+        fetchDashboardData().then(data => {
+            setAssets(data.assets);
+        }).catch(console.error);
     }, []);
 
     const filteredAssets = assets
         .filter(a =>
             a.name.toLowerCase().includes(search.toLowerCase()) ||
-            (a.ticker && a.ticker.toLowerCase().includes(search.toLowerCase())) ||
-            (a.tags && a.tags.some((tag: any) => tag.name.toLowerCase().includes(search.toLowerCase()) || tag.name.includes(search)))
+            (a.ticker && a.ticker.toLowerCase().includes(search.toLowerCase()))
         )
         .sort((a, b) => {
             const valA = a.current_price * (a.transactions ? a.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0);
@@ -68,7 +70,7 @@ export default function AssetsPage() {
     }, 0);
 
     const refreshData = () => {
-        fetchAssets().then(setAssets).catch(console.error);
+        fetchDashboardData().then(data => setAssets(data.assets)).catch(console.error);
     };
 
     const handleDelete = async (asset: any) => {

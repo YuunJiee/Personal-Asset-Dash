@@ -55,7 +55,13 @@ def create_asset(db: Session, asset: schemas.AssetCreate):
         is_favorite=asset.is_favorite,
         icon=asset.icon,
         current_price=asset.current_price if asset.current_price is not None else (0.0 if asset.ticker else 1.0), # Initial price: from input, or 0 for market, 1 for manual
-        last_updated_at=datetime.now()
+        last_updated_at=datetime.now(),
+        # Web3 Fields
+        network=asset.network,
+        contract_address=asset.contract_address,
+        decimals=asset.decimals,
+        connection_id=asset.connection_id,
+        source=asset.source or "manual"
     )
     db.add(db_asset)
     db.commit()
@@ -214,44 +220,7 @@ def delete_alert(db: Session, alert_id: int):
         db.commit()
     return db_alert
 
-# Tag CRUD
-def get_tag_by_name(db: Session, name: str):
-    return db.query(models.Tag).filter(models.Tag.name == name).first()
 
-def create_tag(db: Session, tag: schemas.TagCreate):
-    db_tag = models.Tag(name=tag.name, color=tag.color)
-    db.add(db_tag)
-    db.commit()
-    db.refresh(db_tag)
-    return db_tag
-
-def get_tags(db: Session):
-    return db.query(models.Tag).all()
-
-def add_tag_to_asset(db: Session, asset_id: int, tag_name: str, color: str = "blue"):
-    asset = get_asset(db, asset_id)
-    if not asset: return None
-    
-    tag = get_tag_by_name(db, tag_name)
-    if not tag:
-        tag = create_tag(db, schemas.TagCreate(name=tag_name, color=color))
-    
-    if tag not in asset.tags:
-        asset.tags.append(tag)
-        db.commit()
-        db.refresh(asset)
-    return asset
-
-def remove_tag_from_asset(db: Session, asset_id: int, tag_id: int):
-    asset = get_asset(db, asset_id)
-    if not asset: return None
-    
-    tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
-    if tag and tag in asset.tags:
-        asset.tags.remove(tag)
-        db.commit()
-        db.refresh(asset)
-    return asset
 
 # Expense CRUD
 def get_expenses(db: Session, skip: int = 0, limit: int = 100):

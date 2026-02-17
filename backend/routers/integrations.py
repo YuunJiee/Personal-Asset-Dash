@@ -114,3 +114,10 @@ def sync_provider(provider: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Unknown provider")
     
     return {"status": "success", "message": f"{provider} synced successfully"}
+
+@router.post("/discover/{connection_id}")
+def discover_wallet_assets(connection_id: int, db: Session = Depends(get_db)):
+    result = wallet_service.discover_tokens(db, connection_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
