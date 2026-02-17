@@ -20,27 +20,56 @@ def fetch_stock_price(ticker: str) -> float:
 
 def fetch_crypto_price(ticker: str) -> float:
     try:
-        # Assuming Binance for now, ticker format e.g., 'BTC/USDT'
+        # Normalize ticker
+        symbol = ticker
+        if symbol.endswith("-USD"):
+            symbol = symbol.replace("-USD", "")
+            
+        # Handle wrapped tokens or specific mappings
+        if symbol == 'BTCB':
+            symbol = 'BTC'
+        elif symbol == 'WETH':
+            symbol = 'ETH'
+            
+        # USDT is stablecoin
+        if symbol == 'USDT' or symbol == 'USDC':
+            return 1.0
+            
+        # Try finding the pair
+        # Binance uses /USDT usually
+        pair = f"{symbol}/USDT"
+        
         exchange = ccxt.binance()
-        ticker_data = exchange.fetch_ticker(ticker)
-        return ticker_data['last']
+        # Fetch ticker (this might fail if pair invalid)
+        ticker_data = exchange.fetch_ticker(pair)
+        return float(ticker_data['last'])
     except Exception as e:
-        print(f"Error fetching crypto {ticker}: {e}")
+        print(f"Error fetching crypto {ticker} (tried pair {symbol}/USDT): {e}")
     return 0.0
 
 def update_prices(db: Session):
     assets = crud.get_assets(db)
     for asset in assets:
         price = 0.0
-        if asset.category in ["Investment", "Fluid"] and asset.ticker: # Only update market assets
-            if "/" in asset.ticker: # Simple heuristic for Crypto
+        # Determine fetch method based on category
+        is_crypto = asset.category == 'Crypto'
+        if not is_crypto and asset.sub_category and "Crypto" in asset.sub_category:
+            is_crypto = True
+
+        if is_crypto and asset.ticker:
+            price = fetch_crypto_price(asset.ticker)
+        elif asset.category == 'Stock' and asset.ticker:
+            price = fetch_stock_price(asset.ticker)
+        elif asset.category in ["Investment", "Fluid"] and asset.ticker: 
+            # Legacy/Generic fallback
+            if "/" in asset.ticker or "-" in asset.ticker: 
                  price = fetch_crypto_price(asset.ticker)
             else:
                  price = fetch_stock_price(asset.ticker)
-            
-            if price > 0:
-                crud.update_asset_price(db, asset.id, price)
-                check_alerts(db, asset.id, price)
+        
+        if price > 0:
+            crud.update_asset_price(db, asset.id, price)
+            check_alerts(db, asset.id, price)
 
 def check_alerts(db: Session, asset_id: int, price: float):
     alerts = crud.get_alerts_by_asset(db, asset_id)

@@ -78,3 +78,5 @@ def start_scheduler_service():
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Personal Asset Dash API"}
+
+

@@ -1,16 +1,40 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 from datetime import datetime
+from .services.exchange_rate_service import get_usdt_twd_rate
 
 def get_asset(db: Session, asset_id: int):
     asset = db.query(models.Asset).filter(models.Asset.id == asset_id).first()
     if asset:
+        usdt_rate = get_usdt_twd_rate(db)
+        is_usd = False
+        if asset.category == 'Crypto':
+             is_usd = True
+        elif asset.category == 'Stock':
+             if asset.ticker:
+                 if asset.ticker.endswith('.TW') or (asset.ticker.isdigit() and len(asset.ticker) == 4):
+                     is_usd = False
+                 elif asset.source == 'max': 
+                     is_usd = False
+                 else:
+                     is_usd = True
+
         total_qty = sum(t.amount for t in asset.transactions)
-        asset.value_twd = (asset.current_price or 0.0) * total_qty
+        native_value = (asset.current_price or 0.0) * total_qty
+        
+        if is_usd:
+            asset.value_twd = native_value * usdt_rate
+        else:
+            asset.value_twd = native_value
         
         # Also compute unrealized PL if possible
-        total_cost = sum(t.amount * t.buy_price for t in asset.transactions if t.buy_price > 0)
-        # simplistic PL
+        total_cost = 0.0
+        for t in asset.transactions:
+            if t.amount > 0 and t.buy_price > 0:
+                cost = t.amount * t.buy_price
+                if is_usd: cost *= usdt_rate
+                total_cost += cost
+
         if total_cost > 0:
             asset.unrealized_pl = asset.value_twd - total_cost
             asset.roi = (asset.unrealized_pl / total_cost) * 100
@@ -18,22 +42,42 @@ def get_asset(db: Session, asset_id: int):
 
 def get_assets(db: Session, skip: int = 0, limit: int = 100):
     assets = db.query(models.Asset).offset(skip).limit(limit).all()
+    usdt_rate = get_usdt_twd_rate(db)
+
+    results = []
     for asset in assets:
+        # Determine if asset is USD based
+        is_usd = False
+        if asset.category == 'Crypto':
+             is_usd = True
+        elif asset.category == 'Stock':
+             if asset.ticker:
+                 if asset.ticker.endswith('.TW') or (asset.ticker.isdigit() and len(asset.ticker) == 4):
+                     is_usd = False
+                 elif asset.source == 'max': 
+                     is_usd = False
+                 else:
+                     is_usd = True # US Stocks
+
         # Compute value_twd dynamically
         total_qty = sum(t.amount for t in asset.transactions)
-        asset.value_twd = (asset.current_price or 0.0) * total_qty
+        native_value = (asset.current_price or 0.0) * total_qty
+        
+        if is_usd:
+            asset.value_twd = native_value * usdt_rate
+        else:
+            asset.value_twd = native_value
         
         # Compute PL/ROI
         # We need buy_price for transactions.
-        # This is expensive for many assets, but necessary for the view.
-        cost_basis = 0.0
         invested_capital = 0.0
         for t in asset.transactions:
-             # Basic logic: 
-             # If is_transfer, skip cost? Or assume 0 cost?
-             # If buy_price is set.
-             if t.amount > 0 and t.buy_price > 0:
-                 invested_capital += t.amount * t.buy_price
+             if t.amount > 0:
+                 # Assume buy_price is in native currency
+                 cost = t.amount * (t.buy_price or 0.0)
+                 if is_usd:
+                     cost *= usdt_rate
+                 invested_capital += cost
         
         # Store temporary attributes for Pydantic
         if invested_capital > 0:
@@ -43,7 +87,9 @@ def get_assets(db: Session, skip: int = 0, limit: int = 100):
             asset.unrealized_pl = 0.0
             asset.roi = 0.0
             
-    return assets
+        results.append(asset)
+            
+    return results
 
 def create_asset(db: Session, asset: schemas.AssetCreate):
     db_asset = models.Asset(
