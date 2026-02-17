@@ -92,12 +92,21 @@ def sync_binance_assets(db: Session):
                 clean_conn_name = conn.name.replace(' Connection', '').strip().capitalize()
                 target_name = f"{coin} ({clean_conn_name})"
                 
+                # Determine standard icon
+                from ..service import get_icon_for_ticker
+                target_icon = get_icon_for_ticker(coin, "Crypto")
+                
                 if db_asset:
                     db_asset.last_updated_at = datetime.now()
                     db_asset.name = target_name
                     
                     if current_price > 0:
                         db_asset.current_price = current_price
+                        
+                    # Enforce Sub-category and Icon
+                    db_asset.sub_category = "Crypto" 
+                    if db_asset.icon != target_icon:
+                        db_asset.icon = target_icon
                     
                     # Update Qty logic - complex if manual edits allowed, but for synced, we usually overwrite or add diff
                     # Previous logic in Pionex was adding a transaction for the diff.
@@ -120,8 +129,9 @@ def sync_binance_assets(db: Session):
                         name=target_name,
                         ticker=coin,
                         category="Crypto",
-                        sub_category=None,
+                        sub_category="Crypto",
                         source="binance",
+                        icon=target_icon,
                         include_in_net_worth=True,
                         current_price=current_price if current_price > 0 else None,
                         connection_id=conn.id

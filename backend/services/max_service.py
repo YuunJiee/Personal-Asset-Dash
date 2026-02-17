@@ -7,7 +7,7 @@ import base64
 import requests
 import logging
 from sqlalchemy.orm import Session
-from .. import models, crud
+from .. import models
 
 logger = logging.getLogger(__name__)
 
@@ -43,20 +43,6 @@ def get_auth_headers(path, api_key, api_secret, params=None):
         'X-MAX-SIGNATURE': signature,
         'Content-Type': 'application/json'
     }, payload_data
-
-# Icon Mapping (Lucide React names)
-TICKER_ICONS = {
-    'BTC': 'Bitcoin',
-    'WBTC': 'Bitcoin',
-    'ETH': 'Gem', # Ethereum not in Lucide, use Gem
-    'WETH': 'Gem',
-    'USDT': 'DollarSign',
-    'USDC': 'DollarSign',
-    'MAX': 'Rocket', # MAX Token -> Rocket
-    'SOL': 'Zap',
-    'DOGE': 'PawPrint', # If available, or Coins
-    'TWD': 'Wallet'
-}
 
 def sync_max_assets(db: Session):
     """
@@ -194,7 +180,8 @@ def sync_max_assets(db: Session):
                         pass
     
                 # Determine Target Icon
-                target_icon = TICKER_ICONS.get(ticker, "Coins")
+                from ..service import get_icon_for_ticker
+                target_icon = get_icon_for_ticker(ticker, "Crypto" if ticker != 'TWD' else "Fluid")
     
                 if db_asset:
                     # Update Price if changed
@@ -206,7 +193,10 @@ def sync_max_assets(db: Session):
                     if avg_cost > 0:
                         db_asset.manual_avg_cost = avg_cost
     
-                    # Update Icon 
+                    # Enforce Icon and Sub-Category
+                    if ticker != 'TWD':
+                        db_asset.sub_category = "Crypto"
+                        
                     if db_asset.icon != target_icon:
                         db_asset.icon = target_icon
                     
@@ -235,7 +225,7 @@ def sync_max_assets(db: Session):
                         sub_category = "Cash"
                     else:
                         category = "Crypto"
-                        sub_category = None
+                        sub_category = "Crypto"
                         
                     new_asset = models.Asset(
                         name=f"{ticker} ({conn.name})",

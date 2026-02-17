@@ -4,6 +4,44 @@ from sqlalchemy.orm import Session
 from . import crud, models, schemas
 from datetime import datetime, timezone
 
+def get_icon_for_ticker(ticker: str, category: str = None) -> str:
+    ticker = ticker.upper()
+    
+    # Map common tickers to Lucide icon names
+    mapping = {
+        'BTC': 'Bitcoin',
+        'WBTC': 'Bitcoin',
+        'ETH': 'Gem', # Lucide doesn't have Ethereum
+        'WETH': 'Gem',
+        'USDT': 'DollarSign',
+        'USDC': 'CircleDollarSign',
+        'DAI': 'CircleDollarSign',
+        'BNB': 'Coins',
+        'SOL': 'Zap',
+        'DOGE': 'PawPrint',
+        'MAX': 'Rocket',
+        'TWD': 'Banknote',
+        'USD': 'DollarSign'
+    }
+    
+    # Check exact match
+    if ticker in mapping:
+        return mapping[ticker]
+        
+    # Partial match heuristics
+    if 'USD' in ticker: return 'DollarSign'
+    if 'BTC' in ticker: return 'Bitcoin'
+    if 'ETH' in ticker: return 'Gem'
+    
+    # Category fallback
+    if category:
+        cat = category.lower()
+        if 'crypto' in cat: return 'Coins'
+        if 'stock' in cat: return 'TrendingUp'
+        if 'fluid' in cat or 'cash' in cat: return 'Wallet'
+        
+    return 'Circle' # Default
+
 def fetch_stock_price(ticker: str) -> float:
     try:
         # Heuristic for Taiwan stocks (e.g. 0050 -> 0050.TW)
