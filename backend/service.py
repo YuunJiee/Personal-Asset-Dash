@@ -139,66 +139,26 @@ def calculate_dashboard_metrics(db: Session) -> schemas.DashboardData:
     asset_list = []
     
     for asset in assets:
-        asset_market_value = 0.0
-        asset_cost = 0.0
-        quantity = 0.0
+        # Use value_twd computed by crud.get_assets
+        asset_market_value = asset.value_twd or 0.0
         
-        for txn in asset.transactions:
-            quantity += txn.amount
-            # Cost basis: simpler to track in TWD or native?
-            # Let's assume buy_price was in native currency.
-            asset_cost += txn.amount * txn.buy_price
-            
-        if asset.manual_avg_cost is not None and asset.manual_avg_cost > 0:
-             # Use manual average cost if set
-             asset_cost = quantity * asset.manual_avg_cost
+        # Calculate Cost Logic (if not fully handled in crud yet)
+        # crud.get_assets computes unrealized_pl and roi, implying it knows cost.
+        # But it doesn't expose total_cost directly on the model unless we added a transient field.
+        # Let's re-calculate cost here using the same robust logic or trust PL?
+        # asset.unrealized_pl = value - cost. So Cost = Value - PL.
         
-        # Format for conversion if needed
-        is_usd = False
-        if asset.sub_category and ("Crypto" in asset.sub_category or "Stock" in asset.sub_category):
-             if asset.ticker:
-                 if asset.ticker.endswith(".TW") or (asset.ticker.isdigit() and len(asset.ticker) == 4):
-                     is_usd = False 
-                 else:
-                     if asset.source == 'max':
-                         is_usd = False
-                     else:
-                         is_usd = True
-        
-        # Calculate Market Value in Native Currency
-        native_price = asset.current_price
-        
-        if not asset.transactions and asset.current_price == 1.0:
-            # Manual asset (Cash) - Quantity is Value
-             asset_market_value = quantity * native_price 
-        else:
-             asset_market_value = quantity * native_price
-             
-        # Convert to TWD if USD
-        if is_usd:
-            asset_market_value *= usdtwd
-            # Only convert cost if manual_avg_cost wasn't already in TWD?
-            # Assuming manual_avg_cost is entered in native currency.
-            asset_cost *= usdtwd 
-            
-        # Computed field injection
-        asset.value_twd = asset_market_value
-        
-        # Calculate P/L and ROI per asset
-        asset_pl = asset_market_value - asset_cost
-        asset_roi = (asset_pl / asset_cost * 100) if asset_cost > 0 else 0.0
-        
-        asset.unrealized_pl = asset_pl
-        asset.roi = asset_roi
+        asset_pl = asset.unrealized_pl or 0.0
+        asset_cost = asset_market_value - asset_pl
         
         # Net Worth Calculation Logic
         if asset.include_in_net_worth:
             if asset.category == 'Liabilities':
+                # Liabilities reduce Net Worth
                 total_market_value -= asset_market_value
-                # For liabilities, 'cost' implies initial debt. 
-                # If we subtract current value, we should probably subtract cost too to keep PL consistent?
-                # PL = (Current - Cost). 
-                # If Liability: Current = -90, Cost = -100. PL = +10.
+                # For Liabilities, cost is usually the principal loan amount. 
+                # PL is (Current Balance - Principal).
+                # If we just subtract cost, it works out.
                 total_cost -= asset_cost
             else:
                 total_market_value += asset_market_value
@@ -214,6 +174,7 @@ def calculate_dashboard_metrics(db: Session) -> schemas.DashboardData:
         total_pl=total_pl,
         total_roi=total_roi,
         exchange_rate=usdtwd,
+        # We must validate to ensure Pydantic serializes the transient fields
         assets=[schemas.Asset.model_validate(a) for a in asset_list],
         updated_at=datetime.now(timezone.utc)
     )
