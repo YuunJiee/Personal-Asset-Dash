@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, TouchSensor, MouseSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
-import { RebalanceWidget } from "./RebalanceWidget";
+import { NetWorthTrendChart } from "./NetWorthTrendChart";
 import { IntegrationDialog } from "./IntegrationDialog";
 import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft, Link as LinkIcon, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -351,8 +351,8 @@ export function DashboardClient({ data }: DashboardClientProps) {
                     {/* Asset Allocation Widget */}
                     <AssetAllocationWidget assets={assets} />
 
-                    {/* Rebalancing Widget */}
-                    <RebalanceWidget />
+                    {/* Net Worth Trend Chart */}
+                    <NetWorthTrendChart />
                 </div>
             </div>
 

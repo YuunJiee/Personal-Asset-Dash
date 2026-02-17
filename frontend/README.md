@@ -74,7 +74,7 @@ Built with **Shadcn/UI** + **TailwindCSS**:
 - `NetWorthTrendChart`: Historical net worth chart
 - `MonthlyChangeChart`: Monthly change visualization
 - `GoalWidget`: Financial goal progress
-- `RebalanceWidget`: Portfolio rebalancing suggestions
+
 
 #### Dialog Components
 - `AddAssetDialog`: Create/edit assets
