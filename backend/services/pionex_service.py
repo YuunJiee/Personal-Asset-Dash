@@ -179,8 +179,8 @@ def sync_pionex_assets(db: Session):
                     if pair_key in market_prices:
                         current_price_usd = market_prices[pair_key]
                 
-                # Convert USD to TWD
-                current_price = current_price_usd * usdt_twd_rate
+                # current_price is USD. Backend converts to TWD for display if needed. 
+                current_price = current_price_usd
                 
                 if db_asset:
                     db_asset.last_updated_at = datetime.now()
