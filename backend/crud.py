@@ -294,3 +294,31 @@ def delete_budget_category(db: Session, category_id: int):
         db.commit()
         return True
     return False
+
+# Income Item CRUD
+def get_income_items(db: Session, skip: int = 0, limit: int = 200):
+    return db.query(models.IncomeItem).filter(models.IncomeItem.is_active == True).offset(skip).limit(limit).all()
+
+def create_income_item(db: Session, item: schemas.IncomeItemCreate):
+    db_item = models.IncomeItem(**item.model_dump())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+def update_income_item(db: Session, item_id: int, item_update: schemas.IncomeItemUpdate):
+    db_item = db.query(models.IncomeItem).filter(models.IncomeItem.id == item_id).first()
+    if db_item:
+        for key, value in item_update.model_dump(exclude_unset=True).items():
+            setattr(db_item, key, value)
+        db.commit()
+        db.refresh(db_item)
+    return db_item
+
+def delete_income_item(db: Session, item_id: int):
+    db_item = db.query(models.IncomeItem).filter(models.IncomeItem.id == item_id).first()
+    if db_item:
+        db.delete(db_item)
+        db.commit()
+        return True
+    return False

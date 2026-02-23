@@ -48,6 +48,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         { value: 'Fluid', label: t('Fluid') },
         { value: 'Crypto', label: t('Crypto') },
         { value: 'Stock', label: t('Stock') },
+        { value: 'Fixed', label: t('Fixed') },
         { value: 'Receivables', label: t('Receivables') },
         { value: 'Liabilities', label: t('Liabilities') },
     ];
@@ -56,6 +57,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         'Fluid': ['Cash', 'E-Wallet', 'Debit Card', 'Other'],
         'Crypto': ['Coin', 'Token', 'Stablecoin', 'DeFi', 'NFT'],
         'Stock': ['TW Stock', 'US Stock', 'Mutual Fund'],
+        'Fixed': ['Real Estate', 'Car', 'Other Fixed Asset'],
         'Receivables': [],
         'Liabilities': ['Credit Card', 'Loan', 'Payable', 'Other Liability']
     };

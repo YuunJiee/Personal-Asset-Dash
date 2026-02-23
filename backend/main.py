@@ -40,7 +40,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from .routers import dashboard, assets, stats, goals, alerts, transactions, budgets, settings, system, integrations
+from .routers import dashboard, assets, stats, goals, alerts, transactions, budgets, settings, system, integrations, income
 
 app.include_router(dashboard.router)
 app.include_router(assets.router)
@@ -49,6 +49,7 @@ app.include_router(goals.router)
 app.include_router(stats.router)
 app.include_router(alerts.router)
 app.include_router(budgets.router)
+app.include_router(income.router)
 app.include_router(settings.router)
 app.include_router(system.router)
 app.include_router(integrations.router)
@@ -74,6 +75,35 @@ def start_scheduler_service():
                 logger.info("Migration successful.")
             except Exception as e:
                 logger.error(f"Migration failed: {e}")
+                
+        # Auto-migration for Budget Refactoring (group_name)
+        try:
+            conn.execute(text("SELECT group_name FROM budget_categories LIMIT 1"))
+        except Exception:
+            logger.info("Migrating: Adding group_name to budget_categories table...")
+            try:
+                conn.execute(text("ALTER TABLE budget_categories ADD COLUMN group_name VARCHAR"))
+                conn.commit()
+                logger.info("Migration (group_name) successful.")
+            except Exception as e:
+                logger.error(f"Migration (group_name) failed: {e}")
+                
+        # Auto-migration for Income Layer
+        try:
+            logger.info("Checking income_items table...")
+            conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS income_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name VARCHAR,
+                amount FLOAT,
+                is_active BOOLEAN DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """))
+            conn.commit()
+            logger.info("Income items table ready.")
+        except Exception as e:
+            logger.error(f"Migration (income_items) failed: {e}")
 
 @app.get("/")
 def read_root():

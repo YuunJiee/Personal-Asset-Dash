@@ -1,6 +1,6 @@
 // Use relative path '/api' which works with Next.js Rewrites (proxy)
 // This avoids CORS and Mixed Content issues when deployed
-import type { Asset, BudgetCategory, DashboardData, Transaction, RiskMetricsResponse } from './types';
+import { DashboardData, Asset, Goal, Alert, Transaction, BudgetCategory, RiskMetricsResponse, IncomeItem } from './types';
 
 const isServer = typeof window === 'undefined';
 export const API_URL = isServer
@@ -130,10 +130,49 @@ export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
         const res = await fetch(`${API_URL}/budgets/`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
+        return await res.json();
     } catch (error) {
         console.error("fetchBudgetCategories failed:", error);
         throw error;
     }
+}
+
+// --- Income API ---
+export async function fetchIncomeItems(): Promise<IncomeItem[]> {
+    try {
+        const res = await fetch(`${API_URL}/income/`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return await res.json();
+    } catch (error) {
+        console.error("fetchIncomeItems failed:", error);
+        throw error;
+    }
+}
+
+export async function createIncomeItem(data: { name: string; amount: number }) {
+    const res = await fetch(`${API_URL}/income/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("Failed to create income item");
+    return res.json();
+}
+
+export async function updateIncomeItem(id: number, data: { name?: string; amount?: number }) {
+    const res = await fetch(`${API_URL}/income/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error("Failed to update income item");
+    return res.json();
+}
+
+export async function deleteIncomeItem(id: number) {
+    const res = await fetch(`${API_URL}/income/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error("Failed to delete income item");
+    return true;
 }
 
 export async function createAsset(assetData: {

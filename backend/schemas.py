@@ -147,8 +147,10 @@ class BudgetCategoryBase(BaseModel):
     name: str
     icon: Optional[str] = None
     budget_amount: float
+    budget_amount: float
     color: Optional[str] = None
     note: Optional[str] = None
+    group_name: Optional[str] = None
     is_active: Optional[bool] = True
 
 class BudgetCategoryCreate(BudgetCategoryBase):
@@ -160,7 +162,28 @@ class BudgetCategoryUpdate(BaseModel):
     budget_amount: Optional[float] = None
     color: Optional[str] = None
     note: Optional[str] = None
+    group_name: Optional[str] = None
     is_active: Optional[bool] = None
+
+class IncomeItemBase(BaseModel):
+    name: str
+    amount: float
+    is_active: Optional[bool] = True
+
+class IncomeItemCreate(IncomeItemBase):
+    pass
+
+class IncomeItemUpdate(BaseModel):
+    name: Optional[str] = None
+    amount: Optional[float] = None
+    is_active: Optional[bool] = None
+
+class IncomeItem(IncomeItemBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class BudgetCategory(BudgetCategoryBase):
     id: int

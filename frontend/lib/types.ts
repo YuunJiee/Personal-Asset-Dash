@@ -63,6 +63,15 @@ export interface BudgetCategory {
     budget_amount: number;
     color?: string | null;
     note?: string | null;
+    group_name?: string | null;
+    is_active: boolean;
+    created_at: string;
+}
+
+export interface IncomeItem {
+    id: number;
+    name: string;
+    amount: number;
     is_active: boolean;
     created_at: string;
 }

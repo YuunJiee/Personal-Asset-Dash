@@ -97,6 +97,16 @@ class BudgetCategory(Base):
     budget_amount = Column(Float)              # Monthly budget in TWD
     color = Column(String, nullable=True)      # Optional color hint
     note = Column(String, nullable=True)       # Optional note
+    group_name = Column(String, nullable=True) # Macro group: "Fixed", "Living", "Investment", "Growth"
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.now)
+
+class IncomeItem(Base):
+    __tablename__ = "income_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)          # e.g. "Salary", "Dividend"
+    amount = Column(Float)                     # Expected monthly income
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
 

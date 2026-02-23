@@ -28,11 +28,42 @@ interface AssetAccordionProps {
     percentage?: number;
 }
 
+const SUBCATEGORY_KEY_MAP: Record<string, string> = {
+    'Cash': 'sc_cash',
+    'E-Wallet': 'sc_ewallet',
+    'Debit Card': 'sc_debit_card',
+    'Other': 'sc_other',
+    'Fund': 'sc_fund',
+    'Stock': 'sc_stock',
+    'TW Stock': 'sc_tw_stock',
+    'US Stock': 'sc_us_stock',
+    'Mutual Fund': 'sc_mutual_fund',
+    'Crypto': 'sc_crypto',
+    'Token': 'sc_crypto',
+    'Coin': 'sc_crypto',
+    'Stablecoin': 'sc_stablecoin',
+    'DeFi': 'sc_defi',
+    'NFT': 'sc_nft',
+    'Other Investment': 'sc_other_invest',
+    'Real Estate': 'sc_real_estate',
+    'Car': 'sc_car',
+    'Other Fixed Asset': 'sc_other_fixed',
+    'Credit Card': 'sc_credit_card',
+    'Loan': 'sc_loan',
+    'Payable': 'sc_payable',
+    'Other Liability': 'sc_other_liability',
+};
+
 export function AssetAccordion({ category, title, totalAmount, assets, color, onAddClick, onTitleClick, onActionClick, actionIcon, className, isEditMode, percentage }: AssetAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
+
+    const getTranslatedSubCategory = (sub: string) => {
+        const key = SUBCATEGORY_KEY_MAP[sub];
+        return key ? t(key as any) : sub;
+    };
     const router = useRouter();
 
     // Dialog State
@@ -239,7 +270,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                     <div className="flex items-center gap-2">
                                                         {(asset.ticker || asset.sub_category) && (
                                                             <div className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate max-w-[80px] md:max-w-none">
-                                                                {asset.ticker || asset.sub_category}
+                                                                {asset.ticker || (asset.sub_category ? getTranslatedSubCategory(asset.sub_category) : '')}
                                                             </div>
                                                         )}
                                                         {asset.last_updated_at && (

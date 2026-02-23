@@ -100,6 +100,31 @@ export const translations = {
         budget_note_placeholder: "e.g. Includes groceries and eating out",
         budget_name_placeholder: "e.g. Food, Transport, Entertainment...",
         delete_budget_confirm: "Are you sure you want to delete this budget category?",
+        save_changes: "Save Changes",
+
+        // Income & Budget Macros
+        monthly_income: "Monthly Income",
+        expected_income: "Expected Income",
+        add_income: "Add Income",
+        edit_income: "Edit Income",
+        delete_income_confirm: "Are you sure you want to delete this income item?",
+        no_income_items: "No income defined. Add your expected monthly income.",
+        income_name_placeholder: "e.g. Salary, Side Hustle, Dividends",
+        budget_group: "Budget Group",
+        group_fixed: "Fixed / Survival",
+        group_living: "Living Expenses",
+        group_investment: "Investments",
+        group_growth: "Growth / Fun",
+        group_unassigned: "Unassigned",
+        deficit_dashboard: "Deficit Dashboard",
+        total_income: "Total Income",
+        total_budget: "Total Budget",
+        remaining_safe: "Remaining (Safe)",
+        deficit_warning: "Deficit (Warning)",
+        deficit_danger: "Deficit (Danger)",
+        adv_metrics: "Progress & Metrics",
+        investment_ratio: "Investment Ratio",
+        emergency_fund: "Emergency Fund",
 
         // Settings
         general_settings: "General Settings",
@@ -181,6 +206,7 @@ export const translations = {
 
         // Common
         name: "Name",
+        category_name: "Category Name",
         color: "Color",
         per_month_suffix: "/mo",
         loading: "Loading...",
@@ -597,6 +623,31 @@ export const translations = {
         budget_note_placeholder: "例如：包含外食和買菜",
         budget_name_placeholder: "例如：食物、交通、娛樂...",
         delete_budget_confirm: "確定要刪除此預算類別嗎？",
+        save_changes: "儲存變更",
+
+        // Income & Budget Macros
+        monthly_income: "每月預期收入",
+        expected_income: "預期收入",
+        add_income: "新增收入",
+        edit_income: "編輯收入",
+        delete_income_confirm: "確定要刪除此收入項目嗎？",
+        no_income_items: "尚未設定預期收入。請新增以掌握財務安全邊際。",
+        income_name_placeholder: "例如：薪資、兼職、助教...",
+        budget_group: "預算大項",
+        group_fixed: "固定生存",
+        group_living: "生活支出",
+        group_investment: "投資",
+        group_growth: "成長",
+        group_unassigned: "未分類",
+        deficit_dashboard: "差額儀表板",
+        total_income: "總收入",
+        total_budget: "總預算",
+        remaining_safe: "安全 (可儲蓄)",
+        deficit_warning: "小赤字 (警告)",
+        deficit_danger: "大赤字 (危險)",
+        adv_metrics: "進階指標",
+        investment_ratio: "投資佔比",
+        emergency_fund: "緊急預備金",
 
         // Settings
         general_settings: "一般設定",
@@ -674,6 +725,7 @@ export const translations = {
 
         // Common
         name: "名稱",
+        category_name: "子類別名稱",
         color: "顏色",
         per_month_suffix: "/月",
         loading: "載入中...",
