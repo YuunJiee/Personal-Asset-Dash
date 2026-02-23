@@ -343,7 +343,7 @@ export default function BudgetPage() {
                                                                 {cat.icon ? <AssetIcon icon={cat.icon} className={cn("w-4 h-4", colors.text)} /> : '📦'}
                                                             </div>
                                                             <div className="min-w-0 flex-1">
-                                                                <div className="font-bold text-sm truncate">{t(`group_${cat.name.toLowerCase()}` as any) || cat.name}</div>
+                                                                <div className="font-bold text-sm truncate">{cat.name}</div>
                                                                 {cat.note && <div className="text-[10px] text-muted-foreground truncate mt-0.5 leading-tight">{cat.note}</div>}
                                                             </div>
                                                         </div>
