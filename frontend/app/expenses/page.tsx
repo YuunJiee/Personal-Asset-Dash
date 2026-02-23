@@ -86,7 +86,7 @@ export default function BudgetPage() {
     const handleBudgetSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload = {
-            name: budgetForm.group_name || 'Unassigned',
+            name: budgetForm.name,
             icon: budgetForm.icon || null,
             budget_amount: parseFloat(budgetForm.budget_amount),
             color: budgetForm.color || null,
@@ -388,10 +388,14 @@ export default function BudgetPage() {
                         <h2 className="text-xl font-bold mb-5">{editingBudgetId ? t('edit_budget_category') : t('add_budget_category')}</h2>
 
                         <form onSubmit={handleBudgetSubmit} className="space-y-4">
-                            <div className="flex gap-4 items-end">
+                            <div className="grid grid-cols-4 gap-3">
                                 <div>
                                     <label className="text-sm font-medium mb-1 block">{t('budget_icon_label')}</label>
-                                    <IconPicker value={budgetForm.icon} onChange={(icon: string) => setBudgetForm({ ...budgetForm, icon })} defaultIcon="ShoppingBag" className="w-[50px] h-[50px] border-border rounded-xl" iconClassName="w-6 h-6 text-foreground" />
+                                    <IconPicker value={budgetForm.icon} onChange={(icon: string) => setBudgetForm({ ...budgetForm, icon })} defaultIcon="ShoppingBag" className="w-full h-[42px] border-border rounded-xl" iconClassName="w-5 h-5 text-foreground" />
+                                </div>
+                                <div className="col-span-3">
+                                    <label className="text-sm font-medium mb-1 block">{t('category_name' as any) || t('name')}</label>
+                                    <input className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2" placeholder={t('budget_name_placeholder')} value={budgetForm.name} onChange={e => setBudgetForm({ ...budgetForm, name: e.target.value })} required />
                                 </div>
                             </div>
 
