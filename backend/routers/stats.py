@@ -245,6 +245,92 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
         traceback.print_exc()
         return []
 
+@router.get("/risk_metrics")
+def get_risk_metrics(db: Session = Depends(get_db)):
+    """Calculate CAGR, Max Drawdown, and Annualized Volatility."""
+    history = get_net_worth_history(range="all", db=db)
+    
+    if not history or len(history) < 2:
+        return {
+            "cagr": {"value": 0, "status": "N/A"},
+            "maxDrawdown": {"value": 0, "status": "N/A"},
+            "volatility": {"value": 0, "status": "N/A"}
+        }
+
+    # Extract clean values
+    values = [h["value"] for h in history if h["value"] > 0]
+    dates = [datetime.strptime(h["date"], "%Y-%m-%d") for h in history if h["value"] > 0]
+    
+    if len(values) < 2:
+        return {
+            "cagr": {"value": 0, "status": "N/A"},
+            "maxDrawdown": {"value": 0, "status": "N/A"},
+            "volatility": {"value": 0, "status": "N/A"}
+        }
+        
+    # --- Max Drawdown ---
+    max_peak = values[0]
+    max_dd = 0.0
+    for v in values:
+        if v > max_peak:
+            max_peak = v
+        dd = (max_peak - v) / max_peak if max_peak > 0 else 0
+        if dd > max_dd:
+            max_dd = dd
+
+    # --- Volatility (Annualized) ---
+    # Calculate daily returns
+    daily_returns = []
+    for i in range(1, len(values)):
+        daily_returns.append((values[i] - values[i-1]) / values[i-1])
+        
+    if len(daily_returns) > 0:
+        mean_return = sum(daily_returns) / len(daily_returns)
+        variance = sum((r - mean_return) ** 2 for r in daily_returns) / len(daily_returns)
+        daily_volatility = math.sqrt(variance)
+        annualized_volatility = daily_volatility * math.sqrt(365)
+    else:
+        annualized_volatility = 0.0
+
+    # --- CAGR ---
+    start_val = values[0]
+    end_val = values[-1]
+    days = (dates[-1] - dates[0]).days
+    years = days / 365.25
+    
+    if years > 0 and start_val > 0:
+        cagr = (end_val / start_val) ** (1 / years) - 1
+    else:
+        # If less than a year, simple return
+        cagr = (end_val - start_val) / start_val if start_val > 0 else 0
+
+    # formatting status
+    cagr_pct = cagr * 100
+    mdd_pct = max_dd * 100
+    vol_pct = annualized_volatility * 100
+
+    def get_cagr_status(v):
+        if v > 15: return "Excellent"
+        if v > 5: return "Healthy"
+        if v >= 0: return "Slow"
+        return "Declining"
+        
+    def get_vol_status(v):
+        if v > 40: return "High Risk"
+        if v > 15: return "Moderate"
+        return "Stable"
+        
+    def get_dd_status(v):
+        if v > 30: return "Heavy Loss"
+        if v > 15: return "Correction"
+        return "Safe"
+
+    return {
+        "cagr": {"value": cagr_pct, "status": get_cagr_status(cagr_pct)},
+        "maxDrawdown": {"value": mdd_pct, "status": get_dd_status(mdd_pct)},
+        "volatility": {"value": vol_pct, "status": get_vol_status(vol_pct)}
+    }
+
 @router.get("/rebalance")
 def get_rebalance_suggestions(db: Session = Depends(get_db)):
     # 1. Fetch Assets

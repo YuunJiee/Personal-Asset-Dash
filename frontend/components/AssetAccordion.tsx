@@ -115,7 +115,8 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                     toggleOpen();
                 }}
                 className={cn(
-                    "relative p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-sm border border-transparent hover:shadow-md group touch-none",
+                    "relative p-6 rounded-3xl cursor-pointer shadow-sm border border-transparent hover:shadow-md group touch-none",
+                    isMounted && "transition-all duration-300",
                     color,
                     isOpen ? "rounded-b-none shadow-none ring-2 ring-black/5" : "text-white",
                     isEditMode ? "cursor-grab active:cursor-grabbing" : ""

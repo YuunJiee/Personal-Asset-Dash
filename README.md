@@ -39,10 +39,10 @@ This is a passion project built to solve my own financial tracking challenges, a
 ### 🎯 **Financial Planning Tools**
 - **Goal Tracking**: Visual progress bars for FIRE (Financial Independence, Retire Early) targets and **multi-category Asset Allocation goals** — set target percentages for each asset category and track balance at a glance
 - **Budget Planner**: Organize monthly spending into color-coded categories with budget limits and progress bars
-- **Wealth Simulator**: Project future wealth based on contributions and expected returns
 - **Emergency Fund Check**: Calculate financial survival time based on liquid assets
 
 ### 📈 **Analytics & Insights**
+- **Risk Metrics**: Automatically calculate **CAGR (Compound Annual Growth Rate)**, **Max Drawdown**, and **Annualized Volatility** based on your historical data to evaluate portfolio health
 - **Net Worth Trends**: Historical tracking with interactive charts and multiple timeframes (30D, 3MO, 6MO, 1Y, ALL)
 - **Asset Allocation**: Visualize portfolio distribution with donut charts
 - **Rebalancing Suggestions**: Maintain target asset allocation with actionable recommendations

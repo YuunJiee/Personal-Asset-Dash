@@ -66,6 +66,8 @@ export function PortfolioAllocation({ assets, title, showToggle = true, defaultT
     }, [assets, viewMode]);
 
     const totalValue = data.reduce((acc, curr) => acc + curr.value, 0);
+    const legendHeight = Math.max(50, Math.ceil(data.length / 3) * 30 + 20);
+    const containerHeight = 300 + legendHeight;
 
     return (
         <Card className="rounded-3xl shadow-sm border-border bg-card h-full">
@@ -98,7 +100,7 @@ export function PortfolioAllocation({ assets, title, showToggle = true, defaultT
                 )}
             </CardHeader>
             <CardContent>
-                <div style={{ width: '100%', height: 350, minHeight: 350 }}>
+                <div style={{ width: '100%', height: containerHeight, minHeight: containerHeight }}>
                     {totalValue === 0 ? (
                         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-2">
                             <ChartPie className="w-8 h-8 opacity-20" />
@@ -111,8 +113,8 @@ export function PortfolioAllocation({ assets, title, showToggle = true, defaultT
                                     data={data}
                                     cx="50%"
                                     cy="45%"
-                                    innerRadius={80}
-                                    outerRadius={110}
+                                    innerRadius={70}
+                                    outerRadius={100}
                                     paddingAngle={2}
                                     dataKey="value"
                                 >
@@ -138,11 +140,11 @@ export function PortfolioAllocation({ assets, title, showToggle = true, defaultT
                                 />
                                 <Legend
                                     verticalAlign="bottom"
-                                    height={50}
+                                    height={legendHeight}
                                     iconType="circle"
                                     layout="horizontal"
                                     align="center"
-                                    wrapperStyle={{ paddingTop: '20px' }}
+                                    wrapperStyle={{ paddingTop: '10px' }}
                                     formatter={(value) => <span className="mr-2 text-muted-foreground text-xs md:text-sm font-medium">{value}</span>}
                                 />
                             </PieChart>

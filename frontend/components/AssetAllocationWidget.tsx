@@ -67,6 +67,9 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
     }, [assets, viewMode]);
 
     const totalValue = data.reduce((acc, curr) => acc + curr.value, 0);
+    const legendHeight = Math.max(50, Math.ceil(data.length / 3) * 30 + 20);
+    const containerHeight = Math.max(420, 360 + legendHeight);
+
     // Use Morandi Theme
     const colors = CHART_THEMES['Morandi'];
 
@@ -112,7 +115,7 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
             </CardHeader>
             <CardContent>
                 {/* Explicit height wrapper to prevent collapse */}
-                <div className="w-full h-[420px] min-h-[420px]">
+                <div style={{ width: '100%', height: containerHeight, minHeight: containerHeight }}>
                     {totalValue === 0 ? (
                         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-2">
                             <ChartPie className="w-8 h-8 opacity-20" />
@@ -125,8 +128,8 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
                                     data={data}
                                     cx="50%"
                                     cy="45%"
-                                    innerRadius={105}
-                                    outerRadius={140}
+                                    innerRadius={95}
+                                    outerRadius={130}
                                     paddingAngle={2}
                                     dataKey="value"
                                 >
@@ -168,11 +171,11 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
                                 />
                                 <Legend
                                     verticalAlign="bottom"
-                                    height={50}
+                                    height={legendHeight}
                                     iconType="circle"
                                     layout="horizontal"
                                     align="center"
-                                    wrapperStyle={{ paddingTop: '40px' }}
+                                    wrapperStyle={{ paddingTop: '20px' }}
                                     formatter={(value) => <span className="mr-2 text-muted-foreground text-xs md:text-sm font-medium">{getTranslatedName(value)}</span>}
                                 />
                             </PieChart>

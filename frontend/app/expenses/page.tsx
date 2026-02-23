@@ -7,6 +7,7 @@ import { usePrivacy } from "@/components/PrivacyProvider";
 import { cn } from '@/lib/utils';
 import { fetchBudgetCategories, API_URL } from '@/lib/api';
 import { useLanguage } from "@/components/LanguageProvider";
+import { IconPicker, AssetIcon } from '@/components/IconPicker';
 
 import type { BudgetCategory } from '@/lib/types';
 
@@ -159,8 +160,8 @@ export default function BudgetPage() {
 
                                 {/* Icon + Name */}
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shrink-0", colors.bg)}>
-                                        {cat.icon || '📦'}
+                                    <div className={cn("w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shrink-0 border border-black/5 dark:border-white/5", colors.bg)}>
+                                        {cat.icon ? <AssetIcon icon={cat.icon} className={cn("w-5 h-5", colors.text)} /> : '📦'}
                                     </div>
                                     <div className="min-w-0">
                                         <div className="font-bold text-foreground truncate">{cat.name}</div>
@@ -215,22 +216,22 @@ export default function BudgetPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* Name + Icon */}
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-4 gap-3">
                                 <div>
                                     <label className="text-sm font-medium mb-1 block">{t('budget_icon_label')}</label>
-                                    <input
-                                        className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2 text-center text-xl"
-                                        placeholder={t('budget_icon_placeholder')}
+                                    <IconPicker
                                         value={form.icon}
-                                        onChange={e => setForm({ ...form, icon: e.target.value })}
-                                        maxLength={4}
+                                        onChange={(icon: string) => setForm({ ...form, icon })}
+                                        defaultIcon="ShoppingBag"
+                                        className="w-full h-[42px] bg-muted/50 border-border rounded-xl"
+                                        iconClassName="text-foreground w-5 h-5"
                                     />
                                 </div>
-                                <div className="col-span-2">
+                                <div className="col-span-3">
                                     <label className="text-sm font-medium mb-1 block">{t('name')}</label>
                                     <input
                                         className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2"
-                                        placeholder="食物、交通、娛樂..."
+                                        placeholder={t('budget_name_placeholder')}
                                         value={form.name}
                                         onChange={e => setForm({ ...form, name: e.target.value })}
                                         required
@@ -246,7 +247,7 @@ export default function BudgetPage() {
                                     min="0"
                                     step="100"
                                     className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2"
-                                    placeholder="e.g. 12000"
+                                    placeholder={t('ph_amount')}
                                     value={form.budget_amount}
                                     onChange={e => setForm({ ...form, budget_amount: e.target.value })}
                                     required
@@ -255,7 +256,7 @@ export default function BudgetPage() {
 
                             {/* Color Picker */}
                             <div>
-                                <label className="text-sm font-medium mb-2 block">顏色</label>
+                                <label className="text-sm font-medium mb-2 block">{t('color')}</label>
                                 <div className="flex gap-2 flex-wrap">
                                     {COLOR_OPTIONS.map(c => (
                                         <button

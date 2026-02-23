@@ -50,6 +50,21 @@ export const translations = {
         add_assets_to_see_trends: "Add assets to see trends",
         no_favorites: "No favorites yet",
 
+        // Risk Metrics
+        compound_growth: "Compound Growth",
+        max_drawdown: "Peak to Trough",
+        annual_volatility: "Annualized Risk",
+        status_excellent: "Excellent",
+        status_healthy: "Healthy",
+        status_slow: "Slow",
+        status_declining: "Declining",
+        status_safe: "Safe",
+        status_correction: "Correction",
+        status_heavy_loss: "Heavy Loss",
+        status_stable: "Stable",
+        status_moderate: "Moderate",
+        status_high_risk: "High Risk",
+
         // History
         history_title: "History Log",
         history_desc: "Full record of all account changes and transactions.",
@@ -79,10 +94,11 @@ export const translations = {
         budget_categories_label: "Budget Categories",
         no_budget_categories: "No categories yet. Click \"Add Category\" to set your first budget.",
         budget_amount_label: "Monthly Budget",
-        budget_icon_label: "Icon (Emoji)",
+        budget_icon_label: "Icon",
         budget_note_label: "Note (Optional)",
         budget_icon_placeholder: "🍜",
         budget_note_placeholder: "e.g. Includes groceries and eating out",
+        budget_name_placeholder: "e.g. Food, Transport, Entertainment...",
         delete_budget_confirm: "Are you sure you want to delete this budget category?",
 
         // Settings
@@ -164,6 +180,8 @@ export const translations = {
         Total: "Total",
 
         // Common
+        name: "Name",
+        color: "Color",
         per_month_suffix: "/mo",
         loading: "Loading...",
         no_assets_yet: "No assets yet",
@@ -528,6 +546,21 @@ export const translations = {
         no_data_available: "尚無資料",
         add_assets_to_see_trends: "新增資產以查看趨勢",
 
+        // Risk Metrics
+        compound_growth: "年化報酬率",
+        max_drawdown: "最大回撤",
+        annual_volatility: "年化波動率",
+        status_excellent: "極佳",
+        status_healthy: "穩健",
+        status_slow: "緩慢",
+        status_declining: "衰退",
+        status_safe: "安全",
+        status_correction: "回調",
+        status_heavy_loss: "重挫",
+        status_stable: "穩定",
+        status_moderate: "中等",
+        status_high_risk: "高風險",
+
         // History
         history_title: "歷史紀錄",
         history_desc: "所有帳戶變動和交易的完整紀錄。",
@@ -558,10 +591,11 @@ export const translations = {
         budget_categories_label: "預算類別",
         no_budget_categories: "尚無預算類別。點擊「新增類別」來設定第一筆預算。",
         budget_amount_label: "每月預算",
-        budget_icon_label: "圖示 (Emoji)",
+        budget_icon_label: "圖示",
         budget_note_label: "備註（選填）",
         budget_icon_placeholder: "🍜",
         budget_note_placeholder: "例如：包含外食和買菜",
+        budget_name_placeholder: "例如：食物、交通、娛樂...",
         delete_budget_confirm: "確定要刪除此預算類別嗎？",
 
         // Settings
@@ -639,6 +673,8 @@ export const translations = {
         Total: "總計",
 
         // Common
+        name: "名稱",
+        color: "顏色",
         per_month_suffix: "/月",
         loading: "載入中...",
         no_assets_yet: "尚無資產",

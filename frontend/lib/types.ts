@@ -80,3 +80,14 @@ export interface SystemSetting {
     key: string;
     value: string;
 }
+
+export interface MetricData {
+    value: number;
+    status: string;
+}
+
+export interface RiskMetricsResponse {
+    cagr: MetricData;
+    maxDrawdown: MetricData;
+    volatility: MetricData;
+}

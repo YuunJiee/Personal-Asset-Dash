@@ -276,8 +276,19 @@ export default function InvestmentPage() {
     const [assets, setAssets] = useState<any[]>([]);
     const [exchangeRate, setExchangeRate] = useState(30);
     const [tradingAsset, setTradingAsset] = useState<any | null>(null);
-    const [dustFilter, setDustFilter] = useState(false);
-    const [dustThreshold, setDustThreshold] = useState(100);
+    // Initialize from localStorage if available, otherwise false
+    const [dustFilter, setDustFilter] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('yantage_dust_filter') === 'true';
+        }
+        return false;
+    });
+    const dustThreshold = 10;
+
+    // Persist to localStorage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('yantage_dust_filter', dustFilter.toString());
+    }, [dustFilter]);
 
     const loadData = () => {
         fetchDashboardData()
@@ -326,22 +337,10 @@ export default function InvestmentPage() {
                         >
                             {t('hide_dust')}
                         </button>
-                        {dustFilter && (
-                            <>
-                                <span className="text-muted-foreground text-xs">&lt;</span>
-                                <input
-                                    type="number"
-                                    value={dustThreshold}
-                                    onChange={e => setDustThreshold(Math.max(0, Number(e.target.value)))}
-                                    className="w-16 text-xs font-mono bg-transparent border-b border-primary/40 focus:outline-none text-foreground text-right"
-                                />
-                                <span className="text-xs text-muted-foreground">TWD</span>
-                                {hiddenCount > 0 && (
-                                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
-                                        -{hiddenCount}
-                                    </span>
-                                )}
-                            </>
+                        {dustFilter && hiddenCount > 0 && (
+                            <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                                -{hiddenCount}
+                            </span>
                         )}
                     </div>
                     <a

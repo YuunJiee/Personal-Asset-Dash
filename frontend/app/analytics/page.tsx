@@ -2,6 +2,7 @@
 
 import { MonthlyChangeChart } from "@/components/MonthlyChangeChart";
 import { NetWorthTrendChart } from "@/components/NetWorthTrendChart";
+import { RiskMetricsWidget } from "@/components/RiskMetricsWidget";
 import { useLanguage } from "@/components/LanguageProvider";
 import { PieChart } from "lucide-react";
 
@@ -32,6 +33,8 @@ export default function AnalyticsPage() {
             </header>
 
             <div className="space-y-8">
+                <RiskMetricsWidget />
+
                 {/* Historical Charts */}
                 <div className="space-y-8">
                     <NetWorthTrendChart />

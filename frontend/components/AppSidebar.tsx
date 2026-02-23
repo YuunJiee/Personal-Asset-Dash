@@ -147,8 +147,8 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
 
                 {/* Favorites Section (Hidden if collapsed) */}
                 {!isCollapsed && (
-                    <div className="mt-8 flex-1 overflow-hidden flex flex-col animate-in fade-in duration-300">
-                        <div className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t('favorites')}</div>
+                    <div className="mt-8 flex-1 overflow-y-auto overflow-x-hidden flex flex-col animate-in fade-in duration-300 scrollbar-thin">
+                        <div className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 shrink-0">{t('favorites')}</div>
                         {favorites.map(asset => {
                             const Icon = asset.icon || 'CircleDollarSign';
 
