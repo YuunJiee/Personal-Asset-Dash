@@ -3,6 +3,9 @@ import ccxt
 from sqlalchemy.orm import Session
 from . import crud, models, schemas
 from datetime import datetime, timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_icon_for_ticker(ticker: str, category: str = None) -> str:
     ticker = ticker.upper()
@@ -44,67 +47,47 @@ def get_icon_for_ticker(ticker: str, category: str = None) -> str:
 
 def fetch_stock_price(ticker: str) -> float:
     try:
-        # Heuristic for Taiwan stocks (e.g. 0050 -> 0050.TW)
         if ticker.isdigit() and len(ticker) == 4:
             ticker = f"{ticker}.TW"
-            
         data = yf.Ticker(ticker)
         history = data.history(period="1d")
         if not history.empty:
             return history["Close"].iloc[-1]
     except Exception as e:
-        print(f"Error fetching stock {ticker}: {e}")
+        logger.error(f"Error fetching stock {ticker}: {e}")
     return 0.0
 
 def fetch_crypto_price(ticker: str) -> float:
     try:
-        # Normalize ticker
         symbol = ticker
         if symbol.endswith("-USD"):
             symbol = symbol.replace("-USD", "")
-            
-        # Handle wrapped tokens or specific mappings
-        if symbol == 'BTCB':
-            symbol = 'BTC'
-        elif symbol == 'WETH':
-            symbol = 'ETH'
-            
-        # USDT is stablecoin
-        if symbol == 'USDT' or symbol == 'USDC':
-            return 1.0
-            
-        # Try finding the pair
-        # Binance uses /USDT usually
-        pair = f"{symbol}/USDT"
-        
+        # Handle wrapped tokens
+        if symbol == 'BTCB': symbol = 'BTC'
+        elif symbol == 'WETH': symbol = 'ETH'
+        # Stablecoins
+        if symbol in ('USDT', 'USDC'): return 1.0
+
         exchange = ccxt.binance()
-        # Fetch ticker (this might fail if pair invalid)
-        ticker_data = exchange.fetch_ticker(pair)
+        ticker_data = exchange.fetch_ticker(f"{symbol}/USDT")
         return float(ticker_data['last'])
     except Exception as e:
-        print(f"Error fetching crypto {ticker} (tried pair {symbol}/USDT): {e}")
+        logger.error(f"Error fetching crypto {ticker}: {e}")
     return 0.0
 
 def update_prices(db: Session):
     assets = crud.get_assets(db)
     for asset in assets:
         price = 0.0
-        # Determine fetch method based on category
-        is_crypto = asset.category == 'Crypto'
-        if not is_crypto and asset.sub_category and "Crypto" in asset.sub_category:
-            is_crypto = True
+        is_crypto = asset.category == 'Crypto' or (
+            asset.sub_category and "Crypto" in asset.sub_category
+        )
 
         if is_crypto and asset.ticker:
             price = fetch_crypto_price(asset.ticker)
         elif asset.category == 'Stock' and asset.ticker:
             price = fetch_stock_price(asset.ticker)
-        elif asset.category in ["Investment", "Fluid"] and asset.ticker: 
-            # Legacy/Generic fallback
-            if "/" in asset.ticker or "-" in asset.ticker: 
-                 price = fetch_crypto_price(asset.ticker)
-            else:
-                 price = fetch_stock_price(asset.ticker)
-        
+
         if price > 0:
             crud.update_asset_price(db, asset.id, price)
             check_alerts(db, asset.id, price)
@@ -114,56 +97,24 @@ def check_alerts(db: Session, asset_id: int, price: float):
     for alert in alerts:
         if not alert.is_active:
             continue
-        
         triggered = False
         if alert.condition == "ABOVE" and price >= alert.target_price:
             triggered = True
         elif alert.condition == "BELOW" and price <= alert.target_price:
             triggered = True
-            
         if triggered and not alert.triggered_at:
             alert.triggered_at = datetime.now()
-            print(f"ALERT TRIGGERED: Asset {asset_id} is {alert.condition} {alert.target_price} (Current: {price})")
+            logger.info(f"ALERT TRIGGERED: Asset {asset_id} is {alert.condition} {alert.target_price} (Current: {price})")
             db.commit()
 
 def update_exchange_rate(db: Session, pair="USDTWD=X"):
-    try:
-        data = yf.Ticker(pair)
-        hist = data.history(period="1d")
-        if not hist.empty:
-            rate = float(hist["Close"].iloc[-1])
-            # Store in DB
-            setting = db.query(models.SystemSetting).filter_by(key="exchange_rate_usdtwd").first()
-            if not setting:
-                setting = models.SystemSetting(key="exchange_rate_usdtwd", value=str(rate))
-                db.add(setting)
-            else:
-                setting.value = str(rate)
-            db.commit()
-            print(f"Updated Exchange Rate: {rate}")
-            return rate
-    except Exception as e:
-        print(f"Error fetching exchange rate {pair}: {e}")
-    return None
+    """Kept for backward-compatibility with scheduler. Delegates to exchange_rate_service."""
+    from .services.exchange_rate_service import get_usdt_twd_rate
+    rate = get_usdt_twd_rate(db)
+    logger.info(f"Exchange rate (via exchange_rate_service): {rate}")
+    return rate
 
-def get_exchange_rate(db: Session = None) -> float:
-    # Try to get from DB first
-    if db:
-        setting = db.query(models.SystemSetting).filter_by(key="exchange_rate_usdtwd").first()
-        if setting:
-            try:
-                return float(setting.value)
-            except:
-                pass
-    
-    # Fallback if no DB or no setting (first run)
-    # We should avoid blocking here if possible, but first run needs one.
-    # If db is provided, try 'update_exchange_rate' synchronously once?
-    if db:
-        rate = update_exchange_rate(db)
-        if rate: return rate
-
-    return 30.0 # Hard Fallback
+# NOTE: get_exchange_rate() has been removed — use services/exchange_rate_service.get_usdt_twd_rate() directly.
 
 def calculate_dashboard_metrics(db: Session) -> schemas.DashboardData:
     # update_prices(db) # Moved to background scheduler

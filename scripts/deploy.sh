@@ -29,9 +29,9 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$PROJECT_ROOT
-Environment="PATH=$PROJECT_ROOT/backend/venv/bin:/usr/bin:/bin"
+Environment="PATH=$(conda run -n asset-backend which python | xargs dirname):/usr/bin:/bin"
 Environment="PYTHONPATH=$PROJECT_ROOT"
-ExecStart=$PROJECT_ROOT/backend/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
+ExecStart=$(conda run -n asset-backend which uvicorn) backend.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=10
 

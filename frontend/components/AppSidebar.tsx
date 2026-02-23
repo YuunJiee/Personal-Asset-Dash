@@ -41,7 +41,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
         { name: t('assets'), href: '/assets', icon: Wallet },
         { name: t('stock'), href: '/stock', icon: TrendingUp },
         { name: t('analytics'), href: '/analytics', icon: PieChart },
-        { name: t('fixed_expenses'), href: '/expenses', icon: CreditCard },
+        { name: t('budget_planner'), href: '/expenses', icon: CreditCard },
         { name: t('crypto'), href: '/crypto', icon: Bitcoin },
         { name: t('calendar'), href: '/calendar', icon: Calendar },
         { name: t('history'), href: '/history', icon: History },

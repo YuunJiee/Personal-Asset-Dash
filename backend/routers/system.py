@@ -1,6 +1,15 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
-import os
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import FileResponse, Response
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from datetime import datetime, timedelta
+from pydantic import BaseModel
+import csv
+import io
+import json
+import random
+from .. import database, models, profile_manager
+from ..services import max_service, wallet_service, exchange_service
 
 router = APIRouter(
     prefix="/api/system",
@@ -10,98 +19,49 @@ router = APIRouter(
 
 @router.get("/backup")
 def download_backup():
-    # Helper to find the database file. 
-    # Usually in the root of backend, which is where main.py runs.
     db_path = "./sql_app.db"
     return FileResponse(
-        path=db_path, 
-        filename="ymoney_backup.db", 
+        path=db_path,
+        filename="ymoney_backup.db",
         media_type='application/x-sqlite3'
     )
 
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from .. import database, models
-from sqlalchemy import text
-
 @router.get("/export/csv")
 def export_assets_csv(db: Session = Depends(database.get_db)):
-    import csv
-    import io
-    from datetime import datetime
-    
-    # Fetch Assets
     assets = db.query(models.Asset).all()
-    
-    # Prepare CSV Data
+
     output = io.StringIO()
     writer = csv.writer(output)
-    
-    # Headers
     writer.writerow(['ID', 'Name', 'Ticker', 'Category', 'Sub-Category', 'Source', 'Quantity', 'Current Price', 'Value (approx)', 'Include in NW'])
-    
+
     for asset in assets:
         quantity = sum(t.amount for t in asset.transactions)
         value = quantity * (asset.current_price or 0)
-        
         writer.writerow([
-            asset.id,
-            asset.name,
-            asset.ticker or '',
-            asset.category,
-            asset.sub_category or '',
-            asset.source or 'manual',
-            quantity,
-            asset.current_price,
-            round(value, 2),
-            asset.include_in_net_worth
+            asset.id, asset.name, asset.ticker or '', asset.category,
+            asset.sub_category or '', asset.source or 'manual',
+            quantity, asset.current_price, round(value, 2), asset.include_in_net_worth
         ])
-        
-    output.seek(0)
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"ymoney_assets_{timestamp}.csv"
-    
-    return FileResponse(
-        path=None, # Not using physical file
-        content=output.getvalue(),
-        filename=filename,
-        media_type='text/csv'
-    )
-    # Note: FileResponse expects a path or bytes-like object? 
-    # Actually FileResponse is for files on disk. 
-    # For in-memory, use StreamingResponse or Response with media_type.
-    
-    from fastapi.responses import Response
     return Response(
         content=output.getvalue(),
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from .. import database
-from sqlalchemy import text
-
 @router.delete("/reset")
 def reset_database(db: Session = Depends(database.get_db)):
     try:
-        # Delete data from all tables
-        # Order matters for Foreign Keys
         db.execute(text("DELETE FROM transactions"))
-        db.execute(text("DELETE FROM asset_tags"))
-        db.execute(text("DELETE FROM tags"))
         db.execute(text("DELETE FROM assets"))
         db.execute(text("DELETE FROM goals"))
-        db.execute(text("DELETE FROM expenses"))
+        db.execute(text("DELETE FROM budget_categories"))
         db.execute(text("DELETE FROM alerts"))
         db.execute(text("DELETE FROM system_settings"))
         db.execute(text("DELETE FROM crypto_connections"))
-
-        # Re-seed default settings
         db.execute(text("INSERT INTO system_settings (key, value) VALUES ('budget_start_day', '1')"))
-        
         db.commit()
         return {"message": "System reset successfully"}
     except Exception as e:
@@ -133,18 +93,8 @@ def seed_database(db: Session = Depends(database.get_db)):
     try:
         # 2. System Settings
         db.add(models.SystemSetting(key='budget_start_day', value='1'))
-        
-        # 3. Create Tags
-        tag_names = ["Emergency Fund", "Tech", "Dividend", "Vacation", "High Risk", "Safe", "Retirement", "Short Term"]
-        tags = []
-        colors = ["red", "blue", "green", "yellow", "orange", "purple", "indigo", "pink"]
-        for i, name in enumerate(tag_names):
-            t = models.Tag(name=name, color=colors[i % len(colors)])
-            tags.append(t)
-        db.add_all(tags)
-        db.commit() # Commit to get IDs
-        
-        # 4. Create Assets & Transactions
+
+        # 3. Create Assets & Transactions
         today = datetime.now()
         assets = []
         
@@ -181,16 +131,7 @@ def seed_database(db: Session = Depends(database.get_db)):
         db.add_all(assets)
         db.commit()
 
-        # 5. Add Tags
-        tsmc.tags.extend([tags[1], tags[2], tags[5]]) # Tech, Dividend, Safe
-        nvda.tags.extend([tags[1], tags[4]]) # Tech, High Risk
-        aapl.tags.extend([tags[1], tags[5]]) # Tech, Safe
-        vti.tags.extend([tags[5], tags[6]]) # Safe, Retirement
-        btc.tags.extend([tags[4]]) # High Risk
-        ctbc.tags.extend([tags[0]]) # Emergency Fund
-        usdt_earn.tags.extend([tags[7]]) # Short Term
-
-        # 6. Generate History (Transactions)
+        # 4. Generate History (Transactions)
         transactions = []
 
         # Cash History
@@ -255,34 +196,29 @@ def seed_database(db: Session = Depends(database.get_db)):
 
         db.add_all(transactions)
 
-        # 7. Create Goals
+        # 5. Create Goals
         fire_goal = models.Goal(name="FIRE Target", target_amount=30000000, goal_type="NET_WORTH", currency="TWD", description="Financial Independence, Retire Early")
         car_goal = models.Goal(name="Buy Porsche 911", target_amount=8000000, goal_type="NET_WORTH", currency="TWD", description="Dream Car Fund")
         budget_goal = models.Goal(name="Monthly Spending Limit", target_amount=60000, goal_type="MONTHLY_SPENDING", currency="TWD")
-        
         db.add_all([fire_goal, car_goal, budget_goal])
-        
-        # 8. Create Recuring Expenses
-        expenses = [
-            models.Expense(name="Netflix", amount=390, currency="TWD", frequency="MONTHLY", due_day=15, category="Subscription"),
-            models.Expense(name="Spotify", amount=190, currency="TWD", frequency="MONTHLY", due_day=5, category="Subscription"),
-            models.Expense(name="Rent", amount=25000, currency="TWD", frequency="MONTHLY", due_day=1, category="Housing"),
-            models.Expense(name="Gym", amount=1200, currency="TWD", frequency="MONTHLY", due_day=10, category="Health"),
-            models.Expense(name="Internet", amount=900, currency="TWD", frequency="MONTHLY", due_day=20, category="Utilities"),
-            models.Expense(name="Car Insurance", amount=12000, currency="TWD", frequency="YEARLY", due_day=1, category="Insurance"),
-            models.Expense(name="AWS", amount=50, currency="USD", frequency="MONTHLY", due_day=3, category="Tech"),
+
+        # 6. Create Sample Budget Categories
+        budget_categories = [
+            models.BudgetCategory(name="食物", icon="🍜", budget_amount=12000, color="emerald"),
+            models.BudgetCategory(name="交通", icon="🚇", budget_amount=5000, color="blue"),
+            models.BudgetCategory(name="娛樂", icon="🎮", budget_amount=3000, color="purple"),
+            models.BudgetCategory(name="房租", icon="🏠", budget_amount=25000, color="amber"),
+            models.BudgetCategory(name="醫療", icon="💊", budget_amount=2000, color="rose"),
+            models.BudgetCategory(name="訂閱", icon="📱", budget_amount=1500, color="cyan"),
         ]
-        
-        db.add_all(expenses)
-        
+        db.add_all(budget_categories)
+
         db.commit()
         return {"message": "Database seeded with comprehensive fake data successfully"}
         
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
-
-from ..services import max_service, wallet_service, exchange_service
 
 @router.post("/sync/max")
 def trigger_max_sync(db: Session = Depends(database.get_db)):

@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-02-23
+
+### ✨ Added
+
+- **Asset Allocation Goals**: Replaced `MONTHLY_SPENDING` goal type with a new `ASSET_ALLOCATION` type
+  - Set target percentages for multiple asset categories (Fluid, Stock, Crypto, Fixed, Receivables) that must sum to 100%
+  - Multi-row editor in GoalDialog with live total badge (green = 100%, red = off)
+  - Dynamically add / remove category rows
+  - GoalWidget shows per-category progress bars with target marker lines and diff indicators (+/-%)
+  - Overall **Balanced / Off-Balance** badge when all categories are within ±5% of target
+  - Data stored as JSON in existing `description` field — no DB schema change required
+- **Delete Goal button** added to GoalDialog (trash icon on lower-left when editing)
+
+### 🔧 Fixed
+
+- **`crud.py`**: Added missing `delete_goal()` function (caused `AttributeError` when deleting goals)
+- **`crud.py`**: Removed orphaned `return db_alert` line inside `get_active_alerts()` body
+- **`AddAssetDialog.tsx`**: Removed all leftover Tag-related code (state, handlers, `tags` API payload, UI) from the Tag-removal refactor
+- **`createTransaction`**: Added missing required `date` field (`new Date().toISOString()`) in initial balance transaction call
+- **GoalDialog layout**: Fixed `%` label and delete button overlapping the number Input (switched to `absolute` positioning inside a `relative` wrapper)
+- **`types.ts`**: Updated `Goal.goal_type` union from `MONTHLY_SPENDING` → `ASSET_ALLOCATION`
+
+---
+
+## [2.3.0] - 2026-02-22
+
+
+### ✨ Added
+
+- **Budget Planner** (`/expenses`): Replaced Fixed Expenses tracker with a full Budget Category Manager
+  - Color-coded budget category cards with emoji icons and monthly budget amounts
+  - Progress bar showing each category's proportion of total budget
+  - Total monthly budget summary card
+  - Add / Edit / Delete categories via dialog
+  - Demo seed data: 6 default Chinese budget categories (食物, 交通, 娛樂, 房租, 醫療, 訂閱)
+  - New backend model `BudgetCategory`, Pydantic schemas, CRUD, and `/api/budgets/` router
+
+### 🔧 Fixed
+
+- **CSV Export**: `GET /api/system/export/csv` was using `FileResponse` for in-memory data (always crashed). Fixed to use `Response` with correct `Content-Disposition` header
+- **System Reset**: `DELETE /api/system/reset` no longer attempts to `DELETE FROM expenses`, `asset_tags`, or `tags` (tables that no longer exist)
+- **System Seed**: `POST /api/system/seed` no longer creates `Expense` or `Tag` objects; seeds `BudgetCategory` instead
+- **Scheduler**: Removed stale `pionex_service` import; `run_pionex_sync` now calls `exchange_service.sync_all_exchanges()`
+- **Stats**: Removed duplicate `import math` in `stats.py`
+- **i18n**: Removed duplicate keys (`per_month_suffix`, budget form shared keys) that caused TypeScript errors
+
+### ♻️ Refactored
+
+- **`stats.py`**: Extracted two module-level helpers:
+  - `parse_range(range)` – shared date range parser (removes duplicated if/elif blocks from both endpoints)
+  - `fetch_yahoo_history(symbols, start_date)` – single yfinance downloader shared by both `/history` and `/asset/{id}/history`
+- **`stats.py`**: Replaced `asset.yf_ticker` monkey-patch on SQLAlchemy model with a local `yf_ticker_map: dict[int, str]`
+- **`system.py`**: Consolidated all imports to top of file (removed mid-file scattered `from x import y` blocks)
+
+### 🗑️ Removed
+
+- Removed `Expense` model, schemas, CRUD functions, and `/api/expenses/` router
+
+---
+
 ## [2.2.0] - 2026-02-15
 
 ### ✨ Enhanced

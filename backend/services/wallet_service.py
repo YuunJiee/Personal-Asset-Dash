@@ -4,6 +4,7 @@ from .. import models
 from datetime import datetime
 import json
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ def sync_wallets(db: Session):
                         new_asset = models.Asset(
                             name=asset_name,
                             ticker=native_ticker,
-                            category="Investment",
+                            category="Crypto",
                             sub_category="Crypto",
                             source="web3_wallet",
                             include_in_net_worth=True,
@@ -178,17 +179,12 @@ def sync_wallets(db: Session):
                 except Exception as e:
                     logger.error(f"    Error syncing token {asset.ticker}: {e}")
 
-            # C. Auto-Discovery (Merge of Scan logic)
-            # Iterate popular tokens for this network
+            # C. Auto-Discovery: check popular tokens for this network
             if network in POPULAR_TOKENS:
                 for token in POPULAR_TOKENS[network]:
-                    # Skip if already tracked
                     if token['address'].lower() in tracked_contracts:
                         continue
-                        
-                    # Slow down slightly for public RPCs
-                    import time
-                    time.sleep(0.1) 
+                    time.sleep(0.1)  # Slow down for public RPCs
                     
                     try:
                         contract = w3.eth.contract(address=Web3.to_checksum_address(token['address']), abi=ERC20_ABI)
@@ -253,11 +249,3 @@ def sync_wallets(db: Session):
 
     db.commit()
     return True
-
-# Helper to keep keeping discover_tokens for backward compatibility or direct endpoint use if needed
-# (But sync_wallets now covers it)
-def discover_tokens(db: Session, connection_id: int):
-    # Just call sync_wallets? No, sync_wallets syncs ALL.
-    # For now, we can leave this function as is or deprecate it.
-    # User asked to merge logic.
-    return {"status": "success", "message": "Discovery is now integrated into Sync."}

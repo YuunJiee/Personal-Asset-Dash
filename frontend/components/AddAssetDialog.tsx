@@ -8,7 +8,8 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { createAsset, createTransaction, lookupTicker, fetchIntegrations } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { IconPicker, AssetIcon, getDefaultIcon } from './IconPicker';
-import { X, Tag as TagIcon } from 'lucide-react';
+
+
 
 interface AddAssetDialogProps {
     isOpen: boolean;
@@ -42,10 +43,6 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
     const [network, setNetwork] = useState('Ethereum');
     const [contractAddress, setContractAddress] = useState('');
     const [decimals, setDecimals] = useState('18');
-
-    // Local Tags State
-    const [tags, setTags] = useState<string[]>([]);
-    const [newTag, setNewTag] = useState('');
 
     const categories = [
         { value: 'Fluid', label: t('Fluid') },
@@ -108,8 +105,6 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 manualAvgCost: '',
                 paymentDueDay: ''
             });
-            setTags([]);
-            setNewTag('');
             setMarket('TW');
             setFetchedPrice(null);
 
@@ -180,17 +175,6 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
         return () => clearTimeout(timeoutId);
     }, [formData.ticker, formData.category, formData.subCategory, market]);
 
-    const handleAddTag = () => {
-        if (newTag.trim() && !tags.includes(newTag.trim())) {
-            setTags([...tags, newTag.trim()]);
-            setNewTag('');
-        }
-    };
-
-    const handleRemoveTag = (tagToRemove: string) => {
-        setTags(tags.filter(tag => tag !== tagToRemove));
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -224,7 +208,6 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                 sub_category: formData.subCategory || null,
                 include_in_net_worth: formData.includeInNetWorth,
                 icon: finalIcon,
-                tags: tags.map(tag => ({ name: tag })),
                 current_price: fetchedPrice,
                 payment_due_day: formData.paymentDueDay ? parseInt(formData.paymentDueDay) : null,
 
@@ -243,14 +226,14 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
                 await createTransaction(assetRes.id, {
                     amount: initialBalance,
-                    buy_price: buyPrice
+                    buy_price: buyPrice,
+                    date: new Date().toISOString(),
                 });
             }
 
             router.refresh();
             onClose();
             setFormData({ name: '', ticker: '', category: 'Fluid', subCategory: '', initialBalance: '', includeInNetWorth: true, icon: '', manualAvgCost: '', paymentDueDay: '' });
-            setTags([]);
             setMarket('TW');
         } catch (error) {
             console.error("Failed to create asset", error);
@@ -507,31 +490,6 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                     )}
                 </div>
 
-
-                {/* Tags Section */}
-                <div className="space-y-2 pt-2 border-t border-border">
-                    <Label className="flex items-center gap-2">
-                        <TagIcon className="w-4 h-4" /> {t('tags')}
-                    </Label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                        {tags.map((tag) => (
-                            <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                                #{tag}
-                                <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
-                            </span>
-                        ))}
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            placeholder={t('add_tag')}
-                            className="h-9 text-sm"
-                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                        />
-                        <Button type="button" onClick={handleAddTag} disabled={!newTag} className="h-9 px-3 whitespace-nowrap shrink-0">{t('add_button')}</Button>
-                    </div>
-                </div>
 
                 {/* Include in Net Worth */}
                 <div className="pt-2 border-t border-border">

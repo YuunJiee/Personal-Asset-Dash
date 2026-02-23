@@ -1,5 +1,7 @@
 // Use relative path '/api' which works with Next.js Rewrites (proxy)
 // This avoids CORS and Mixed Content issues when deployed
+import type { Asset, BudgetCategory, DashboardData, Transaction } from './types';
+
 const isServer = typeof window === 'undefined';
 export const API_URL = isServer
     ? (process.env.INTERNAL_API_URL || "http://127.0.0.1:8000/api") // Server-side: Direct to backend
@@ -17,7 +19,7 @@ export async function fetchAssetHistory(assetId: number, range: string = '1y') {
     }
 }
 
-export async function fetchDashboardData() {
+export async function fetchDashboardData(): Promise<DashboardData> {
     try {
         const url = `${API_URL}/dashboard/`;
         const res = await fetch(url, { cache: 'no-store' });
@@ -31,7 +33,7 @@ export async function fetchDashboardData() {
     }
 }
 
-export async function fetchAssets() {
+export async function fetchAssets(): Promise<Asset[]> {
     try {
         const res = await fetch(`${API_URL}/assets/`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -112,13 +114,13 @@ export async function fetchForecast() {
     }
 }
 
-export async function fetchExpenses() {
+export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/expenses/`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/budgets/`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
     } catch (error) {
-        console.error("fetchExpenses failed:", error);
+        console.error("fetchBudgetCategories failed:", error);
         throw error;
     }
 }
@@ -149,7 +151,7 @@ export async function createAsset(assetData: {
     return res.json();
 }
 
-export async function createTransaction(assetId: number, transactionData: any) {
+export async function createTransaction(assetId: number, transactionData: Omit<Transaction, 'id' | 'asset_id'>): Promise<Transaction> {
     const res = await fetch(`${API_URL}/assets/${assetId}/transactions/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -167,7 +169,7 @@ export async function deleteAsset(assetId: number) {
     return res.json();
 }
 
-export async function updateAsset(assetId: number, assetData: any) {
+export async function updateAsset(assetId: number, assetData: Partial<Omit<Asset, 'id'>>): Promise<Asset> {
     const res = await fetch(`${API_URL}/assets/${assetId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -197,7 +199,7 @@ export async function transferFunds(data: { from_asset_id: number; to_asset_id: 
 }
 
 // Update Transaction
-export async function updateTransaction(id: number, data: any) {
+export async function updateTransaction(id: number, data: Partial<Omit<Transaction, 'id'>>): Promise<Transaction> {
     const res = await fetch(`${API_URL}/assets/transactions/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

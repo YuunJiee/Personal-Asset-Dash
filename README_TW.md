@@ -37,8 +37,8 @@
 - **可展開資產卡片**：單擊即可深入查看個別持倉
 
 ### 🎯 **財務規劃工具**
-- **目標追蹤**：FIRE（財務獨立，提早退休）目標的視覺化進度條
-- **智慧預算管理**：追蹤每月支出，顯示進度指標（符合預算、超支、節省）
+- **目標追蹤**：FIRE（財務獨立，提早退休）目標的視覺化進度條，以及**多類別資產配置目標** — 為每個資產類別設定目標佔比，一眼掌握投資組合是否平衡
+- **預算規劃器**：將每月支出整理成色彩標示的類別，設定預算上限並顯示進度條
 - **財富模擬器**：根據投入金額與預期報酬率預測未來財富
 - **緊急預備金檢測**：根據流動資產計算財務生存時間
 
@@ -158,6 +158,10 @@
 personal-asset-dash/
 ├── backend/              # FastAPI 後端
 │   ├── routers/          # API 端點
+│   │   ├── assets.py
+│   │   ├── budgets.py    # 預算類別 CRUD
+│   │   ├── stats.py
+│   │   └── system.py
 │   ├── services/         # 業務邏輯
 │   ├── models.py         # SQLAlchemy 模型
 │   ├── schemas.py        # Pydantic 驗證
@@ -168,9 +172,9 @@ personal-asset-dash/
 │   ├── components/       # React 元件
 │   ├── lib/              # 工具函式與 API 客戶端
 │   └── README.md         # 前端文件
-├── screenshots/          # 應用程式截圖
-├── .gitignore            # Git 忽略規則
-└── start.sh              # 啟動腳本
+├── scripts/              # 管理腳本（dev/prod/deploy）
+├── CHANGELOG.md          # 版本紀錄
+└── .gitignore
 ```
 
 ---

@@ -118,7 +118,9 @@ class Alert(AlertBase):
 class GoalBase(BaseModel):
     name: str
     target_amount: float
-    goal_type: str # "NET_WORTH", "MONTHLY_SPENDING"
+    goal_type: str # "NET_WORTH", "ASSET_ALLOCATION"
+    # NET_WORTH: target_amount = TWD amount
+    # ASSET_ALLOCATION: target_amount = percentage (0-100), description = category name
     currency: Optional[str] = "TWD"
     description: Optional[str] = None
 
@@ -137,35 +139,30 @@ class Goal(GoalBase):
 
     class Config:
         from_attributes = True
-    class Config:
-        from_attributes = True
 
 
 
-# Expense Schemas
-class ExpenseBase(BaseModel):
+# Budget Category Schemas
+class BudgetCategoryBase(BaseModel):
     name: str
-    amount: float
-    currency: Optional[str] = "TWD"
-    frequency: str # MONTHLY, YEARLY
-    due_day: Optional[int] = 1
-    category: Optional[str] = "Subscription"
-    split_with: Optional[int] = 1
+    icon: Optional[str] = None
+    budget_amount: float
+    color: Optional[str] = None
+    note: Optional[str] = None
     is_active: Optional[bool] = True
 
-class ExpenseCreate(ExpenseBase):
+class BudgetCategoryCreate(BudgetCategoryBase):
     pass
 
-class ExpenseUpdate(BaseModel):
+class BudgetCategoryUpdate(BaseModel):
     name: Optional[str] = None
-    amount: Optional[float] = None
-    frequency: Optional[str] = None
-    due_day: Optional[int] = None
-    category: Optional[str] = None
-    split_with: Optional[int] = None
+    icon: Optional[str] = None
+    budget_amount: Optional[float] = None
+    color: Optional[str] = None
+    note: Optional[str] = None
     is_active: Optional[bool] = None
 
-class Expense(ExpenseBase):
+class BudgetCategory(BudgetCategoryBase):
     id: int
     created_at: datetime
 

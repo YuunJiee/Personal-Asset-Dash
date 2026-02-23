@@ -236,6 +236,7 @@ def update_goal(db: Session, goal_id: int, goal_update: schemas.GoalUpdate):
         db.refresh(db_goal)
     return db_goal
 
+def delete_goal(db: Session, goal_id: int):
     goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
     if goal:
         db.delete(goal)
@@ -257,7 +258,6 @@ def get_alerts_by_asset(db: Session, asset_id: int):
 def get_active_alerts(db: Session):
     return db.query(models.Alert).filter(models.Alert.is_active == True).all()
 
-    return db_alert
 
 def delete_alert(db: Session, alert_id: int):
     db_alert = db.query(models.Alert).filter(models.Alert.id == alert_id).first()
@@ -267,31 +267,30 @@ def delete_alert(db: Session, alert_id: int):
     return db_alert
 
 
+# Budget Category CRUD
+def get_budget_categories(db: Session, skip: int = 0, limit: int = 200):
+    return db.query(models.BudgetCategory).filter(models.BudgetCategory.is_active == True).offset(skip).limit(limit).all()
 
-# Expense CRUD
-def get_expenses(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Expense).offset(skip).limit(limit).all()
-
-def create_expense(db: Session, expense: schemas.ExpenseCreate):
-    db_expense = models.Expense(**expense.dict())
-    db.add(db_expense)
+def create_budget_category(db: Session, category: schemas.BudgetCategoryCreate):
+    db_cat = models.BudgetCategory(**category.dict())
+    db.add(db_cat)
     db.commit()
-    db.refresh(db_expense)
-    return db_expense
+    db.refresh(db_cat)
+    return db_cat
 
-def update_expense(db: Session, expense_id: int, expense_update: schemas.ExpenseUpdate):
-    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    if db_expense:
-        for key, value in expense_update.dict(exclude_unset=True).items():
-            setattr(db_expense, key, value)
+def update_budget_category(db: Session, category_id: int, category_update: schemas.BudgetCategoryUpdate):
+    db_cat = db.query(models.BudgetCategory).filter(models.BudgetCategory.id == category_id).first()
+    if db_cat:
+        for key, value in category_update.dict(exclude_unset=True).items():
+            setattr(db_cat, key, value)
         db.commit()
-        db.refresh(db_expense)
-    return db_expense
+        db.refresh(db_cat)
+    return db_cat
 
-def delete_expense(db: Session, expense_id: int):
-    db_expense = db.query(models.Expense).filter(models.Expense.id == expense_id).first()
-    if db_expense:
-        db.delete(db_expense)
+def delete_budget_category(db: Session, category_id: int):
+    db_cat = db.query(models.BudgetCategory).filter(models.BudgetCategory.id == category_id).first()
+    if db_cat:
+        db.delete(db_cat)
         db.commit()
         return True
     return False

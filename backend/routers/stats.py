@@ -7,10 +7,8 @@ import yfinance as yf
 import pandas as pd
 from collections import defaultdict
 import math
-
 import traceback
 
-import math
 
 def safe_float(val):
     if val is None: return 0.0
@@ -19,6 +17,41 @@ def safe_float(val):
             return 0.0
     return val
 
+
+def parse_range(range: str) -> date:
+    """Convert a range string to a start date."""
+    today = datetime.now().date()
+    if range == "30d":  return today - timedelta(days=30)
+    if range == "3mo":  return today - timedelta(days=90)
+    if range == "6mo":  return today - timedelta(days=180)
+    if range == "1y":   return today - timedelta(days=365)
+    if range == "ytd":  return date(today.year, 1, 1)
+    if range == "all":  return date(2020, 1, 1)
+    return today - timedelta(days=365)  # default
+
+
+def fetch_yahoo_history(symbols, start_date: date) -> dict:
+    """Download price history from Yahoo Finance. Returns {ticker: {date_str: price}}."""
+    try:
+        fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
+        today = datetime.now().date()
+        data = yf.download(symbols, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
+        history_map = {}
+        if isinstance(data, pd.DataFrame) and not data.empty:
+            for col in data.columns:
+                series = data[col].ffill().bfill()
+                history_map[col] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
+        elif isinstance(data, pd.Series) and not data.empty:
+            symbol = symbols[0] if isinstance(symbols, list) else symbols
+            series = data.ffill().bfill()
+            history_map[symbol] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
+        return history_map
+    except Exception as e:
+        print(f"Error fetching history for {symbols}: {e}")
+        traceback.print_exc()
+        return {}
+
+
 router = APIRouter(
     prefix="/api/stats",
     tags=["stats"],
@@ -26,193 +59,87 @@ router = APIRouter(
 
 @router.get("/asset/{asset_id}/history")
 def get_asset_history(asset_id: int, range: str = "1y", db: Session = Depends(get_db)):
-    # Determine start date
     today = datetime.now().date()
-    if range == "30d": start_date = today - timedelta(days=30)
-    elif range == "3mo": start_date = today - timedelta(days=90)
-    elif range == "6mo": start_date = today - timedelta(days=180)
-    elif range == "1y": start_date = today - timedelta(days=365)
-    elif range == "ytd": start_date = date(today.year, 1, 1)
-    elif range == "all": start_date = date(2020, 1, 1) # Arbitrary old date
-    else: start_date = today - timedelta(days=365)
+    start_date = parse_range(range)
 
     asset = crud.get_asset(db, asset_id)
     if not asset:
         return []
 
-    # 1. Fetch Price History if applicable
-    price_history = {}
-    usdtwd_history = {}
-    
-    # Check if stock/crypto for price fetching
+    # Resolve yfinance ticker
     ticker = None
-    if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
+    if (asset.category in ('Stock', 'Crypto')) and asset.ticker:
         t = asset.ticker
         if t.isdigit() and len(t) == 4: t = f"{t}.TW"
         if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
         ticker = t
 
+    price_history = {}
+    usdtwd_history = {}
     if ticker:
-        # Fetch Price History similar to get_net_worth_history
-        # We can refactor fetch_yahoo_history to be shared, but for now inline or copy is safer for this tool usage.
-        # Minimal fetch logic
-        try:
-             fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
-             # Fetch Ticker
-             p_data = yf.download(ticker, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
-             if not p_data.empty:
-                 series = p_data.ffill().bfill()
-                 price_history = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
-             
-             # Fetch FX
-             fx_data = yf.download("USDTWD=X", start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
-             if not fx_data.empty:
-                 fx_series = fx_data.ffill().bfill()
-                 usdtwd_history = {d.strftime("%Y-%m-%d"): val for d, val in fx_series.items()}
-                 
-        except Exception as e:
-            print(f"Error fetching hisotry for asset {asset_id}: {e}")
+        price_history = fetch_yahoo_history([ticker], start_date).get(ticker, {})
+        usdtwd_history = fetch_yahoo_history("USDTWD=X", start_date).get("USDTWD=X", {})
 
-    # 2. Replay Transactions
     transactions = sorted(asset.transactions, key=lambda x: x.date)
-    
     current_qty = 0.0
-    # Calculate initial quantity before start_date
     tx_idx = 0
     while tx_idx < len(transactions) and transactions[tx_idx].date.date() < start_date:
         current_qty += transactions[tx_idx].amount
         tx_idx += 1
-        
+
     history = []
     curr_date = start_date
-    current_usdtwd = 32.0 # Fallback
-    
+    current_usdtwd = 32.0
+
     while curr_date <= today:
         d_str = curr_date.strftime("%Y-%m-%d")
-        
-        # Apply daily transactions
         while tx_idx < len(transactions) and transactions[tx_idx].date.date() == curr_date:
             current_qty += transactions[tx_idx].amount
             tx_idx += 1
-            
-        # Determine Value
-        price = 1.0 # Default
+
         if ticker:
             p = price_history.get(d_str)
             rate = usdtwd_history.get(d_str, current_usdtwd)
-            
             if p is not None:
-                if asset.source == 'max': # MAX usually TWD
-                     if p is not None: price = p # Assuming fallback logic handled
-                elif ticker.endswith('.TW'):
-                     price = p
-                else:
-                     price = p * rate
+                price = p if asset.source == 'max' or ticker.endswith('.TW') else p * rate
             else:
-                 # Fallback to current price if history missing
-                 price = asset.current_price
+                price = asset.current_price
         else:
-             price = asset.current_price
-             
-        val = current_qty * price
-        
+            price = asset.current_price
+
         history.append({
             "date": d_str,
             "quantity": current_qty,
-            "value": round(val, 2),
+            "value": round(current_qty * price, 2),
             "price": round(price, 2)
         })
-        
         curr_date += timedelta(days=1)
-        
+
     return history
 
 @router.get("/history")
 def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
     try:
-        # Determine start date
         today = datetime.now().date()
-        if range == "30d":
-            start_date = today - timedelta(days=30)
-        elif range == "3mo":
-            start_date = today - timedelta(days=90)
-        elif range == "6mo":
-            start_date = today - timedelta(days=180)
-        elif range == "1y":
-            start_date = today - timedelta(days=365)
-        elif range == "ytd":
-            start_date = date(today.year, 1, 1)
-        else:
-            start_date = today - timedelta(days=30)
-    
-        # 1. Fetch all assets and transactions
+        start_date = parse_range(range)
+
         assets = crud.get_assets(db)
-        
-        # 2. Identify Investable Assets (Stocks/Crypto) to fetch history
+
+        # Build yf_ticker map (avoid monkey-patching SQLAlchemy models)
+        yf_ticker_map: dict[int, str] = {}
         tickers = []
-        # asset_map = {} # id -> Asset
-        # txn_map = defaultdict(list)
-        
         for asset in assets:
-            # asset_map[asset.id] = asset
-            if (asset.category == 'Stock' or asset.category == 'Crypto') and asset.ticker:
+            if (asset.category in ('Stock', 'Crypto')) and asset.ticker:
                 t = asset.ticker
-                # Heuristic checks
                 if t.isdigit() and len(t) == 4: t = f"{t}.TW"
                 if ("Crypto" in (asset.sub_category or "") or asset.category == 'Crypto') and "-" not in t: t = f"{t}-USD"
-                
-                asset.yf_ticker = t 
+                yf_ticker_map[asset.id] = t
                 tickers.append(t)
-    
-        # 3. Fetch Historical Data (Prices and FX)
-        price_history = {} # ticker -> {date_str ('YYYY-MM-DD') -> close_price}
-        usdtwd_history = {} # date_str -> rate
-    
-        # Helper to download and process
-        def fetch_yahoo_history(symbols):
-            try:
-                # Buffer start date by 7 days to ensure we have previous close for weekends/holidays
-                fetch_start = (start_date - timedelta(days=7)).strftime("%Y-%m-%d")
-                data = yf.download(symbols, start=fetch_start, end=str(today + timedelta(days=1)), progress=False)['Close']
-                
-                history_map = {}
-                
-                # Normalize to dict: ticker -> {date_str -> price}
-                if isinstance(data, pd.DataFrame) and not data.empty:
-                     # If MultiIndex columns (when multiple tickers)
-                     if isinstance(data.columns, pd.MultiIndex): 
-                         # Should not happen with just 'Close' usually, unless yfinance version differs. 
-                         # Newer yfinance might return MultiIndex if asking for multiple fields.
-                         # But ['Close'] returns DataFrame with tickers as columns.
-                         pass
-                     
-                     for col in data.columns:
-                         # Fill NaN with forward fill (ffill) then backward fill (bfill)
-                         # to handle weekends/holidays seamlessly
-                         series = data[col].ffill().bfill()
-                         history_map[col] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
-                         
-                elif isinstance(data, pd.Series) and not data.empty:
-                     # Single symbol
-                     symbol = symbols[0] if isinstance(symbols, list) else symbols
-                     series = data.ffill().bfill()
-                     history_map[symbol] = {d.strftime("%Y-%m-%d"): val for d, val in series.items()}
-                
-                return history_map
-            except Exception as e:
-                print(f"Error fetching history for {symbols}: {e}")
-                traceback.print_exc()
-                return {}
-    
-        if tickers:
-            price_history = fetch_yahoo_history(tickers)
-    
-        # Fetch USDTWD History
-        fx_map = fetch_yahoo_history("USDTWD=X")
+
+        price_history = fetch_yahoo_history(tickers, start_date) if tickers else {}
+        fx_map = fetch_yahoo_history("USDTWD=X", start_date)
         usdtwd_history = fx_map.get("USDTWD=X", {})
-    
-        # Default FX if missing
-        current_usdtwd = 32.0 # fallback
+        current_usdtwd = 32.0
     
         # 4. Reconstruct Daily Net Worth
         result = []
@@ -273,56 +200,27 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
             for asset in assets:
                 if not asset.include_in_net_worth:
                     continue
-                    
+
                 qty = balances[asset.id]
                 if qty == 0: continue
-                
-                # Determine Price
-                price = 1.0 # Default (Fluid/Fixed/Receivables)
-                
-                if (asset.category == 'Stock' or asset.category == 'Crypto') and getattr(asset, 'yf_ticker', None):
-                    t = asset.yf_ticker
-                    # Get price from history
+
+                price = 1.0
+                t = yf_ticker_map.get(asset.id)
+                if t:
                     hist = price_history.get(t, {})
                     p = hist.get(date_str)
-                    
-                    # Treat NaN as None to trigger fallback
                     if p is not None and (math.isnan(p) or math.isinf(p)):
-                         p = None
-                    
+                        p = None
                     if p is None:
-                        # Fallback to current asset price if history missing completely?
-                        # Or 0?
-                        # Let's use asset.current_price as last resort
                         p = asset.current_price
-                    
-                    # Check Currency (Heuristic: Stocks.TW -> TWD, Crypto -> USD, US Stocks -> USD)
-                    # If ticker ends with .TW, no FX. Else x Rate.
-                    # FIX: If Asset Source is 'max', price is already TWD (from DB Fallback or Manual).
-                    # Actually, MAX assets fallback to `current_price` which is TWD.
-                    # If YF fetch succeeds, it returns USD for BTC-USD. 
-                    # But YF fails in 2026 -> Fallback to TWD Price -> Mistakenly * 32.
-                    
                     if asset.source == 'max':
-                        # Special case: If we used Fallback (p == current_price), it is TWD.
-                        # If we used YF (p == hist), it is likely USD (e.g. BTC-USD).
-                        # How to know if p came from YF or Fallback?
-                        # Check if p (hist) was None.
-                        
-                        if hist.get(date_str) is None:
-                             # Fallback used -> TWD
-                             price = p
-                        else:
-                             # YF used -> USD (assuming BTC-USD)
-                             price = p * rate
+                        price = p if hist.get(date_str) is None else p * rate
                     elif t.endswith('.TW'):
                         price = p
                     else:
                         price = p * rate
-                
-                elif asset.category == 'Stock' or asset.category == 'Crypto':
-                     # Investment without recognized ticker (manual price)
-                     price = asset.current_price
+                elif asset.category in ('Stock', 'Crypto'):
+                    price = asset.current_price
                 
                 val = qty * price
     

@@ -37,8 +37,8 @@ This is a passion project built to solve my own financial tracking challenges, a
 - **Expandable Asset Cards**: Drill down into individual holdings with a single click
 
 ### 🎯 **Financial Planning Tools**
-- **Goal Tracking**: Visual progress bars for FIRE (Financial Independence, Retire Early) targets
-- **Smart Budget Management**: Track monthly spending with pacing indicators (on track, over budget, under budget)
+- **Goal Tracking**: Visual progress bars for FIRE (Financial Independence, Retire Early) targets and **multi-category Asset Allocation goals** — set target percentages for each asset category and track balance at a glance
+- **Budget Planner**: Organize monthly spending into color-coded categories with budget limits and progress bars
 - **Wealth Simulator**: Project future wealth based on contributions and expected returns
 - **Emergency Fund Check**: Calculate financial survival time based on liquid assets
 
@@ -159,6 +159,10 @@ Example `.env` file is provided at `backend/.env.example`. See configuration gui
 personal-asset-dash/
 ├── backend/              # FastAPI backend
 │   ├── routers/          # API endpoints
+│   │   ├── assets.py
+│   │   ├── budgets.py    # Budget category CRUD
+│   │   ├── stats.py
+│   │   └── system.py
 │   ├── services/         # Business logic
 │   ├── models.py         # SQLAlchemy models
 │   ├── schemas.py        # Pydantic schemas
@@ -169,9 +173,9 @@ personal-asset-dash/
 │   ├── components/       # React components
 │   ├── lib/              # Utilities and API client
 │   └── README.md         # Frontend documentation
-├── screenshots/          # Application screenshots
-├── .gitignore            # Git ignore rules
-└── start.sh              # Startup script
+├── scripts/              # Management scripts (dev/prod/deploy)
+├── CHANGELOG.md          # Version history
+└── .gitignore
 ```
 
 ---

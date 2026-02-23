@@ -63,7 +63,9 @@ class Goal(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True) # e.g. "Net Worth Target", "Monthly Budget"
     target_amount = Column(Float)
-    goal_type = Column(String) # "NET_WORTH", "MONTHLY_SPENDING"
+    goal_type = Column(String) # "NET_WORTH", "ASSET_ALLOCATION"
+    # For NET_WORTH: target_amount is TWD amount
+    # For ASSET_ALLOCATION: target_amount is target percentage (0-100); description holds category name (e.g. "Stock")
     currency = Column(String, default="TWD")
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
@@ -86,17 +88,15 @@ Asset.alerts = relationship("Alert", back_populates="asset", cascade="all, delet
 
 
 
-class Expense(Base):
-    __tablename__ = "expenses"
+class BudgetCategory(Base):
+    __tablename__ = "budget_categories"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    amount = Column(Float)
-    currency = Column(String, default="TWD")
-    frequency = Column(String) # "MONTHLY", "YEARLY"
-    due_day = Column(Integer) # 1-31
-    category = Column(String) # "Subscription", "Rent", etc.
-    split_with = Column(Integer, default=1) # 1 = Paying full, 2 = split with 1 other, etc.
+    name = Column(String, index=True)          # e.g. "食物", "交通"
+    icon = Column(String, nullable=True)       # Emoji, e.g. "🍜"
+    budget_amount = Column(Float)              # Monthly budget in TWD
+    color = Column(String, nullable=True)      # Optional color hint
+    note = Column(String, nullable=True)       # Optional note
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now)
 

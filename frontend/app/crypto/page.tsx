@@ -71,14 +71,14 @@ export default function CryptoPage() {
     const COLORS = ['#A4C3B2', '#E0D5C3', '#D4A59A', '#8199A6', '#8ABF9E', '#C5AFA5'];
 
     return (
-        <div className="min-h-screen bg-background p-6 md:p-10 pb-24 space-y-8">
-            <header className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+        <div className="min-h-screen bg-background p-4 md:p-6 lg:p-10 pb-24 space-y-6 overflow-x-hidden">
+            <header className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                     <Bitcoin className="w-6 h-6" />
                 </div>
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('crypto_dashboard_title')}</h1>
-                    <p className="text-muted-foreground mt-1">{t('crypto_dashboard_desc')}</p>
+                <div className="min-w-0">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">{t('crypto_dashboard_title')}</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">{t('crypto_dashboard_desc')}</p>
                 </div>
             </header>
 
@@ -164,9 +164,10 @@ export default function CryptoPage() {
                     </CardHeader>
                     <CardContent className="h-[300px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={platformData}>
+                            <BarChart data={platformData} margin={{ left: 0, right: 8 }}>
                                 <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                                 <YAxis
+                                    width={50}
                                     stroke="#888888"
                                     fontSize={12}
                                     tickLine={false}
@@ -203,27 +204,25 @@ export default function CryptoPage() {
                         {assets.map((asset) => (
                             <div
                                 key={asset.id}
-                                className="flex items-center justify-between p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+                                className="flex items-center justify-between gap-2 p-4 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
                                 onClick={() => setSelectedAsset(asset)}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
-                                        {/* Simple Identicon or generic icon based on name */}
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 shrink-0 rounded-full bg-background flex items-center justify-center border border-border">
                                         <span className="font-bold text-xs">{asset.ticker ? asset.ticker.substring(0, 3) : asset.name.substring(0, 2)}</span>
                                     </div>
-                                    <div>
-                                        <div className="font-semibold">{asset.ticker || asset.name}</div>
-                                        <div className="text-xs text-muted-foreground flex gap-2">
+                                    <div className="min-w-0">
+                                        <div className="font-semibold truncate">{asset.ticker || asset.name}</div>
+                                        <div className="text-xs text-muted-foreground flex gap-2 flex-wrap">
                                             {asset.network && <span className="bg-blue-500/10 text-blue-600 px-1.5 py-0.5 rounded">{asset.network}</span>}
                                             <span className="capitalize">{asset.source}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <div className="font-bold font-mono">
+                                <div className="text-right shrink-0">
+                                    <div className="font-bold font-mono text-sm">
                                         {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US').format(Math.round(asset.value_twd || 0))}`}
                                     </div>
-                                    {/* Calculated Quantity if available (transactions sum) could be shown */}
                                     {asset.transactions && (
                                         <div className="text-xs text-muted-foreground">
                                             {asset.transactions.reduce((s: number, t: any) => s + t.amount, 0).toFixed(4)} {asset.ticker}

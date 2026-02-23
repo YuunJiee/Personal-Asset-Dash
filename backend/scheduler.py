@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from .database import SessionLocal
 from . import service, models
-from .services import max_service, pionex_service, wallet_service, binance_service
+from .services import max_service, wallet_service, binance_service, exchange_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,14 +34,14 @@ def run_max_sync():
         db.close()
 
 def run_pionex_sync():
-    logger.info("Running Pionex exchange sync...")
+    logger.info("Running exchange sync (CCXT/Pionex)...")
     db: Session = SessionLocal()
     try:
-        success = pionex_service.sync_pionex_assets(db)
+        success = exchange_service.sync_all_exchanges(db)
         if success:
-            logger.info("Pionex exchange sync completed.")
+            logger.info("Exchange sync completed.")
     except Exception as e:
-        logger.error(f"Error in Pionex sync: {e}")
+        logger.error(f"Error in exchange sync: {e}")
     finally:
         db.close()
 
