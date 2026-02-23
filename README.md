@@ -160,7 +160,7 @@ personal-asset-dash/
 ├── backend/              # FastAPI backend
 │   ├── routers/          # API endpoints
 │   │   ├── assets.py
-│   │   ├── budgets.py    # Budget category CRUD
+│   │   ├── budgets.py    # Budget 
 │   │   ├── stats.py
 │   │   └── system.py
 │   ├── services/         # Business logic

@@ -108,7 +108,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
             await updateAsset(asset.id, {
                 name: finalName,
                 ticker: formData.ticker || null,
-                category: formData.category,
+                category: formData.category as any,
                 sub_category: formData.subCategory || null,
                 include_in_net_worth: formData.includeInNetWorth,
                 icon: finalIcon,

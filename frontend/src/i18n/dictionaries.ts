@@ -213,6 +213,9 @@ export const translations = {
         view_analytics: "View Analytics",
         view_portfolio: "View Portfolio",
         manage_investments: "Manage Investments",
+        hide_dust: "Hide Dust",
+        assets_hidden: "assets hidden",
+        all_filtered_dust: "All assets are below the dust threshold",
 
         // Crypto Dashboard
         crypto_dashboard_title: "Crypto Dashboard",
@@ -687,6 +690,9 @@ export const translations = {
         view_analytics: "查看分析報表",
         view_portfolio: "查看投資組合",
         manage_investments: "管理投資",
+        hide_dust: "塵埃過濾",
+        assets_hidden: "筆已隱藏",
+        all_filtered_dust: "所有資產都低於過濾閾值，已全部隱藏",
 
         // Crypto Dashboard
         crypto_dashboard_title: "加密貨幣儀表板",

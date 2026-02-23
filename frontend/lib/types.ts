@@ -15,14 +15,16 @@ export interface Transaction {
 export interface Asset {
     id: number;
     name: string;
-    ticker?: string;
+    ticker?: string | null;
     category: 'Fluid' | 'Stock' | 'Crypto' | 'Fixed' | 'Receivables' | 'Liabilities';
-    sub_category?: string;
+    sub_category?: string | null;
     source?: string;
-    icon?: string;
+    icon?: string | null;
     current_price?: number;
     include_in_net_worth?: boolean;
     is_favorite?: boolean;
+    manual_avg_cost?: number | null;
+    payment_due_day?: number | null;
     // Computed fields returned by /api/dashboard/
     value_twd?: number;
     unrealized_pl?: number;
@@ -31,7 +33,10 @@ export interface Asset {
     // Integration fields
     connection_id?: number;
     network?: string;
+    contract_address?: string;
+    last_updated_at?: string;
 }
+
 
 export interface Goal {
     id: number;
@@ -54,10 +59,12 @@ export interface Alert {
 export interface BudgetCategory {
     id: number;
     name: string;
-    icon: string;
+    icon?: string | null;
     budget_amount: number;
-    color: string;
-    note?: string;
+    color?: string | null;
+    note?: string | null;
+    is_active: boolean;
+    created_at: string;
 }
 
 export interface DashboardData {

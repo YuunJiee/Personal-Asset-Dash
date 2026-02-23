@@ -8,16 +8,7 @@ import { cn } from '@/lib/utils';
 import { fetchBudgetCategories, API_URL } from '@/lib/api';
 import { useLanguage } from "@/components/LanguageProvider";
 
-interface BudgetCategory {
-    id: number;
-    name: string;
-    icon: string | null;
-    budget_amount: number;
-    color: string | null;
-    note: string | null;
-    is_active: boolean;
-    created_at: string;
-}
+import type { BudgetCategory } from '@/lib/types';
 
 // Predefined color palette for categories
 const COLOR_OPTIONS = [
@@ -154,7 +145,7 @@ export default function BudgetPage() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {categories.map(cat => {
-                        const colors = getColors(cat.color);
+                        const colors = getColors(cat.color ?? null);
                         return (
                             <div
                                 key={cat.id}

@@ -51,10 +51,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             await createTransaction(asset.id, {
                 amount: finalAmount,
                 buy_price: p,
-                // date: date // Context: Backend uses datetime.now() by default. If we want date support we need to update backend.
-                // Checking backend schemas.TransactionCreate... checking crud...
-                // Crud: date=datetime.now(). It ignores input date.
-                // So for now we ignore date input or just don't show it.
+                date: new Date().toISOString()
             });
 
             if (onSuccess) onSuccess();

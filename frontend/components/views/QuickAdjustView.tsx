@@ -42,7 +42,8 @@ export function QuickAdjustView({ asset, onClose, onBack }: QuickAdjustViewProps
             if (diff !== 0) {
                 await createTransaction(asset.id, {
                     amount: diff,
-                    buy_price: asset.current_price || 1
+                    buy_price: asset.current_price || 1,
+                    date: new Date().toISOString()
                 });
             }
 

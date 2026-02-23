@@ -11,7 +11,7 @@ import { updateAsset } from "@/lib/api";
 import { fetchDashboardData } from "@/lib/api";
 
 import { TradeDialog } from "@/components/TradeDialog";
-import { AlertCircle, ArrowLeftRight, TrendingUp } from "lucide-react";
+import { AlertCircle, ArrowLeftRight, TrendingUp, Filter } from "lucide-react";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { TopMovers } from "@/components/TopMovers";
 import { TopPerformersWidget } from "@/components/TopPerformersWidget";
@@ -276,6 +276,8 @@ export default function InvestmentPage() {
     const [assets, setAssets] = useState<any[]>([]);
     const [exchangeRate, setExchangeRate] = useState(30);
     const [tradingAsset, setTradingAsset] = useState<any | null>(null);
+    const [dustFilter, setDustFilter] = useState(false);
+    const [dustThreshold, setDustThreshold] = useState(100);
 
     const loadData = () => {
         fetchDashboardData()
@@ -290,8 +292,14 @@ export default function InvestmentPage() {
         loadData();
     }, []);
 
-    // Categorize
-    const portfolioAssets = assets.filter(a => ['Stock', 'Crypto', 'Fund', 'Other Investment'].includes(a.category) || a.category === 'Investment');
+    // Categorize & filter
+    const portfolioAssets = assets.filter(a =>
+        ['Stock', 'Crypto', 'Fund', 'Other Investment'].includes(a.category) || a.category === 'Investment'
+    );
+    const filteredAssets = dustFilter
+        ? portfolioAssets.filter(a => (a.value_twd ?? 0) >= dustThreshold)
+        : portfolioAssets;
+    const hiddenCount = portfolioAssets.length - filteredAssets.length;
 
     const { t } = useLanguage();
 
@@ -307,16 +315,52 @@ export default function InvestmentPage() {
                         <p className="text-muted-foreground mt-1">{t('portfolio_desc')}</p>
                     </div>
                 </div>
-                <a
-                    href="/analytics"
-                    className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-sm font-medium"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    {t('view_analytics')}
-                </a>
+                <div className="flex items-center gap-3 flex-wrap">
+                    {/* Dust Filter */}
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-colors ${dustFilter ? 'bg-primary/10 border-primary/30' : 'bg-muted border-border'
+                        }`}>
+                        <Filter className={`w-3.5 h-3.5 ${dustFilter ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <button
+                            onClick={() => setDustFilter(v => !v)}
+                            className={`text-xs font-medium ${dustFilter ? 'text-primary' : 'text-muted-foreground'}`}
+                        >
+                            {t('hide_dust')}
+                        </button>
+                        {dustFilter && (
+                            <>
+                                <span className="text-muted-foreground text-xs">&lt;</span>
+                                <input
+                                    type="number"
+                                    value={dustThreshold}
+                                    onChange={e => setDustThreshold(Math.max(0, Number(e.target.value)))}
+                                    className="w-16 text-xs font-mono bg-transparent border-b border-primary/40 focus:outline-none text-foreground text-right"
+                                />
+                                <span className="text-xs text-muted-foreground">TWD</span>
+                                {hiddenCount > 0 && (
+                                    <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-medium">
+                                        -{hiddenCount}
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    <a
+                        href="/analytics"
+                        className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-sm font-medium"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        {t('view_analytics')}
+                    </a>
+                </div>
             </header>
+
+            {filteredAssets.length === 0 && portfolioAssets.length > 0 && (
+                <div className="bg-card rounded-3xl shadow-sm border border-border p-12 text-center">
+                    <p className="text-muted-foreground">{t('all_filtered_dust')} ({hiddenCount} {t('assets_hidden')})</p>
+                </div>
+            )}
 
             {portfolioAssets.length === 0 && (
                 <div className="bg-card rounded-3xl shadow-sm border border-border p-12 text-center">
@@ -324,30 +368,30 @@ export default function InvestmentPage() {
                 </div>
             )}
 
-            {portfolioAssets.length > 0 && (
+            {filteredAssets.length > 0 && (
                 <>
                     <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <PortfolioAllocation
-                            assets={portfolioAssets}
+                            assets={filteredAssets}
                             title={t('allocation_by_asset')}
                             defaultTab="Asset"
                             showToggle={false}
                         />
                         <PortfolioAllocation
-                            assets={portfolioAssets}
+                            assets={filteredAssets}
                             title={t('allocation_by_platform')}
                             defaultTab="Platform"
                             showToggle={false}
                         />
-                        <TopMovers assets={portfolioAssets} />
+                        <TopMovers assets={filteredAssets} />
                     </div>
                     <div className="mb-8">
-                        <TopPerformersWidget assets={portfolioAssets} />
+                        <TopPerformersWidget assets={filteredAssets} />
                     </div>
                 </>
             )}
 
-            <AssetTable title={t('assets')} assets={portfolioAssets} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
+            <AssetTable title={t('assets')} assets={filteredAssets} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
 
             <TradeDialog
                 isOpen={!!tradingAsset}
