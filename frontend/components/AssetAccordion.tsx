@@ -12,7 +12,7 @@ import { updateAsset } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { AssetIcon } from './IconPicker';
 import { getCategoryIconName } from '@/lib/iconHelper';
-import type { Asset } from '@/lib/types';
+import type { Asset, AssetGroup, Transaction } from '@/lib/types';
 
 interface AssetAccordionProps {
     category: string;
@@ -128,7 +128,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const finalItems: any[] = [...others];
+        const finalItems: (Asset | AssetGroup)[] = [...others];
         Object.entries(web3Groups).forEach(([key, group]) => {
             if (group.length > 1) {
                 finalItems.push({
@@ -150,8 +150,10 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
 
         // Sort: Favorites first, then by value descending
         return finalItems.sort((a, b) => {
-            if (a.is_favorite && !b.is_favorite) return -1;
-            if (!a.is_favorite && b.is_favorite) return 1;
+            const aFav = !a.isGroup && a.is_favorite;
+            const bFav = !b.isGroup && b.is_favorite;
+            if (aFav && !bFav) return -1;
+            if (!aFav && bFav) return 1;
             const getVal = (item: typeof a) =>
                 item.isGroup
                     ? item.totalValue
@@ -307,7 +309,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                             {item.icon ? (
                                                                 <AssetIcon icon={item.icon} className="w-5 h-5 md:w-6 md:h-6" />
                                                             ) : (
-                                                                <AssetIcon icon={getCategoryIconName(item.category, item.sub_category)} className="w-5 h-5 md:w-6 md:h-6" />
+                                                                <AssetIcon icon={getCategoryIconName(item.category, item.sub_category ?? undefined)} className="w-5 h-5 md:w-6 md:h-6" />
                                                             )}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -332,8 +334,8 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                 {/* Group Children */}
                                                 {isExpanded && (
                                                     <div className="grid gap-2 pl-6 border-l-2 border-border/30 ml-6 pb-2 transition-all">
-                                                        {item.assets.map((asset: any) => {
-                                                            const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: any, t: any) => acc + t.amount, 0) || 0));
+                                                        {item.assets.map((asset) => {
+                                                            const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: number, tx: Transaction) => acc + tx.amount, 0) || 0));
                                                             return (
                                                                 <div
                                                                     key={asset.id}
@@ -364,7 +366,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                     }
 
                                     const asset = item;
-                                    const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: any, t: any) => acc + t.amount, 0) || 0));
+                                    const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: number, tx: Transaction) => acc + tx.amount, 0) || 0));
 
                                     return (
                                         <div
@@ -383,7 +385,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                     {asset.icon ? (
                                                         <AssetIcon icon={asset.icon} className="w-5 h-5 md:w-6 md:h-6" />
                                                     ) : (
-                                                        <AssetIcon icon={getCategoryIconName(asset.category, asset.sub_category)} className="w-5 h-5 md:w-6 md:h-6" />
+                                                        <AssetIcon icon={getCategoryIconName(asset.category, asset.sub_category ?? undefined)} className="w-5 h-5 md:w-6 md:h-6" />
                                                     )}
                                                 </div>
 
@@ -416,7 +418,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                                                     {/* Payment Due Day for Credit Cards */}
                                                     {asset.category === 'Liabilities' && asset.payment_due_day && (
                                                         <div className="text-[10px] text-muted-foreground/80 font-medium">
-                                                            📅 {t('due_on_day').replace('{day}', asset.payment_due_day)}
+                                                            📅 {t('due_on_day').replace('{day}', String(asset.payment_due_day))}
                                                         </div>
                                                     )}
                                                 </div>

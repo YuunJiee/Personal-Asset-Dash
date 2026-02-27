@@ -570,6 +570,9 @@ export const translations = {
         limit: "Limit",
         budget_suffix: "(Budget)",
         net_worth_suffix: "(FIRE)",
+        load_error: "Failed to load data",
+        load_error_desc: "Please check your connection and try again.",
+        retry: "Retry",
 
     },
     "zh-TW": {
@@ -1127,6 +1130,9 @@ export const translations = {
         limit: "上限",
         budget_suffix: "(預算)",
         net_worth_suffix: "(FIRE)",
+        load_error: "無法載入資料",
+        load_error_desc: "請確認網路連線並重試。",
+        retry: "重試",
 
     }
 };

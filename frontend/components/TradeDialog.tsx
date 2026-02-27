@@ -10,11 +10,12 @@ import { createTransaction } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageProvider';
 import { useToast } from '@/components/ui/toast';
+import type { Asset } from '@/lib/types';
 
 interface TradeDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    asset: any;
+    asset: Asset | null;
     onSuccess?: () => void;
 }
 
@@ -35,6 +36,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!asset) return;
         setLoading(true);
 
         try {

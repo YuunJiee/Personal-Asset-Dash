@@ -340,7 +340,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                         {/* Source Selection for Crypto */}
                         {formData.category === 'Crypto' && (
                             <div className="space-y-2">
-                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('source') || 'Source'}</Label>
+                                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('source')}</Label>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"

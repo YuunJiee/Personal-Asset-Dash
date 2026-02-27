@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { updateAsset, deleteAsset, API_URL } from '@/lib/api';
-import type { Asset } from '@/lib/types';
+import type { Asset, Transaction } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Trash2, X, Plus, Tag as TagIcon, ArrowLeft } from 'lucide-react';
 import { IconPicker, AssetIcon, getDefaultIcon } from '../IconPicker';
@@ -140,7 +140,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
 
     if (!asset) return null;
 
-    const currentBalance = asset.transactions ? asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0;
+    const currentBalance = asset.transactions ? asset.transactions.reduce((acc: number, tx: Transaction) => acc + tx.amount, 0) : 0;
 
     return (
         <div className="max-h-[80vh] overflow-y-auto px-1">

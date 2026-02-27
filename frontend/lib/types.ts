@@ -42,6 +42,8 @@ export interface Asset {
         name: string;
         provider: string;
     } | null;
+    /** Discriminant — ensures AssetGroup narrows correctly in union types */
+    isGroup?: never;
 }
 
 
@@ -117,6 +119,20 @@ export interface SimulatorDataPoint {
     balance: number;
     principal: number;
     interest: number;
+}
+
+/** A web3 wallet group combining multiple wallet addresses of the same token */
+export interface AssetGroup {
+    isGroup: true;
+    groupKey: string;
+    assets: Asset[];
+    name: string;
+    ticker?: string | null;
+    icon?: string | null;
+    category: Asset['category'];
+    sub_category?: string | null;
+    totalValue: number;
+    last_updated_at: string | null;
 }
 
 /** A single forecast entry returned by /api/stats/forecast */

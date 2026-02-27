@@ -6,12 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { translations } from "@/src/i18n/dictionaries";
 import { IncomeItem } from "@/lib/types";
 import { Trash2 } from "lucide-react";
 import { createIncomeItem, updateIncomeItem, deleteIncomeItem } from "@/lib/api";
-
-type TranslationKey = keyof typeof translations['en'];
 
 interface IncomeItemDialogProps {
     open: boolean;
@@ -21,10 +18,7 @@ interface IncomeItemDialogProps {
 }
 
 export function IncomeItemDialog({ open, onOpenChange, onSave, editingItem }: IncomeItemDialogProps) {
-    const { language } = useLanguage();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dict: any = translations[language as keyof typeof translations] || translations['en'];
-    const t = (key: TranslationKey) => dict[key] || key;
+    const { t } = useLanguage();
 
     const [name, setName] = useState("");
     const [amount, setAmount] = useState("");
@@ -66,7 +60,7 @@ export function IncomeItemDialog({ open, onOpenChange, onSave, editingItem }: In
 
     const handleDelete = async () => {
         if (!editingItem) return;
-        if (!confirm(t('delete_income_confirm') as string)) return;
+        if (!confirm(t('delete_income_confirm'))) return;
         try {
             setLoading(true);
             await deleteIncomeItem(editingItem.id);
