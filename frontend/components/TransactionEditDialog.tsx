@@ -7,10 +7,12 @@ import { updateTransaction, deleteTransaction } from "@/lib/api";
 import { Trash2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 
+import type { Transaction } from '@/lib/types';
+
 interface TransactionEditDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    transaction: any;
+    transaction: Transaction | null;
     onSuccess: () => void;
 }
 
@@ -54,6 +56,7 @@ export function TransactionEditDialog({ isOpen, onClose, transaction, onSuccess 
     };
 
     const handleDelete = async () => {
+        if (!transaction) return;
         if (!confirm(t('delete_transaction_confirm'))) return;
         setLoading(true);
         try {

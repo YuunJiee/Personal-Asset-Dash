@@ -12,12 +12,13 @@ import { updateAsset } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { AssetIcon } from './IconPicker';
 import { getCategoryIconName } from '@/lib/iconHelper';
+import type { Asset } from '@/lib/types';
 
 interface AssetAccordionProps {
     category: string;
     title: string;
     totalAmount: number;
-    assets: any[];
+    assets: Asset[];
     color: string;
     onAddClick?: () => void;
     onTitleClick?: () => void;
@@ -57,18 +58,19 @@ const SUBCATEGORY_KEY_MAP: Record<string, string> = {
 export function AssetAccordion({ category, title, totalAmount, assets, color, onAddClick, onTitleClick, onActionClick, actionIcon, className, isEditMode, percentage }: AssetAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
+    const [expandedWeb3Groups, setExpandedWeb3Groups] = useState<Record<string, boolean>>({});
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
 
     const getTranslatedSubCategory = (sub: string) => {
         const key = SUBCATEGORY_KEY_MAP[sub];
-        return key ? t(key as any) : sub;
+        return key ? t(key) : sub;
     };
     const router = useRouter();
 
     // Dialog State
     // Dialog State
-    const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
     const [dialogMode, setDialogMode] = useState<'history' | 'edit' | 'adjust' | 'set' | 'transfer'>('history');
 
     // Load state from localStorage on mount
@@ -88,7 +90,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
         localStorage.setItem(`accordion_open_${category}`, String(newState));
     };
 
-    const toggleFavorite = async (e: React.MouseEvent, asset: any) => {
+    const toggleFavorite = async (e: React.MouseEvent, asset: Asset) => {
         e.stopPropagation(); // Prevent opening edit dialog
         try {
             await updateAsset(asset.id, { is_favorite: !asset.is_favorite });
@@ -98,7 +100,7 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
         }
     };
 
-    const handleCardClick = (asset: any) => {
+    const handleCardClick = (asset: Asset) => {
         setSelectedAsset(asset);
         setDialogMode('history');
     };
@@ -109,6 +111,59 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
 
     // Filter assets for this category
     const categoryAssets = assets.filter(a => a.category === category);
+
+    // Grouping Logic for Web3 Wallets
+    const groupedAssets = (() => {
+        const web3Groups: Record<string, Asset[]> = {};
+        const others: Asset[] = [];
+
+        categoryAssets.forEach(asset => {
+            if (asset.source === 'web3_wallet') {
+                const key = asset.ticker || asset.name;
+                if (!web3Groups[key]) web3Groups[key] = [];
+                web3Groups[key].push(asset);
+            } else {
+                others.push(asset);
+            }
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const finalItems: any[] = [...others];
+        Object.entries(web3Groups).forEach(([key, group]) => {
+            if (group.length > 1) {
+                finalItems.push({
+                    isGroup: true,
+                    groupKey: key,
+                    assets: group,
+                    name: group[0].name.split(' (')[0] || group[0].name, // e.g. "ETH"
+                    ticker: group[0].ticker,
+                    icon: group[0].icon,
+                    category: group[0].category,
+                    sub_category: group[0].sub_category,
+                    totalValue: group.reduce((sum, a) => sum + (a.value_twd || ((a.current_price || 0) * (a.transactions?.reduce((acc, t) => acc + t.amount, 0) || 0))), 0),
+                    last_updated_at: group.reduce((latest: string | null, a) => !latest || (a.last_updated_at && new Date(a.last_updated_at) > new Date(latest)) ? (a.last_updated_at ?? null) : latest, null),
+                });
+            } else {
+                finalItems.push(group[0]);
+            }
+        });
+
+        // Sort: Favorites first, then by value descending
+        return finalItems.sort((a, b) => {
+            if (a.is_favorite && !b.is_favorite) return -1;
+            if (!a.is_favorite && b.is_favorite) return 1;
+            const getVal = (item: typeof a) =>
+                item.isGroup
+                    ? item.totalValue
+                    : (item.value_twd || ((item.current_price || 0) * (item.transactions?.reduce((acc: number, t: { amount: number }) => acc + t.amount, 0) || 0)));
+            return getVal(b) - getVal(a);
+        });
+    })();
+
+    const toggleGroupExpand = (e: React.MouseEvent, key: string) => {
+        e.stopPropagation();
+        setExpandedWeb3Groups(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     const {
         attributes,
@@ -146,7 +201,10 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                     toggleOpen();
                 }}
                 className={cn(
-                    "relative p-6 rounded-3xl cursor-pointer shadow-sm border border-transparent hover:shadow-md group touch-none",
+                    "relative p-6 rounded-3xl cursor-pointer shadow-sm border border-transparent hover:shadow-md group",
+                    // Only disable touch-based scrolling when in drag/edit mode;
+                    // otherwise the user can't scroll the page by swiping on these cards.
+                    isEditMode && "touch-none",
                     isMounted && "transition-all duration-300",
                     color,
                     isOpen ? "rounded-b-none shadow-none ring-2 ring-black/5" : "text-white",
@@ -234,8 +292,78 @@ export function AssetAccordion({ category, title, totalAmount, assets, color, on
                         ) : (
                             // Changed to Single Column Layout
                             <div className={cn("grid gap-3 grid-cols-1")}>
-                                {categoryAssets.map(asset => {
-                                    // Use Computed value_twd from backend if available, otherwise simplified calc
+                                {groupedAssets.map(item => {
+                                    if (item.isGroup) {
+                                        const isExpanded = expandedWeb3Groups[item.groupKey];
+                                        return (
+                                            <div key={item.groupKey} className="space-y-2">
+                                                {/* Group Header */}
+                                                <div
+                                                    onClick={(e) => toggleGroupExpand(e, item.groupKey)}
+                                                    className="relative p-4 rounded-3xl border border-border/80 bg-muted/20 hover:border-primary/50 transition-all cursor-pointer flex items-center justify-between"
+                                                >
+                                                    <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
+                                                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-muted/50 flex items-center justify-center shrink-0">
+                                                            {item.icon ? (
+                                                                <AssetIcon icon={item.icon} className="w-5 h-5 md:w-6 md:h-6" />
+                                                            ) : (
+                                                                <AssetIcon icon={getCategoryIconName(item.category, item.sub_category)} className="w-5 h-5 md:w-6 md:h-6" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="text-sm md:text-base font-bold text-foreground leading-none truncate">{item.name}</div>
+                                                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">{item.assets.length} {t('chains')}</span>
+                                                            </div>
+                                                            <div className="text-[10px] md:text-xs text-muted-foreground font-medium uppercase mt-1">Multi-Chain Asset</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <div className="font-bold text-foreground text-lg md:text-xl tracking-tight">
+                                                            {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(item.totalValue)}`}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                            {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                                                            {isExpanded ? t('collapse') : t('expand')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Group Children */}
+                                                {isExpanded && (
+                                                    <div className="grid gap-2 pl-6 border-l-2 border-border/30 ml-6 pb-2 transition-all">
+                                                        {item.assets.map((asset: any) => {
+                                                            const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: any, t: any) => acc + t.amount, 0) || 0));
+                                                            return (
+                                                                <div
+                                                                    key={asset.id}
+                                                                    onClick={() => handleCardClick(asset)}
+                                                                    className="p-3 rounded-2xl bg-card border border-border/60 hover:border-primary/40 transition-all cursor-pointer flex items-center justify-between"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                                                            <span className="text-[8px] md:text-[10px] font-bold opacity-70">{asset.network?.substring(0, 3).toUpperCase()}</span>
+                                                                        </div>
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-xs font-bold">{asset.network}</span>
+                                                                            <span className="text-[10px] text-muted-foreground uppercase">{asset.ticker?.split('-')[0]}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <div className="text-sm md:text-base font-bold">
+                                                                            {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)}`}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+
+                                    const asset = item;
                                     const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price || 0) * (asset.transactions?.reduce((acc: any, t: any) => acc + t.amount, 0) || 0));
 
                                     return (

@@ -8,6 +8,7 @@ import pandas as pd
 from collections import defaultdict
 import math
 import traceback
+import json
 
 
 def safe_float(val):
@@ -122,6 +123,26 @@ def get_net_worth_history(range: str = "30d", db: Session = Depends(get_db)):
     try:
         today = datetime.now().date()
         start_date = parse_range(range)
+
+        # ── Fast-path: serve pre-computed daily snapshots ─────────────────────
+        snapshots = (
+            db.query(models.NetWorthHistory)
+            .filter(models.NetWorthHistory.date >= start_date.strftime("%Y-%m-%d"))
+            .order_by(models.NetWorthHistory.date)
+            .all()
+        )
+        # Use snapshots when they cover at least 80 % of the requested window
+        expected_days = (today - start_date).days + 1
+        if snapshots and len(snapshots) >= max(1, int(expected_days * 0.8)):
+            return [
+                {
+                    "date": s.date,
+                    "value": safe_float(s.value),
+                    "breakdown": json.loads(s.breakdown) if s.breakdown else {},
+                }
+                for s in snapshots
+            ]
+        # ── Slow-path: reconstruct from transactions (first-run / backfill) ───
 
         assets = crud.get_assets(db)
 
@@ -298,10 +319,11 @@ def get_risk_metrics(db: Session = Depends(get_db)):
     days = (dates[-1] - dates[0]).days
     years = days / 365.25
     
-    if years > 0 and start_val > 0:
+    if years >= 1.0 and start_val > 0:
         cagr = (end_val / start_val) ** (1 / years) - 1
     else:
-        # If less than a year, simple return
+        # If less than a month, it's too noisy, return 0 or status N/A
+        # But if the user says it's "ultra high", they probably want the actual cumulative % gain
         cagr = (end_val - start_val) / start_val if start_val > 0 else 0
 
     # formatting status

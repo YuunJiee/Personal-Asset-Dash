@@ -32,3 +32,4 @@ logs/
 /*.db
 
 # Note: Python and Database files in backend/ are handled by backend/.gitignore
+ARCHITECTURE.md

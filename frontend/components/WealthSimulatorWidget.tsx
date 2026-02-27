@@ -9,6 +9,7 @@ import { usePrivacy } from "@/components/PrivacyProvider";
 import { Calculator, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchSetting, updateSetting } from "@/lib/api";
+import type { SimulatorDataPoint } from "@/lib/types";
 
 interface WealthSimulatorWidgetProps {
     currentNetWorth?: number;
@@ -39,7 +40,7 @@ export function WealthSimulatorWidget({ currentNetWorth = 0 }: WealthSimulatorWi
         years: 10
     });
 
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<SimulatorDataPoint[]>([]);
     const [finalAmount, setFinalAmount] = useState(0);
     const [totalInterest, setTotalInterest] = useState(0);
     const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -127,7 +128,8 @@ export function WealthSimulatorWidget({ currentNetWorth = 0 }: WealthSimulatorWi
                 chartData.push({
                     year: `Y${i / 12}`,
                     balance: Math.round(balance),
-                    principal: Math.round(principal)
+                    principal: Math.round(principal),
+                    interest: Math.round(balance - principal)
                 });
             }
             balance = balance * (1 + monthlyRate) + monthlyContribution;

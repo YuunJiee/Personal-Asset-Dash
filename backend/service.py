@@ -1,5 +1,7 @@
 import yfinance as yf
 import ccxt
+import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy.orm import Session
 from . import crud, models, schemas
 from datetime import datetime, timezone
@@ -77,20 +79,98 @@ def fetch_crypto_price(ticker: str) -> float:
 
 def update_prices(db: Session):
     assets = crud.get_assets(db)
+
+    # Classify assets by their price-fetch method
+    crypto_jobs: list[tuple[int, str]] = []
+    stock_jobs: list[tuple[int, str]] = []
+
     for asset in assets:
-        price = 0.0
         is_crypto = asset.category == 'Crypto' or (
             asset.sub_category and "Crypto" in asset.sub_category
         )
-
         if is_crypto and asset.ticker:
-            price = fetch_crypto_price(asset.ticker)
+            crypto_jobs.append((asset.id, asset.ticker))
         elif asset.category == 'Stock' and asset.ticker:
-            price = fetch_stock_price(asset.ticker)
+            stock_jobs.append((asset.id, asset.ticker))
 
-        if price > 0:
-            crud.update_asset_price(db, asset.id, price)
-            check_alerts(db, asset.id, price)
+    # Fetch prices in parallel using a thread pool
+    # (yfinance and ccxt are I/O bound – threads give a big speedup)
+    price_results: dict[int, float] = {}
+
+    def _fetch_crypto(asset_id: int, ticker: str) -> tuple[int, float]:
+        return asset_id, fetch_crypto_price(ticker)
+
+    def _fetch_stock(asset_id: int, ticker: str) -> tuple[int, float]:
+        return asset_id, fetch_stock_price(ticker)
+
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        futures = {
+            executor.submit(_fetch_crypto, aid, t): aid
+            for aid, t in crypto_jobs
+        }
+        futures.update({
+            executor.submit(_fetch_stock, aid, t): aid
+            for aid, t in stock_jobs
+        })
+
+        for future in as_completed(futures):
+            try:
+                asset_id, price = future.result()
+                if price > 0:
+                    price_results[asset_id] = price
+            except Exception as e:
+                logger.error(f"Price fetch error for asset {futures[future]}: {e}")
+
+    # Apply results (single-threaded DB writes to avoid session conflicts)
+    for asset_id, price in price_results.items():
+        crud.update_asset_price(db, asset_id, price)
+        check_alerts(db, asset_id, price)
+
+
+def snapshot_net_worth(db: Session) -> None:
+    """Write today's net worth to the NetWorthHistory table.
+
+    Called by the scheduler after each price update so the /stats/history
+    endpoint can serve from fast snapshot reads instead of recalculating
+    from scratch every request.
+    """
+    from .services.exchange_rate_service import get_usdt_twd_rate
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    assets = crud.get_assets(db)
+
+    net_worth = 0.0
+    breakdown: dict[str, float] = {}
+
+    for asset in assets:
+        if not asset.include_in_net_worth:
+            continue
+        val = asset.value_twd or 0.0
+        if asset.category == 'Liabilities':
+            net_worth -= val
+            breakdown['Liabilities'] = breakdown.get('Liabilities', 0.0) - val
+        else:
+            net_worth += val
+            breakdown[asset.category] = breakdown.get(asset.category, 0.0) + val
+
+    rounded = round(net_worth, 0)
+
+    try:
+        existing = db.query(models.NetWorthHistory).filter_by(date=today).first()
+        if existing:
+            existing.value = rounded
+            existing.breakdown = json.dumps({k: round(v, 0) for k, v in breakdown.items()})
+        else:
+            db.add(models.NetWorthHistory(
+                date=today,
+                value=rounded,
+                breakdown=json.dumps({k: round(v, 0) for k, v in breakdown.items()}),
+            ))
+        db.commit()
+        logger.info(f"Net worth snapshot saved: {today} = {rounded:,.0f}")
+    except Exception as e:
+        logger.error(f"Failed to save net worth snapshot: {e}")
+        db.rollback()
 
 def check_alerts(db: Session, asset_id: int, price: float):
     alerts = crud.get_alerts_by_asset(db, asset_id)

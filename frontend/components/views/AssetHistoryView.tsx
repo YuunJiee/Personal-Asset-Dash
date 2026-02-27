@@ -4,26 +4,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, ArrowRightLeft, Pencil, Wallet, BarChart3 } from 'lucide-react';
 import { AssetHistoryChart } from '../AssetHistoryChart';
-
-interface Transaction {
-    id: number;
-    amount: number;
-    buy_price: number;
-    date: string;
-    is_transfer: boolean;
-}
-
-interface Asset {
-    id: number;
-    name: string;
-    ticker?: string;
-    category: string;
-    sub_category?: string;
-    current_price: number;
-    icon?: string;
-    transactions: Transaction[];
-    source?: string;
-}
+import type { Asset } from '@/lib/types';
 
 interface AssetHistoryDialogProps {
     isOpen: boolean;
@@ -55,7 +36,7 @@ export function AssetHistoryView({ asset, onEdit, onAdjustBalance, onTransfer }:
     }).reverse();
 
     const totalQuantity = asset.transactions?.reduce((sum, tx) => sum + tx.amount, 0) || 0;
-    const totalValue = asset.current_price * totalQuantity;
+    const totalValue = (asset.current_price ?? 0) * totalQuantity;
     const isCrypto = asset.sub_category?.includes('Crypto');
 
     return (

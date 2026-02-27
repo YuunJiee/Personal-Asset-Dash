@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { transferFunds } from '@/lib/api';
 import { ArrowRightLeft, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import type { Asset } from '@/lib/types';
 
 interface TransferViewProps {
     onClose: () => void;
-    assets: any[];
+    assets: Asset[];
     initialFromAssetId?: number;
     onBack?: () => void;
 }
@@ -105,7 +106,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                                 }, {} as Record<string, typeof assets>)
                             ).map(([category, items]) => (
                                 <optgroup key={category} label={category}>
-                                    {(items as any[]).map(a => (
+                                    {items.map(a => (
                                         <option key={a.id} value={a.id}>{a.name}</option>
                                     ))}
                                 </optgroup>
@@ -116,7 +117,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                                 {t('balance')}: ${new Intl.NumberFormat('en-US').format(
                                     assets.find(a => a.id === parseInt(formData.fromId))?.value_twd ??
                                     ((assets.find(a => a.id === parseInt(formData.fromId))?.current_price || 0) *
-                                        (assets.find(a => a.id === parseInt(formData.fromId))?.transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0))
+                                        (assets.find(a => a.id === parseInt(formData.fromId))?.transactions?.reduce((sum: number, t) => sum + t.amount, 0) || 0))
                                 )}
                             </div>
                         )}
@@ -140,7 +141,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                                 }, {} as Record<string, typeof assets>)
                             ).map(([category, items]) => (
                                 <optgroup key={category} label={category}>
-                                    {(items as any[]).map(a => (
+                                    {items.map(a => (
                                         <option key={a.id} value={a.id}>{a.name}</option>
                                     ))}
                                 </optgroup>
@@ -151,7 +152,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                                 {t('balance')}: ${new Intl.NumberFormat('en-US').format(
                                     assets.find(a => a.id === parseInt(formData.toId))?.value_twd ??
                                     ((assets.find(a => a.id === parseInt(formData.toId))?.current_price || 0) *
-                                        (assets.find(a => a.id === parseInt(formData.toId))?.transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0))
+                                        (assets.find(a => a.id === parseInt(formData.toId))?.transactions?.reduce((sum: number, t) => sum + t.amount, 0) || 0))
                                 )}
                             </div>
                         )}

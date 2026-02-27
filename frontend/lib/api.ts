@@ -130,7 +130,6 @@ export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
         const res = await fetch(`${API_URL}/budgets/`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
-        return await res.json();
     } catch (error) {
         console.error("fetchBudgetCategories failed:", error);
         throw error;

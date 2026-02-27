@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,33 +8,38 @@ import { AssetActionDialog } from "@/components/AssetActionDialog";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { Wallet, Bitcoin, Activity, Layers } from 'lucide-react';
 import { IntegrationManager } from "@/components/IntegrationManager";
-import { fetchAssets } from "@/lib/api";
+import { useDashboard } from "@/lib/hooks";
+import type { Asset } from "@/lib/types";
+import { AssetRowSkeleton, ChartSkeleton, PageHeaderSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
 
 export default function CryptoPage() {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [assets, setAssets] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
-    useEffect(() => {
-        fetchAssets()
-            .then(data => {
-                // Filter only crypto assets
-                const crypto = data.filter((a: any) => a.category === 'Crypto');
-                setAssets(crypto);
-            })
-            .catch(e => console.error("Failed to fetch crypto assets:", e))
-            .finally(() => setLoading(false));
-    }, []);
+    const { assets: allAssets, isLoading } = useDashboard();
+    const assets = allAssets.filter(a => a.category === 'Crypto');
 
-    if (loading) return <div className="p-8">Loading crypto data...</div>;
+    if (isLoading) return (
+        <div className="min-h-screen bg-background p-4 md:p-6 lg:p-10 space-y-6">
+            <PageHeaderSkeleton />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ChartSkeleton /><ChartSkeleton />
+            </div>
+            <div className="rounded-3xl border border-border bg-card p-5 flex flex-col gap-2">
+                {Array.from({ length: 5 }).map((_, i) => <AssetRowSkeleton key={i} />)}
+            </div>
+        </div>
+    );
 
     // Derived Data
     const totalValue = assets.reduce((sum, a) => sum + (a.value_twd || 0), 0);
 
     // 1. Allocation by Coin (Ticker)
-    const coinAlloc = assets.reduce((acc: any, a) => {
+    const coinAlloc = assets.reduce((acc: Record<string, number>, a) => {
         let ticker = a.ticker || a.name;
         // Normalize: Remove -USD suffix if present to merge duplicate symbols
         if (ticker && ticker.endsWith('-USD')) {
@@ -43,10 +48,10 @@ export default function CryptoPage() {
         acc[ticker] = (acc[ticker] || 0) + (a.value_twd || 0);
         return acc;
     }, {});
-    const coinData = Object.entries(coinAlloc).map(([name, value]) => ({ name, value })).sort((a: any, b: any) => b.value - a.value);
+    const coinData = Object.entries(coinAlloc).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
     // 2. Allocation by Platform (Source)
-    const platformAlloc = assets.reduce((acc: any, a) => {
+    const platformAlloc = assets.reduce((acc: Record<string, number>, a) => {
         let source = 'Other';
         if (a.source === 'max') source = 'MAX';
         else if (a.source === 'pionex') source = 'Pionex';
@@ -60,7 +65,7 @@ export default function CryptoPage() {
     const platformData = Object.entries(platformAlloc).map(([name, value]) => ({ name, value }));
 
     // 3. Allocation by Network
-    const networkAlloc = assets.reduce((acc: any, a) => {
+    const networkAlloc = assets.reduce((acc: Record<string, number>, a) => {
         const label = a.network ? a.network : (a.source === 'manual' ? 'Manual' : 'CEX');
         acc[label] = (acc[label] || 0) + (a.value_twd || 0);
         return acc;
@@ -225,7 +230,7 @@ export default function CryptoPage() {
                                     </div>
                                     {asset.transactions && (
                                         <div className="text-xs text-muted-foreground">
-                                            {asset.transactions.reduce((s: number, t: any) => s + t.amount, 0).toFixed(4)} {asset.ticker}
+                                            {asset.transactions.reduce((s, t) => s + t.amount, 0).toFixed(4)} {asset.ticker}
                                         </div>
                                     )}
                                 </div>

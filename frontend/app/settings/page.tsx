@@ -8,8 +8,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { Settings, Download, Trash2, Globe, DollarSign, Palette, Calendar, PieChart as PieChartIcon, Key, Wallet, RefreshCw, Sun, Moon, Languages } from 'lucide-react';
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { CategoryVisibility } from "@/components/CategoryVisibility";
-import { useGlobalTheme } from "@/components/GlobalThemeProvider";
-import { useLanguage } from "@/components/LanguageProvider";
+import { useGlobalTheme } from "@/components/GlobalThemeProvider";import type { ThemeName } from '@/components/GlobalThemeProvider';import { useLanguage } from "@/components/LanguageProvider";
 import { useTheme } from "next-themes";
 
 import { fetchSetting, updateSetting, fetchDashboardData, API_URL } from '@/lib/api';
@@ -59,7 +58,7 @@ export default function SettingsPage() {
     }, []);
 
     const handleSaveChartTheme = (val: string) => {
-        setChartTheme(val as any);
+        setChartTheme(val as ThemeName);
     };
 
     const handleSaveUpdateInterval = async (val: string) => {

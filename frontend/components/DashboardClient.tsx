@@ -16,21 +16,16 @@ import { IntegrationDialog } from "./IntegrationDialog";
 import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft, Link as LinkIcon, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AssetAllocationWidget } from "./AssetAllocationWidget";
-const CATEGORY_COLORS: Record<string, string> = {
-    'Fluid': 'bg-[var(--color-fluid)]',
-    'Crypto': 'bg-[var(--color-crypto)]',
-    'Stock': 'bg-[var(--color-stock)]',
-    'Fixed': 'bg-[var(--color-fixed)]',
-    'Receivables': 'bg-[var(--color-receivables)]',
-    'Liabilities': 'bg-[var(--color-liabilities)]',
-};
+import { CATEGORY_COLORS } from "@/lib/constants";
 
 interface DashboardClientProps {
-    data: any;
+    data: DashboardData;
 }
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchSetting, API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
+import { useSetting } from '@/lib/hooks';
+import type { Goal, DashboardData } from '@/lib/types';
 
 export function DashboardClient({ data }: DashboardClientProps) {
     const { isPrivacyMode } = usePrivacy();
@@ -45,7 +40,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
 
     const [isIntegrationOpen, setIsIntegrationOpen] = useState(false);
     const [goalsRefreshTrigger, setGoalsRefreshTrigger] = useState(0);
-    const [editingGoal, setEditingGoal] = useState<any>(null);
+    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -79,14 +74,11 @@ export function DashboardClient({ data }: DashboardClientProps) {
     // Helper to filter assets by category and sum values (excluding those filtered out of net worth)
     const getCategoryTotal = (cat: string) => {
         return assets
-            .filter((a: any) => a.category === cat && a.include_in_net_worth !== false)
-            .reduce((sum: number, a: any) => {
+            .filter((a) => a.category === cat && a.include_in_net_worth !== false)
+            .reduce((sum, a) => {
                 if (a.value_twd !== undefined) return sum + a.value_twd;
-                let quantity = 0;
-                if (a.transactions) {
-                    a.transactions.forEach((t: any) => quantity += t.amount);
-                }
-                return sum + (a.current_price * quantity);
+                const quantity = a.transactions?.reduce((q, t) => q + t.amount, 0) ?? 0;
+                return sum + ((a.current_price ?? 0) * quantity);
             }, 0);
     };
 
@@ -132,15 +124,14 @@ export function DashboardClient({ data }: DashboardClientProps) {
     // Prepare data for Chart: Top 5 Assets by Value
     // Prepare data for Chart: Top 5 Assets by Value
     const aggregatedChartData: Record<string, number> = {};
-    assets.forEach((a: any) => {
+    assets.forEach((a) => {
         if (a.include_in_net_worth === false) return;
 
         let val = 0;
         if (a.value_twd !== undefined) val = a.value_twd;
         else {
-            // Fallback calc
-            const qty = a.transactions?.reduce((sum: number, t: any) => sum + t.amount, 0) || 0;
-            val = a.current_price * qty;
+            const qty = a.transactions?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
+            val = (a.current_price ?? 0) * qty;
         }
 
         if (val > 0) {
@@ -158,21 +149,30 @@ export function DashboardClient({ data }: DashboardClientProps) {
     const [visibleCategories, setVisibleCategories] = useState<Record<string, boolean>>({});
     const [chartTheme, setChartTheme] = useState('Classic');
 
+    const { value: visibleCatsRaw } = useSetting('visible_categories');
+
+    // Sync SWR-fetched setting → state (also keep localStorage copy for cold-load).
     useEffect(() => {
-        // Fetch visibility settings
-        fetchSetting('visible_categories')
-            .then(data => {
-                try {
-                    setVisibleCategories(JSON.parse(data.value));
-                } catch (e) { }
-            })
-            .catch(() => {
-                // Default all visible if fetch fails or key doesn't exist
+        if (!visibleCatsRaw) {
+            // API returned nothing — use localStorage cache or safe defaults
+            const cached = localStorage.getItem('setting_visible_categories');
+            if (cached) {
+                try { setVisibleCategories(JSON.parse(cached)); } catch { /* ignore */ }
+            } else {
                 const defaults: Record<string, boolean> = {};
                 ['Fluid', 'Crypto', 'Stock', 'Fixed', 'Receivables', 'Liabilities'].forEach(c => defaults[c] = true);
                 setVisibleCategories(defaults);
-            });
+            }
+            return;
+        }
+        try {
+            const parsed = JSON.parse(visibleCatsRaw);
+            setVisibleCategories(parsed);
+            localStorage.setItem('setting_visible_categories', JSON.stringify(parsed));
+        } catch { /* ignore malformed JSON */ }
+    }, [visibleCatsRaw]);
 
+    useEffect(() => {
         // Force Morandi Theme
         setChartTheme('Morandi');
     }, []);
@@ -324,7 +324,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                                         <AssetAccordion
                                             key={category}
                                             category={category}
-                                            title={t(category as any) || category}
+                                            title={t(category) || category}
                                             totalAmount={catTotal}
                                             assets={data.assets}
                                             color={CATEGORY_COLORS[category] || 'bg-gray-500'}

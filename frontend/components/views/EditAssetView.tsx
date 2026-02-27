@@ -5,16 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { updateAsset, deleteAsset, API_URL } from '@/lib/api';
+import type { Asset } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Trash2, X, Plus, Tag as TagIcon, ArrowLeft } from 'lucide-react';
 import { IconPicker, AssetIcon, getDefaultIcon } from '../IconPicker';
 
 interface EditAssetViewProps {
-    asset: any;
-    onClose: () => void; // Used for saving/closing the whole flow? Or just success?
-    // Actually, View doesn't close dialog directly, it calls callback.
-    // We pass onClose to it as "onSuccess" or "onCancel".
-    // But existing code uses onClose for everything.
+    asset: Asset | null;
+    onClose: () => void;
     onBack?: () => void;
 }
 
@@ -23,7 +21,16 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
     const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        name: string;
+        ticker: string;
+        category: Asset['category'];
+        subCategory: string;
+        includeInNetWorth: boolean;
+        icon: string;
+        manualAvgCost: string | number;
+        paymentDueDay: string | number;
+    }>({
         name: '',
         ticker: '',
         category: 'Fluid',
@@ -38,7 +45,8 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
 
     const subCategories: Record<string, string[]> = {
         'Fluid': ['Cash', 'E-Wallet', 'Debit Card', 'Other'],
-        'Investment': ['Fund', 'Stock', 'Crypto', 'Other Investment'],
+        'Stock': ['TW Stock', 'US Stock', 'ETF', 'Bond', 'Mutual Fund', 'Other Investment'],
+        'Crypto': ['Coin', 'Token', 'Stablecoin', 'DeFi', 'NFT'],
         'Fixed': ['Real Estate', 'Car', 'Other Fixed Asset'],
         'Receivables': [],
         'Liabilities': ['Credit Card', 'Loan', 'Payable', 'Other Liability']
@@ -82,6 +90,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
     }, [asset]);
 
     const handleDelete = async () => {
+        if (!asset) return;
         if (!confirm(t('delete_asset_confirm'))) return;
         setLoading(true);
         try {
@@ -99,6 +108,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!asset) return;
         setLoading(true);
         try {
             // Determine Name and Icon defaults
@@ -108,11 +118,11 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
             await updateAsset(asset.id, {
                 name: finalName,
                 ticker: formData.ticker || null,
-                category: formData.category as any,
+                category: formData.category,
                 sub_category: formData.subCategory || null,
                 include_in_net_worth: formData.includeInNetWorth,
                 icon: finalIcon,
-                manual_avg_cost: formData.manualAvgCost || null,
+                manual_avg_cost: formData.manualAvgCost ? Number(formData.manualAvgCost) : null,
                 payment_due_day: formData.category === 'Liabilities' && formData.paymentDueDay ? parseInt(formData.paymentDueDay as string) : null
             });
 
@@ -173,7 +183,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                         </div>
                     )}
 
-                    {formData.category === 'Investment' && (
+                    {(formData.category === 'Stock' || formData.category === 'Crypto') && (
                         <div className="flex gap-4">
                             <div className="space-y-2 flex-1">
                                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('ticker')}</Label>

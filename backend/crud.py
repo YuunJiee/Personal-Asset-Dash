@@ -1,10 +1,13 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from . import models, schemas
 from datetime import datetime
 from .services.exchange_rate_service import get_usdt_twd_rate
 
 def get_asset(db: Session, asset_id: int):
-    asset = db.query(models.Asset).filter(models.Asset.id == asset_id).first()
+    # Use joinedload to avoid N+1 queries when accessing asset.transactions
+    asset = db.query(models.Asset).options(
+        joinedload(models.Asset.transactions)
+    ).filter(models.Asset.id == asset_id).first()
     if asset:
         usdt_rate = get_usdt_twd_rate(db)
         is_usd = False
@@ -41,7 +44,10 @@ def get_asset(db: Session, asset_id: int):
     return asset
 
 def get_assets(db: Session, skip: int = 0, limit: int = 100):
-    assets = db.query(models.Asset).offset(skip).limit(limit).all()
+    # joinedload: fetch all transactions in a single JOIN query instead of N+1 lazy loads
+    assets = db.query(models.Asset).options(
+        joinedload(models.Asset.transactions)
+    ).offset(skip).limit(limit).all()
     usdt_rate = get_usdt_twd_rate(db)
 
     results = []
@@ -121,7 +127,7 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate, asse
     # But models.Transaction expects 'date'.
     # If transaction.date is None, we want datetime.now()
     
-    tx_data = transaction.dict()
+    tx_data = transaction.model_dump()
     if 'date' in tx_data and tx_data['date'] is None:
         tx_data['date'] = datetime.now()
     elif 'date' not in tx_data: # Should not happen if in schema but just in case

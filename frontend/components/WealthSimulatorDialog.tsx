@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { Calculator, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SimulatorDataPoint } from "@/lib/types";
 
 interface WealthSimulatorDialogProps {
     isOpen: boolean;
@@ -41,7 +42,7 @@ export function WealthSimulatorDialog({ isOpen, onClose, currentNetWorth = 0 }: 
         years: 10
     });
 
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<SimulatorDataPoint[]>([]);
     const [finalAmount, setFinalAmount] = useState(0);
     const [totalPrincipal, setTotalPrincipal] = useState(0);
     const [totalInterest, setTotalInterest] = useState(0);

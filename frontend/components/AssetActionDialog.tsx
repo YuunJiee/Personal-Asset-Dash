@@ -7,13 +7,24 @@ import { AssetHistoryView } from './views/AssetHistoryView';
 import { EditAssetView } from './views/EditAssetView';
 import { QuickAdjustView } from './views/QuickAdjustView';
 import { TransferView } from './views/TransferView';
+import type { Asset } from '@/lib/types';
+
+type DialogMode = 'history' | 'edit' | 'adjust' | 'set' | 'transfer';
 
 interface AssetActionDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    asset: any;
-    allAssets?: any[]; // For transfer
-    initialMode?: 'history' | 'edit' | 'adjust' | 'set' | 'transfer';
+    asset: Asset | null;
+    allAssets?: Asset[];
+    initialMode?: DialogMode;
+}
+
+interface DynamicContentProps {
+    mode: DialogMode;
+    asset: Asset | null;
+    allAssets?: Asset[];
+    onClose: () => void;
+    setMode: (mode: DialogMode) => void;
 }
 
 export function AssetActionDialog({ isOpen, onClose, asset, allAssets, initialMode = 'history' }: AssetActionDialogProps) {
@@ -67,7 +78,7 @@ export function AssetActionDialog({ isOpen, onClose, asset, allAssets, initialMo
 // We need to check `frontend/components/ui/dialog.tsx` to see if it just passes props to Radix.
 // If so, we can pass a dynamic title.
 
-function DynamicContent({ mode, asset, allAssets, onClose, setMode }: any) {
+function DynamicContent({ mode, asset, allAssets, onClose, setMode }: DynamicContentProps) {
     switch (mode) {
         case 'edit':
             return (
@@ -79,13 +90,13 @@ function DynamicContent({ mode, asset, allAssets, onClose, setMode }: any) {
             );
         case 'adjust':
         case 'set': // QuickAdjust supports both, mapping might be needed
-            return (
+            return asset ? (
                 <QuickAdjustView
                     asset={asset}
                     onClose={onClose}
                     onBack={() => setMode('history')}
                 />
-            );
+            ) : null;
         case 'transfer':
             return (
                 <TransferView

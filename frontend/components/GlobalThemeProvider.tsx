@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { updateSetting } from '@/lib/api';
 
-type ThemeName = 'Classic' | 'Morandi' | 'Vibrant';
+export type ThemeName = 'Classic' | 'Morandi' | 'Vibrant';
 
 interface GlobalThemeContextType {
     themeName: ThemeName;

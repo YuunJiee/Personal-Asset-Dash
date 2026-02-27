@@ -1,30 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { fetchRiskMetrics } from '@/lib/api';
-import type { RiskMetricsResponse } from '@/lib/types';
+import { useRiskMetrics } from '@/lib/hooks';
 import { Activity, ShieldAlert, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/LanguageProvider';
 
 export function RiskMetricsWidget() {
-    const [metrics, setMetrics] = useState<RiskMetricsResponse | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { metrics, isLoading: loading } = useRiskMetrics();
     const { t, language } = useLanguage();
-
-    useEffect(() => {
-        async function loadMetrics() {
-            try {
-                const data = await fetchRiskMetrics();
-                setMetrics(data);
-            } catch (err) {
-                console.error("Failed to load risk metrics", err);
-            } finally {
-                setLoading(false);
-            }
-        }
-        loadMetrics();
-    }, []);
 
     if (loading) {
         return (
@@ -43,7 +26,7 @@ export function RiskMetricsWidget() {
     // Let's use generic strings for now and fallback to english status if translation is missing.
     const translateStatus = (s: string) => {
         const key = `status_${s.toLowerCase().replace(' ', '_')}`;
-        const translated = t(key as any);
+        const translated = t(key);
         return translated === key ? s : translated;
     };
 

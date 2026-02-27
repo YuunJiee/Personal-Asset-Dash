@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { fetchAssetHistory } from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import type { AssetHistoryPoint } from "@/lib/types";
 import { Select } from "@/components/ui/select"; // Helper if you have it, else native
 // Assuming native select for simplicity since we don't have Select component handy in context
 // actually we do have Select in ui/select based on IntegrationManager
@@ -19,7 +20,7 @@ interface AssetHistoryChartProps {
 export function AssetHistoryChart({ assetId, color = "#8884d8" }: AssetHistoryChartProps) {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<AssetHistoryPoint[]>([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('1y');
 
@@ -54,7 +55,7 @@ export function AssetHistoryChart({ assetId, color = "#8884d8" }: AssetHistoryCh
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}
                         >
-                            {t(`range_${r}` as any)}
+                            {t(`range_${r}`)}
                         </button>
                     ))}
                 </div>

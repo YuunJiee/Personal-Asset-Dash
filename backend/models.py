@@ -54,6 +54,7 @@ class Transaction(Base):
     buy_price = Column(Float) # Average Cost
     date = Column(DateTime, default=datetime.now)
     is_transfer = Column(Boolean, default=False)
+    note = Column(String, nullable=True)  # Optional memo / description
 
     asset = relationship("Asset", back_populates="transactions")
 
@@ -114,3 +115,14 @@ class SystemSetting(Base):
     __tablename__ = "system_settings"
     key = Column(String, primary_key=True, index=True)
     value = Column(String)
+
+
+class NetWorthHistory(Base):
+    """Daily net worth snapshots for fast historical queries."""
+    __tablename__ = "net_worth_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(String, unique=True, index=True)  # YYYY-MM-DD
+    value = Column(Float)
+    breakdown = Column(String, nullable=True)   # JSON: {"Fluid": 100, "Stock": 200, ...}
+    created_at = Column(DateTime, default=datetime.now)

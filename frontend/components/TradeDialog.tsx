@@ -9,6 +9,7 @@ import { CustomSelect } from "@/components/ui/custom-select"; // If needed, or u
 import { createTransaction } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageProvider';
+import { useToast } from '@/components/ui/toast';
 
 interface TradeDialogProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ interface TradeDialogProps {
 export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogProps) {
     const { t } = useLanguage();
     const router = useRouter();
+    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'buy' | 'sell'>('buy');
 
@@ -40,7 +42,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             const p = parseFloat(price);
 
             if (isNaN(qty) || isNaN(p) || qty <= 0) {
-                alert("Invalid quantity or price");
+                toast(t('invalid_qty_price') || 'Invalid quantity or price', 'error');
                 setLoading(false);
                 return;
             }
@@ -57,12 +59,13 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             if (onSuccess) onSuccess();
             router.refresh();
             onClose();
+            toast(t('trade_success') || `${mode === 'buy' ? 'Buy' : 'Sell'} order recorded`, 'success');
             // Reset form
             setQuantity('');
             setPrice('');
         } catch (error) {
             console.error("Trade failed", error);
-            alert("Trade failed");
+            toast(t('trade_failed') || 'Trade failed', 'error');
         } finally {
             setLoading(false);
         }

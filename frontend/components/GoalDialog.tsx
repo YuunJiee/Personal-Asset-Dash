@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 import { API_URL } from '@/lib/api';
 import { Trash2 } from 'lucide-react';
+import type { Goal } from '@/lib/types';
 
 // Categories available for allocation goals
 const ALLOCATION_CATEGORIES = ['Fluid', 'Stock', 'Crypto', 'Fixed', 'Receivables'];
@@ -31,7 +32,7 @@ function parseAllocation(description?: string): AllocationMap {
 interface GoalDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    initialGoal?: any;
+    initialGoal?: Goal | null;
 }
 
 export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
@@ -151,7 +152,7 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
                 {/* Goal Type */}
                 <div className="space-y-2">
                     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('goal_type_label')}</Label>
-                    <CustomSelect value={goalType} onChange={(v) => setGoalType(v as any)} options={goalTypes} />
+                    <CustomSelect value={goalType} onChange={(v) => setGoalType(v as 'NET_WORTH' | 'ASSET_ALLOCATION')} options={goalTypes} />
                 </div>
 
                 {/* Goal Name */}

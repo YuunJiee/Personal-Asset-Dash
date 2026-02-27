@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { fetchGoals, fetchForecast } from '@/lib/api';
+import type { Goal, GoalForecast, DashboardData, Asset } from '@/lib/types';
 
 // Parse allocation JSON from description
 function parseAllocation(description?: string | null): Record<string, number> | null {
@@ -18,14 +19,14 @@ function parseAllocation(description?: string | null): Record<string, number> | 
 }
 
 export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: {
-    dashboardData: any;
+    dashboardData: DashboardData | null | undefined;
     refreshTrigger: number;
-    onEditGoal: (goal: any) => void;
+    onEditGoal: (goal: Goal) => void;
 }) {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [goals, setGoals] = useState<any[]>([]);
-    const [forecasts, setForecasts] = useState<any>({});
+    const [goals, setGoals] = useState<Goal[]>([]);
+    const [forecasts, setForecasts] = useState<Record<number, GoalForecast>>({});
 
     useEffect(() => {
         fetchGoals().then(setGoals).catch(() => { });
@@ -34,26 +35,26 @@ export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: {
     useEffect(() => {
         fetchForecast()
             .then(data => {
-                const map: any = {};
-                data.forecasts.forEach((f: any) => { map[f.goal_id] = f; });
+                const map: Record<number, GoalForecast> = {};
+                data.forecasts.forEach((f: GoalForecast) => { map[f.goal_id] = f; });
                 setForecasts(map);
             })
             .catch(() => { });
     }, [refreshTrigger]);
 
     const netWorth = dashboardData?.net_worth || 0;
-    const assets: any[] = dashboardData?.assets || [];
+    const assets: Asset[] = dashboardData?.assets || [];
 
     // Total portfolio value (included assets only)
     const totalValue = assets
-        .filter((a: any) => a.include_in_net_worth !== false)
-        .reduce((s: number, a: any) => s + (a.value_twd || 0), 0);
+        .filter((a) => a.include_in_net_worth !== false)
+        .reduce((s, a) => s + (a.value_twd || 0), 0);
 
     // Per-category value
     const categoryValue = (category: string) =>
         assets
-            .filter((a: any) => a.include_in_net_worth !== false && a.category === category)
-            .reduce((s: number, a: any) => s + (a.value_twd || 0), 0);
+            .filter((a) => a.include_in_net_worth !== false && a.category === category)
+            .reduce((s, a) => s + (a.value_twd || 0), 0);
 
     const fmt = (n: number) =>
         isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { notation: 'compact' }).format(n)}`;

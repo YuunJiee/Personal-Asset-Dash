@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -8,6 +8,7 @@ class TransactionBase(BaseModel):
     buy_price: float
     date: Optional[datetime] = None
     is_transfer: Optional[bool] = False
+    note: Optional[str] = None  # Optional memo
 
 class TransactionCreate(TransactionBase):
     pass
@@ -30,8 +31,7 @@ class Transaction(TransactionBase):
     asset_id: int
     date: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Asset Schemas
 class AssetBase(BaseModel):
@@ -75,8 +75,7 @@ class CryptoConnection(BaseModel):
     name: str # e.g. "My Pionex"
     provider: str # "pionex", "max"
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class Asset(AssetBase):
     id: int
@@ -85,8 +84,7 @@ class Asset(AssetBase):
     transactions: List[Transaction] = []
     connection: Optional[CryptoConnection] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DashboardData(BaseModel):
     net_worth: float
@@ -110,8 +108,7 @@ class Alert(AlertBase):
     triggered_at: datetime | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Goal Schemas
@@ -137,8 +134,7 @@ class Goal(GoalBase):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 
@@ -146,7 +142,6 @@ class Goal(GoalBase):
 class BudgetCategoryBase(BaseModel):
     name: str
     icon: Optional[str] = None
-    budget_amount: float
     budget_amount: float
     color: Optional[str] = None
     note: Optional[str] = None
@@ -182,20 +177,17 @@ class IncomeItem(IncomeItemBase):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BudgetCategory(BudgetCategoryBase):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SystemSettingBase(BaseModel):
     key: str
     value: str
 
 class SystemSetting(SystemSettingBase):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

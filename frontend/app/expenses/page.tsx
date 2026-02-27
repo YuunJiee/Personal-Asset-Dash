@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, Pencil, X, PiggyBank, Wallet, ArrowRight, ShieldCheck, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { cn } from '@/lib/utils';
-import { fetchBudgetCategories, fetchIncomeItems, API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
+import { useBudgetCategories, useIncomeItems, useDashboard } from '@/lib/hooks';
 import { useLanguage } from "@/components/LanguageProvider";
 import { IconPicker, AssetIcon } from '@/components/IconPicker';
 import { IncomeItemDialog } from '@/components/views/IncomeItemDialog';
+import { PageHeaderSkeleton, StatCardSkeleton, BudgetRowSkeleton } from '@/components/ui/skeleton';
 
-import type { BudgetCategory, IncomeItem, DashboardData } from '@/lib/types';
+import type { BudgetCategory, IncomeItem } from '@/lib/types';
 
 // Predefined color palette for categories
 const COLOR_OPTIONS = [
@@ -33,9 +35,10 @@ const MACRO_GROUPS = ['Fixed', 'Living', 'Investment', 'Growth', 'Unassigned'];
 export default function BudgetPage() {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [categories, setCategories] = useState<BudgetCategory[]>([]);
-    const [incomeItems, setIncomeItems] = useState<IncomeItem[]>([]);
-    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+    const { categories, refresh: refreshBudgets, isLoading } = useBudgetCategories();
+    const { incomeItems, refresh: refreshIncome } = useIncomeItems();
+    const { dashboard } = useDashboard();
+    const dashboardData = dashboard ?? null;
 
     // Dialog States
     const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
@@ -45,23 +48,6 @@ export default function BudgetPage() {
 
     const defaultBudgetForm = { name: '', icon: '', budget_amount: '', color: 'emerald', note: '', group_name: 'Unassigned' };
     const [budgetForm, setBudgetForm] = useState(defaultBudgetForm);
-
-    const loadData = async () => {
-        try {
-            const [cats, incomes, dash] = await Promise.all([
-                fetchBudgetCategories(),
-                fetchIncomeItems(),
-                fetch(`${API_URL}/dashboard/`, { cache: 'no-store' }).then(res => res.json())
-            ]);
-            setCategories(cats);
-            setIncomeItems(incomes);
-            setDashboardData(dash);
-        } catch (e) {
-            console.error("Failed to load budget data", e);
-        }
-    };
-
-    useEffect(() => { loadData(); }, []);
 
     // --- Budget Functions ---
     const openAddBudget = () => {
@@ -103,7 +89,7 @@ export default function BudgetPage() {
                 body: JSON.stringify(payload),
             });
             setIsBudgetDialogOpen(false);
-            loadData();
+            refreshBudgets();
         } catch (err) {
             console.error(err);
         }
@@ -114,7 +100,7 @@ export default function BudgetPage() {
         if (!confirm(t('delete_budget_confirm'))) return;
         await fetch(`${API_URL}/budgets/${editingBudgetId}`, { method: 'DELETE' });
         setIsBudgetDialogOpen(false);
-        loadData();
+        refreshBudgets();
     };
 
     // --- Income Functions ---
@@ -158,6 +144,18 @@ export default function BudgetPage() {
         acc[group] = categories.filter(c => (c.group_name || 'Unassigned') === group);
         return acc;
     }, {} as Record<string, BudgetCategory[]>);
+
+    if (isLoading) return (
+        <div className="min-h-screen bg-background p-6 md:p-10 space-y-6">
+            <PageHeaderSkeleton />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton />
+            </div>
+            <div className="bg-card rounded-3xl border border-border overflow-hidden">
+                {Array.from({ length: 5 }).map((_, i) => <BudgetRowSkeleton key={i} />)}
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 font-sans text-foreground pb-32">
@@ -373,7 +371,7 @@ export default function BudgetPage() {
             <IncomeItemDialog
                 open={isIncomeDialogOpen}
                 onOpenChange={setIsIncomeDialogOpen}
-                onSave={loadData}
+                onSave={refreshIncome}
                 editingItem={editingIncomeItem}
             />
 
@@ -394,7 +392,7 @@ export default function BudgetPage() {
                                     <IconPicker value={budgetForm.icon} onChange={(icon: string) => setBudgetForm({ ...budgetForm, icon })} defaultIcon="ShoppingBag" className="w-full h-[42px] border-border rounded-xl" iconClassName="w-5 h-5 text-foreground" />
                                 </div>
                                 <div className="col-span-3">
-                                    <label className="text-sm font-medium mb-1 block">{t('category_name' as any) || t('name')}</label>
+                                    <label className="text-sm font-medium mb-1 block">{t('category_name')}</label>
                                     <input className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2" placeholder={t('budget_name_placeholder')} value={budgetForm.name} onChange={e => setBudgetForm({ ...budgetForm, name: e.target.value })} required />
                                 </div>
                             </div>
@@ -408,7 +406,7 @@ export default function BudgetPage() {
                                             onClick={() => setBudgetForm({ ...budgetForm, group_name: g })}
                                             className={cn("px-3 py-1.5 rounded-lg border text-sm transition-colors", budgetForm.group_name === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-transparent border-border hover:bg-muted text-foreground')}
                                         >
-                                            {t(`group_${g.toLowerCase()}` as any) || g}
+                                            {t(`group_${g.toLowerCase()}`) || g}
                                         </button>
                                     ))}
                                 </div>

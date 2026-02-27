@@ -7,8 +7,10 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { Trophy, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
+import type { Asset } from '@/lib/types';
+
 interface TopPerformersWidgetProps {
-    assets: any[];
+    assets: Asset[];
 }
 
 export function TopPerformersWidget({ assets }: TopPerformersWidgetProps) {
@@ -20,7 +22,7 @@ export function TopPerformersWidget({ assets }: TopPerformersWidgetProps) {
         // Filter out assets with 0 cost (infinite ROI) or cash-like if needed
         const candidates = assets.filter(a =>
             a.include_in_net_worth !== false &&
-            (a.category === 'Investment' || a.category === 'Stock' || a.category === 'Crypto') && // Primarily for investments
+            (a.category === 'Stock' || a.category === 'Crypto') && // Primarily for investments
             (a.roi !== undefined && a.roi !== 0)
         );
 

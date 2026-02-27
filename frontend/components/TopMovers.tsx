@@ -3,9 +3,10 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
+import type { Asset } from "@/lib/types";
 
 interface TopMoversProps {
-    assets: any[];
+    assets: Asset[];
 }
 
 export function TopMovers({ assets }: TopMoversProps) {
@@ -16,7 +17,7 @@ export function TopMovers({ assets }: TopMoversProps) {
     // This is "Top Holdings"
     const topAssets = [...assets]
         .filter(a => a.value_twd && a.value_twd > 0 && a.include_in_net_worth !== false)
-        .sort((a, b) => b.value_twd - a.value_twd)
+        .sort((a, b) => (b.value_twd ?? 0) - (a.value_twd ?? 0))
         .slice(0, 5);
 
     return (
@@ -34,7 +35,7 @@ export function TopMovers({ assets }: TopMoversProps) {
                             </div>
                         </div>
                         <div className="font-bold tabular-nums">
-                            {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(asset.value_twd)}`}
+                            {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(asset.value_twd ?? 0)}`}
                         </div>
                     </div>
                 ))}

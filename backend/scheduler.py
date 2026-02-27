@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal
 from . import service, models
 from .services import max_service, wallet_service, binance_service, exchange_service
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,14 @@ def run_price_updates():
     try:
         service.update_prices(db)
         service.update_exchange_rate(db)
-        logger.info("Scheduled price updates completed.")
+        # Take a net worth snapshot after every price update so the history
+        # endpoint can serve from fast DB reads instead of recalculating.
+        service.snapshot_net_worth(db)
+        logger.info("Scheduled price updates + snapshot completed.")
+        # Notify all connected WebSocket clients so the frontend SWR cache
+        # revalidates automatically (no manual page refresh needed).
+        from .routers.ws import manager as ws_manager
+        ws_manager.broadcast_from_thread(json.dumps({"type": "prices_updated"}))
     except Exception as e:
         logger.error(f"Error in scheduled price update: {e}")
     finally:
@@ -88,6 +96,8 @@ def start_scheduler():
         scheduler.add_job(run_pionex_sync, 'interval', minutes=60, id='pionex_sync_job')
         scheduler.add_job(run_binance_sync, 'interval', minutes=60, id='binance_sync_job')
         scheduler.add_job(run_wallet_sync, 'interval', minutes=10, id='wallet_sync_job') # Low cost RPC, higher freq
+        # Daily midnight snapshot ensures history data exists even on days with no manual refresh
+        scheduler.add_job(lambda: run_price_updates(), 'cron', hour=0, minute=5, id='daily_snapshot_job')
         scheduler.start()
         logger.info(f"Scheduler started with interval: {interval_minutes} minutes")
 

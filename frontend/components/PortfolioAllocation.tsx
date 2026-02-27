@@ -5,14 +5,15 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { ChartPie, Layers } from 'lucide-react'; // Layers for platform?
+import { ChartPie, Layers } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import type { Asset } from "@/lib/types";
 
 // Morandi Color Palette (matching AssetAllocationWidget)
 const COLORS = ['#A4C3B2', '#E0D5C3', '#D4A59A', '#8199A6', '#8ABF9E', '#C5AFA5', '#E6B89C', '#F4E4BA'];
 
 interface PortfolioAllocationProps {
-    assets: any[];
+    assets: Asset[];
     title?: string;
     showToggle?: boolean;
     defaultTab?: 'Asset' | 'Platform';

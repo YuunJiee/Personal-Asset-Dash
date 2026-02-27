@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { fetchDashboardData } from "@/lib/api";
+import { useState, useMemo } from "react";
+import { useDashboard } from "@/lib/hooks";
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, DollarSign, X, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
+import type { Asset, Transaction } from "@/lib/types";
+import { PageHeaderSkeleton, Skeleton } from "@/components/ui/skeleton";
+
+/** Transaction enriched with asset metadata for calendar display. */
+interface CalendarTransaction extends Transaction {
+    assetName: string;
+    ticker?: string | null;
+    category: Asset['category'];
+    currentAssetPrice?: number;
+    parsedDate: Date;
+}
 
 // Helper to get days in month
 function getDaysInMonth(year: number, month: number) {
@@ -19,43 +30,26 @@ function getFirstDayOfMonth(year: number, month: number) {
 
 export default function FinancialCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [loading, setLoading] = useState(true);
   const { isPrivacyMode } = usePrivacy();
   const { t, language } = useLanguage();
+  const { dashboard, isLoading: loading } = useDashboard();
 
-  // Fetch data
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const data = await fetchDashboardData();
-        // Flatten transactions from ALL assets
-        const allTxns = data.assets.flatMap((asset: any) => {
-          // Filter: Exclude assets that are NOT included in Net Worth
-          // Debugging exclusion
-          if (asset.include_in_net_worth === false) {
-            return [];
-          }
-
-          return (asset.transactions || []).map((t: any) => ({
-            ...t,
-            assetName: asset.name,
-            ticker: asset.ticker,
-            category: asset.category,
-            currentAssetPrice: asset.current_price,
-            parsedDate: new Date(t.date)
-          }));
-        });
-        setTransactions(allTxns);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Flatten transactions from all assets (memoised — recomputes only when dashboard changes)
+  const transactions = useMemo<CalendarTransaction[]>(() => {
+    if (!dashboard) return [];
+    return dashboard.assets.flatMap((asset: Asset) => {
+      if (asset.include_in_net_worth === false) return [];
+      return (asset.transactions || []).map((t: Transaction) => ({
+        ...t,
+        assetName: asset.name,
+        ticker: asset.ticker,
+        category: asset.category,
+        currentAssetPrice: asset.current_price,
+        parsedDate: new Date(t.date),
+      }));
+    });
+  }, [dashboard]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -90,7 +84,7 @@ export default function FinancialCalendar() {
 
   // Helper to calculate transaction value
   // Helper to calculate transaction value (Price * Amount)
-  const getTxnValue = (t: any) => {
+  const getTxnValue = (t: CalendarTransaction) => {
     let price = t.buy_price;
     if (!price || price === 0) {
       // Fallback to current asset price, or 1 if that fails (e.g. Cash)
@@ -105,14 +99,14 @@ export default function FinancialCalendar() {
   // User asked for "Total Outflow" to include Credit Card spending.
   // Credit Card Spending = Amount > 0 (Debt UP).
   // So for Liabilities: Amount > 0 -> Outflow.
-  const isInflow = (t: any) => {
+  const isInflow = (t: CalendarTransaction) => {
     if (t.category === 'Liabilities') {
       return t.amount < 0; // Debt going down is "Good" (Inflow-like) or Repayment
     }
     return t.amount > 0; // Asset going up
   };
 
-  const isOutflow = (t: any) => {
+  const isOutflow = (t: CalendarTransaction) => {
     if (t.category === 'Liabilities') {
       return t.amount > 0; // Debt going up is "Bad" (Outflow/Expense)
     }
@@ -129,14 +123,14 @@ export default function FinancialCalendar() {
 
   const monthlyNetFlow = monthlyInflow - monthlyOutflow;
 
-  const getActionLabel = (t: any) => {
+  const getActionLabel = (t: CalendarTransaction) => {
     if (t.amount > 0) {
-      if (t.category === 'Investment') return 'BUY';
+      if (t.category === 'Stock' || t.category === 'Crypto') return 'BUY';
       if (t.category === 'Fluid') return 'INC';
       if (t.category === 'Liabilities') return 'BORROW';
       return 'ADD';
     } else {
-      if (t.category === 'Investment') return 'SELL';
+      if (t.category === 'Stock' || t.category === 'Crypto') return 'SELL';
       if (t.category === 'Fluid') return 'EXP';
       if (t.category === 'Liabilities') return 'REPAY';
       return 'DEC';
@@ -353,12 +347,12 @@ export default function FinancialCalendar() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {getTxnsForDay(selectedDate.getDate()).map((txn: any, idx: number) => (
+                  {getTxnsForDay(selectedDate.getDate()).map((txn, idx) => (
                     <div key={idx} className="bg-card p-4 rounded-2xl shadow-sm border border-border flex justify-between items-center">
                       <div>
                         <div className="font-bold">{txn.assetName}</div>
                         <div className="text-xs text-muted-foreground">
-                          {t(txn.category as any) || txn.category}
+                          {t(txn.category) || txn.category}
                           {txn.ticker ? ` • ${txn.ticker}` : ''}
                         </div>
                       </div>

@@ -15,8 +15,15 @@ export const CHART_THEMES: Record<string, string[]> = {
 
 const DEFAULT_THEME = 'Morandi';
 
+/** A single slice of the pie chart. */
+export interface PieChartDataPoint {
+    name: string;
+    value: number;
+    category?: string;
+}
+
 interface AssetPieChartProps {
-    data: any[];
+    data: PieChartDataPoint[];
     themeName?: string;
 }
 
@@ -81,12 +88,13 @@ export function AssetPieChart({ data, themeName = 'Classic' }: AssetPieChartProp
                                     })}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: any, name: any) => {
-                                        if (isPrivacyMode) return ['****', name];
-                                        const percent = totalValue ? (value / totalValue * 100).toFixed(1) : 0;
+                                    formatter={(value, name) => {
+                                        if (isPrivacyMode) return ['****', String(name ?? '')];
+                                        const v = Number(value ?? 0);
+                                        const percent = totalValue ? ((v / totalValue) * 100).toFixed(1) : 0;
                                         return [
-                                            `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)} (${percent}%)`,
-                                            name
+                                            `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v)} (${percent}%)`,
+                                            String(name ?? '')
                                         ];
                                     }}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}

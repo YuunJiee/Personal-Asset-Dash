@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchHistory } from '@/lib/api';
+import { useNetWorthHistory } from '@/lib/hooks';
 
 interface DataPoint {
     date: string;
@@ -21,34 +21,12 @@ interface NetWorthTrendChartProps {
 export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [data, setData] = useState<DataPoint[]>([]);
     const [range, setRange] = useState<string>('30d');
-    const [isLoading, setIsLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-        const fetchData = async () => {
-            setIsLoading(true);
-            try {
-                // Fetch from backend
-                const result = await fetchHistory(range);
-                if (result && result.length > 0) {
-                    setData(result);
-                } else {
-                    // No data available - show empty state
-                    setData([]);
-                }
-            } catch (error) {
-                console.error("Failed to fetch history:", error);
-                setData([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    useEffect(() => { setMounted(true); }, []);
 
-        fetchData();
-    }, [range]);
+    const { history: data, isLoading } = useNetWorthHistory(range);
 
     if (!mounted) return <div className={cn("rounded-3xl shadow-sm border-border bg-card h-[400px]", className)} />;
 
@@ -70,13 +48,13 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {t(`range_${r}` as any)}
+                            {t(`range_${r}`)}
                         </button>
                     ))}
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="h-[350px] w-full min-w-0">
+                <div className="h-[350px] w-full min-w-0 overflow-hidden">
                     {isLoading ? (
                         <div className="h-full w-full flex items-center justify-center text-muted-foreground">Loading...</div>
                     ) : data.length === 0 ? (

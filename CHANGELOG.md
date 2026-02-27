@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-02-27
+
+### ✨ Added
+
+- **Skeleton Loading System** — fully consistent loading UX across all pages
+  - New shared variants in `components/ui/skeleton.tsx`: `PageHeaderSkeleton`, `TableRowSkeleton`, `BudgetRowSkeleton`
+  - Applied to all 6 pages (`assets`, `crypto`, `history`, `calendar`, `expenses`, `stock`); all now show layout-accurate shimmer instead of a blank screen
+  - Replaced all ad-hoc `animate-pulse` inline divs in `assets` and `crypto` pages with the shared `PageHeaderSkeleton`
+- **Toast Notification System** — `components/ui/toast.tsx`
+  - `ToastProvider` + `useToast()` hook with enter/exit animation
+  - Wired into `ClientLayout`; used in `AddAssetDialog`, `TradeDialog`, `assets/page` for CRUD feedback
+- **Empty State Component** — `components/EmptyState.tsx`; shown in `assets/page` when no assets exist
+
+### ♻️ Refactored
+
+- **Analytics page responsibility split** — removed `PortfolioAllocation × 2`, `TopPerformersWidget`, `TopMovers` (duplicate of Stock page); Analytics now focuses on historical reports: `RiskMetricsWidget` + `NetWorthTrendChart` + `MonthlyChangeChart` + PDF export
+- **`EditAssetView.tsx` fully typed**
+  - `asset: any` prop → `Asset | null`; formData state given explicit generic
+  - Added `null` guards in `handleDelete` / `handleSubmit`
+  - Fixed dead `'Investment'` category comparison (correct union: `'Stock' | 'Crypto'`)
+  - Fixed `subCategories` map to match actual `Asset['category']` union
+  - Fixed `manual_avg_cost` cast: `|| null` → `Number(x) : null`
+- **`GlobalThemeProvider.tsx`** — exported `ThemeName` type; `settings/page.tsx` replaced `as any` with `as ThemeName`
+
+### 🌐 i18n
+
+- **Full bilingual audit**: found and fixed 23 asymmetric translation keys between EN and ZH-TW
+  - 13 keys missing from ZH-TW (integration providers, sub-categories)
+  - 10 keys missing from EN (table headers, favorites, price columns)
+  - 10 new UI keys added to both languages: `export_pdf`, `asset_created`, `asset_create_failed`, `asset_deleted`, `delete_failed`, `trade_success`, `trade_failed`, `invalid_qty_price`, `no_assets_found`, `no_assets_desc`
+- **`_AssertSymmetry` compile-time guard** added at bottom of `dictionaries.ts` — TypeScript error on any missing ZH-TW key
+- **JSDoc** added to `dictionaries.ts` explaining how to add new keys and new languages
+- Normalized two quoted keys (`'confirm_delete'`, `'sync_includes_scan'`) to unquoted in ZH-TW section
+- Eliminated all `t(x as any)` casts (13 files, ~25 occurrences) — `t()` already accepts `string`
+
+### 🐛 Fixed
+
+- `PortfolioAllocation` prop type: `assets: any[]` → `Asset[]`; added `connection?: { id, name, provider }` to `lib/types.ts`
+- `MonthlyChangeChart` temporal dead zone crash on mount
+
+### 🔒 Type Safety
+
+- Global `as any` count reduced to **2** (both in `IconPicker.tsx` for dynamic Lucide icon lookup — unavoidable)
+- Full-project `npx tsc --noEmit` → **0 errors**
+
+---
+
 ## [2.4.0] - 2026-02-23
 
 ### ✨ Added

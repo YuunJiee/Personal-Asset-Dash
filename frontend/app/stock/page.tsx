@@ -7,21 +7,22 @@ import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { AlertButton } from "@/components/AlertButton";
 import { updateAsset } from "@/lib/api";
-
-import { fetchDashboardData } from "@/lib/api";
+import { useDashboard } from "@/lib/hooks";
+import type { Asset } from "@/lib/types";
 
 import { TradeDialog } from "@/components/TradeDialog";
 import { AlertCircle, ArrowLeftRight, TrendingUp, Filter } from "lucide-react";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { TopMovers } from "@/components/TopMovers";
 import { TopPerformersWidget } from "@/components/TopPerformersWidget";
+import { PageHeaderSkeleton, ChartSkeleton, AssetRowSkeleton } from "@/components/ui/skeleton";
 
 // Reusable Table Component
-function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title: string, assets: any[], exchangeRate: number, onUpdate: () => void, onTrade: (asset: any) => void }) {
+function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title: string, assets: Asset[], exchangeRate: number, onUpdate: () => void, onTrade: (asset: Asset) => void }) {
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
 
-    const handleCostChange = async (asset: any, value: string) => {
+    const handleCostChange = async (asset: Asset, value: string) => {
         const num = parseFloat(value);
         if (isNaN(num)) return;
 
@@ -69,14 +70,14 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
             {/* Mobile Card List */}
             <div className="md:hidden space-y-4">
                 {assets.map(asset => {
-                    const quantity = asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0);
+                    const quantity = (asset.transactions ?? []).reduce((acc, t) => acc + t.amount, 0);
 
                     // Native Values
-                    const backendTotalCost = asset.transactions.reduce((acc: any, t: any) => acc + (t.amount * t.buy_price), 0);
+                    const backendTotalCost = (asset.transactions ?? []).reduce((acc, t) => acc + (t.amount * t.buy_price), 0);
                     const backendAvgCost = quantity > 0 ? backendTotalCost / quantity : 0;
-                    const hasManual = asset.manual_avg_cost !== null;
-                    const avgCostNative = hasManual ? asset.manual_avg_cost : backendAvgCost;
-                    const currentPriceNative = asset.current_price;
+                    const hasManual = asset.manual_avg_cost != null;
+                    const avgCostNative = hasManual ? (asset.manual_avg_cost ?? 0) : backendAvgCost;
+                    const currentPriceNative = asset.current_price ?? 0;
 
                     let isUSD = false;
                     if (asset.ticker) {
@@ -99,7 +100,9 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
                     const plTWD = valueTWD - (costTWD * quantity);
                     const roi = (costTWD * quantity) > 0 ? (plTWD / (costTWD * quantity)) * 100 : 0;
 
-                    const daysSinceUpdate = (new Date().getTime() - new Date(asset.last_updated_at).getTime()) / (1000 * 3600 * 24);
+                    const daysSinceUpdate = asset.last_updated_at
+                        ? (new Date().getTime() - new Date(asset.last_updated_at).getTime()) / (1000 * 3600 * 24)
+                        : 0;
                     const isManual = !asset.ticker;
                     const isStale = isManual && daysSinceUpdate > 30;
 
@@ -168,14 +171,14 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
                     </thead>
                     <tbody className="divide-y divide-border">
                         {assets.map(asset => {
-                            const quantity = asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0);
+                            const quantity = (asset.transactions ?? []).reduce((acc, t) => acc + t.amount, 0);
 
                             // Native Values
-                            const backendTotalCost = asset.transactions.reduce((acc: any, t: any) => acc + (t.amount * t.buy_price), 0);
+                            const backendTotalCost = (asset.transactions ?? []).reduce((acc, t) => acc + (t.amount * t.buy_price), 0);
                             const backendAvgCost = quantity > 0 ? backendTotalCost / quantity : 0;
-                            const hasManual = asset.manual_avg_cost !== null;
-                            const avgCostNative = hasManual ? asset.manual_avg_cost : backendAvgCost;
-                            const currentPriceNative = asset.current_price;
+                            const hasManual = asset.manual_avg_cost != null;
+                            const avgCostNative = hasManual ? (asset.manual_avg_cost ?? 0) : backendAvgCost;
+                            const currentPriceNative = asset.current_price ?? 0;
 
                             // Determine Currency & Conversion
                             // Heuristic: If Ticker exists and NOT .TW, assume USD.
@@ -206,7 +209,9 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
                             const roi = (costTWD * quantity) > 0 ? (plTWD / (costTWD * quantity)) * 100 : 0;
 
                             // Stale Logic
-                            const daysSinceUpdate = (new Date().getTime() - new Date(asset.last_updated_at).getTime()) / (1000 * 3600 * 24);
+                            const daysSinceUpdate = asset.last_updated_at
+                                ? (new Date().getTime() - new Date(asset.last_updated_at).getTime()) / (1000 * 3600 * 24)
+                                : 0;
                             const isManual = !asset.ticker;
                             const isStale = isManual && daysSinceUpdate > 30;
 
@@ -229,7 +234,7 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
                                                 <AlertButton
                                                     assetId={asset.id}
                                                     currentPrice={currentPriceNative}
-                                                    ticker={asset.ticker}
+                                                    ticker={asset.ticker!}
                                                 />
                                             )}
                                         </div>
@@ -273,9 +278,22 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
 }
 
 export default function InvestmentPage() {
-    const [assets, setAssets] = useState<any[]>([]);
-    const [exchangeRate, setExchangeRate] = useState(30);
-    const [tradingAsset, setTradingAsset] = useState<any | null>(null);
+    const { assets, dashboard: dashData, refresh: refreshData, isLoading } = useDashboard();
+    const exchangeRate = dashData?.exchange_rate ?? 30;
+    const [tradingAsset, setTradingAsset] = useState<Asset | null>(null);
+
+    if (isLoading) return (
+        <div className="min-h-screen bg-background p-6 md:p-10 space-y-6">
+            <PageHeaderSkeleton />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <ChartSkeleton /><ChartSkeleton /><ChartSkeleton height={160} />
+            </div>
+            <div className="bg-card rounded-3xl border border-border overflow-hidden">
+                {Array.from({ length: 6 }).map((_, i) => <AssetRowSkeleton key={i} />)}
+            </div>
+        </div>
+    );
+
     // Initialize from localStorage if available, otherwise false
     const [dustFilter, setDustFilter] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -285,28 +303,15 @@ export default function InvestmentPage() {
     });
     const dustThreshold = 10;
 
-    // Persist to localStorage whenever it changes
+    // Persist dust-filter preference to localStorage whenever it changes
     useEffect(() => {
         localStorage.setItem('yantage_dust_filter', dustFilter.toString());
     }, [dustFilter]);
 
-    const loadData = () => {
-        fetchDashboardData()
-            .then(data => {
-                setAssets(data.assets);
-                setExchangeRate(data.exchange_rate);
-            })
-            .catch(console.error);
-    };
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
     // Categorize & filter
-    const portfolioAssets = assets.filter(a =>
-        ['Stock', 'Crypto', 'Fund', 'Other Investment'].includes(a.category) || a.category === 'Investment'
-    );
+    // 'Investment' is a legacy category name — include it alongside the current names for backward-compat.
+    const PORTFOLIO_CATEGORIES = new Set(['Stock', 'Crypto', 'Fund', 'Other Investment', 'Investment']);
+    const portfolioAssets = assets.filter(a => PORTFOLIO_CATEGORIES.has(a.category));
     const filteredAssets = dustFilter
         ? portfolioAssets.filter(a => (a.value_twd ?? 0) >= dustThreshold)
         : portfolioAssets;
@@ -390,13 +395,13 @@ export default function InvestmentPage() {
                 </>
             )}
 
-            <AssetTable title={t('assets')} assets={filteredAssets} exchangeRate={exchangeRate} onUpdate={loadData} onTrade={setTradingAsset} />
+            <AssetTable title={t('assets')} assets={filteredAssets} exchangeRate={exchangeRate} onUpdate={refreshData} onTrade={setTradingAsset} />
 
             <TradeDialog
                 isOpen={!!tradingAsset}
                 onClose={() => setTradingAsset(null)}
                 asset={tradingAsset}
-                onSuccess={loadData}
+                onSuccess={refreshData}
             />
 
             {assets.length > 0 && (

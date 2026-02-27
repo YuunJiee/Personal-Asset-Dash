@@ -1,3 +1,18 @@
+/**
+ * i18n Dictionaries — Yantage
+ *
+ * HOW TO ADD A NEW KEY:
+ *   1. Add to `en` first (this is the source-of-truth language).
+ *   2. Add the matching key to `zh-TW`.
+ *   3. TypeScript will error at the bottom `_AssertSymmetry` block if any key
+ *      is present in 'en' but missing from 'zh-TW' — this is intentional.
+ *
+ * HOW TO ADD A NEW LANGUAGE:
+ *   1. Add its code to the `Language` union below.
+ *   2. Add a new section to `translations` that mirrors *all* keys from `en`.
+ *   3. Extend `_AssertSymmetry` to include the new locale.
+ */
+
 export type Language = 'en' | 'zh-TW';
 
 export const translations = {
@@ -13,6 +28,8 @@ export const translations = {
         history: "History",
         settings: "Settings",
         collapse: "Collapse",
+        expand: "Expand",
+        chains: "Chains",
         dark_mode: "Dark Mode",
         light_mode: "Light Mode",
 
@@ -182,6 +199,37 @@ export const translations = {
         // Binance Integration
         binance_integration: "Binance Integration",
         binance_desc: "Sync your Binance spot wallet assets.",
+
+        // Analytics Actions
+        export_pdf: "Export PDF",
+
+        // Toast Notifications
+        asset_created: "Asset created successfully",
+        asset_create_failed: "Failed to create asset",
+        asset_deleted: "Asset deleted",
+        delete_failed: "Failed to delete asset",
+        trade_success: "Trade recorded",
+        trade_failed: "Trade failed",
+        invalid_qty_price: "Invalid quantity or price",
+        no_assets_found: "No matching assets",
+        no_assets_desc: "Add your first asset to start tracking your net worth.",
+        confirm_delete: "Are you sure you want to delete?",
+
+        // Table Column Headers (Portfolio / Crypto pages)
+        price_twd: "Price (TWD)",
+        holdings: "Holdings",
+        avg_cost_twd: "Avg Cost (TWD)",
+        avg_cost: "Avg Cost",
+        value_twd: "Value (TWD)",
+        pl_twd: "P&L (TWD)",
+        return_pct: "Return (%)",
+
+        // Sidebar / Favorites
+        favorites: "Favorites",
+
+        // Rebalance (increments)
+        increase: "Increase",
+        decrease: "Decrease",
 
         // Data Management
         backup_data: "Backup Data",
@@ -536,6 +584,8 @@ export const translations = {
         history: "歷史紀錄",
         settings: "設定",
         collapse: "收起選單",
+        expand: "展開詳情",
+        chains: "條鏈",
         dark_mode: "深色模式",
         light_mode: "淺色模式",
 
@@ -702,6 +752,24 @@ export const translations = {
         sync_success: "同步成功！",
         save_keys: "儲存金鑰",
 
+        // Binance Integration
+        binance_integration: "Binance 交易所串接",
+        binance_desc: "同步您的 Binance 現貨錢包資產。",
+
+        // Analytics Actions
+        export_pdf: "匯出 PDF",
+
+        // Toast Notifications
+        asset_created: "資產新增成功",
+        asset_create_failed: "新增資產失敗",
+        asset_deleted: "資產已刪除",
+        delete_failed: "刪除資產失敗",
+        trade_success: "交易已記錄",
+        trade_failed: "交易失敗",
+        invalid_qty_price: "數量或價格無效",
+        no_assets_found: "找不到符合的資產",
+        no_assets_desc: "新增您的第一筆資產，開始追蹤淨值。",
+
         backup_data: "備份資料",
         backup_desc: "下載所有資產和交易紀錄的備份檔案。",
         backup_json: "下載 JSON 備份",
@@ -748,8 +816,7 @@ export const translations = {
         close: "關閉",
         back: "返回",
         confirm: "確認",
-        'confirm_delete': '確定要刪除嗎？',
-        'sync_includes_scan': '包含自動掃描',
+        confirm_delete: "確定要刪除嗎？",
         cancel: "取消",
         add_button: "新增",
         add_to_favorites: "加入我的最愛",
@@ -808,6 +875,10 @@ export const translations = {
         adding: "新增中...",
         add_connection: "新增連線",
         no_integrations: "尚未連接任何整合。新增一個來追蹤您的加密貨幣。",
+        binance: "Binance",
+        max: "MAX 交易所",
+        pionex: "Pionex",
+        wallet: "Web3 錢包",
 
         // Table Headers
         price_twd: "價格 (TWD)",
@@ -835,7 +906,13 @@ export const translations = {
         sc_ewallet: "電子錢包",
         sc_debit_card: "簽帳金融卡",
         sc_other: "其他",
+        sc_coin: "幣",
+        sc_token: "代幣",
+        sc_stablecoin: "穩定幣",
+        sc_defi: "DeFi",
+        sc_nft: "NFT",
         sc_fund: "基金",
+        sc_mutual_fund: "共同基金",
         sc_tw_stock: "台股",
         sc_us_stock: "美股",
         sc_etf: "ETF",
@@ -1033,6 +1110,7 @@ export const translations = {
         delete_transaction_confirm: "您確定要刪除這筆交易嗎？此操作無法復原。",
         failed_update_txn: "更新交易失敗",
         failed_delete_txn: "刪除交易失敗",
+        sync_includes_scan: "包含自動掃描",
 
         // Goal Widget
         goal_complete: "達成率",
@@ -1054,3 +1132,15 @@ export const translations = {
 };
 
 export type TranslationKey = keyof typeof translations.en;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Compile-time symmetry guard.
+// If zh-TW is missing a key that exists in 'en', TypeScript will error here.
+// When adding a new feature: add to 'en' first, then add to 'zh-TW'.
+// ─────────────────────────────────────────────────────────────────────────────
+type _AssertSymmetry = {
+    [K in TranslationKey]: (typeof translations)['zh-TW'][K]
+};
+// The following line forces evaluation of the type check:
+const _verify: _AssertSymmetry = translations['zh-TW'];
+void _verify;

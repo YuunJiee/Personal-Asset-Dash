@@ -1,7 +1,6 @@
-import { useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PieChart, Settings, Menu, TrendingUp, CreditCard, Sun, Moon, ChevronLeft, ChevronRight, Eye, EyeOff, Download, Wallet, Calendar, Star, Bitcoin, History, ArrowRightLeft, LogOut, X, Languages, UserCircle } from 'lucide-react';
+import { LayoutDashboard, PieChart, Settings, Menu, ChevronLeft, ChevronRight, Eye, EyeOff, Wallet, Calendar, Star, Bitcoin, TrendingUp, CreditCard, History } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
@@ -9,9 +8,21 @@ import { usePrivacy } from "@/components/PrivacyProvider";
 import { AssetActionDialog } from './AssetActionDialog';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { AssetIcon } from './IconPicker';
-
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchDashboardData, API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
+import { useDashboard } from '@/lib/hooks';
+import type { Asset } from '@/lib/types';
+
+/** Per-category icon container class for the sidebar favourites list. */
+const SIDEBAR_CATEGORY_CLASSES: Record<string, string> = {
+    Fluid:       'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    Investment:  'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    Stock:       'bg-indigo-500/10 text-indigo-500',
+    Crypto:      'bg-orange-500/10 text-orange-500',
+    Fixed:       'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    Receivables: 'bg-orange-400/10 text-orange-400',
+    Liabilities: 'bg-red-500/10 text-red-600 dark:text-red-400',
+};
 
 interface AppSidebarProps {
     isCollapsed: boolean;
@@ -24,9 +35,9 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
     const { setTheme, theme } = useTheme();
     const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
     const [mounted, setMounted] = useState(false);
-    const [historyAsset, setHistoryAsset] = useState<any | null>(null);
-    const [assets, setAssets] = useState<any[]>([]);
+    const [historyAsset, setHistoryAsset] = useState<Asset | null>(null);
     const { t, language, setLanguage } = useLanguage();
+    const { assets } = useDashboard();
 
     useEffect(() => {
         setMounted(true);
@@ -48,26 +59,8 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
 
     ];
 
-    const [favorites, setFavorites] = useState<any[]>([]);
-
-    useEffect(() => {
-        const loadFavorites = async () => {
-            try {
-                const data = await fetchDashboardData();
-                if (data && data.assets) {
-                    setAssets(data.assets || []);
-                    const favs = data.assets.filter((a: any) => a.is_favorite).slice(0, 5);
-                    setFavorites(favs);
-                }
-            } catch (e) {
-                console.error("Sidebar couldn't load favorites:", e);
-                // Keep existing favorites or set to empty to avoid repeated crashes
-            }
-        };
-        loadFavorites();
-        const interval = setInterval(loadFavorites, 5000);
-        return () => clearInterval(interval);
-    }, []);
+    // Derive favorites from shared SWR dashboard cache — no extra fetch needed.
+    const favorites = assets.filter((a) => a.is_favorite).slice(0, 5);
 
     return (
         <>
@@ -153,10 +146,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                             const Icon = asset.icon || 'CircleDollarSign';
 
                             let bgClass = "bg-primary/10 text-primary";
-                            if (asset.category === 'Fluid') bgClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-                            else if (asset.category === 'Investment') bgClass = "bg-blue-500/10 text-blue-600 dark:text-blue-400";
-                            else if (asset.category === 'Fixed') bgClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400";
-                            else if (asset.category === 'Liabilities') bgClass = "bg-red-500/10 text-red-600 dark:text-red-400";
+                            bgClass = SIDEBAR_CATEGORY_CLASSES[asset.category] ?? bgClass;
 
                             return (
                                 <div
@@ -188,7 +178,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                                                 </span>
                                             )}
                                             <span className="text-[10px] text-muted-foreground/60 truncate">
-                                                {t(asset.category as any) || asset.category}
+                                                {t(asset.category) || asset.category}
                                             </span>
                                         </div>
                                     </div>

@@ -1,58 +1,69 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { ArrowDownLeft, ArrowUpRight, Trash2, History } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ArrowDownLeft, ArrowUpRight, History } from "lucide-react";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { cn } from "@/lib/utils";
-
-
 import { useLanguage } from "@/components/LanguageProvider";
-
-import { fetchAssets } from "@/lib/api";
-
-// ... imports
+import { useDashboard } from "@/lib/hooks";
+import type { Asset, Transaction } from "@/lib/types";
 import { TransactionEditDialog } from "@/components/TransactionEditDialog";
+import { PageHeaderSkeleton, TableRowSkeleton } from "@/components/ui/skeleton";
+
+/** Transaction enriched with its parent asset metadata for display purposes. */
+interface EnrichedTransaction extends Transaction {
+    assetName: string;
+    assetTicker?: string | null;
+    category: Asset['category'];
+    assetSource?: string;
+    valueTwd?: number;
+}
 
 export default function HistoryPage() {
-    const [transactions, setTransactions] = useState<any[]>([]);
-    const [stats, setStats] = useState({ total_in: 0, total_out: 0 });
     const [range, setRange] = useState<string>('all');
-    const [selectedTx, setSelectedTx] = useState<any | null>(null);
+    const [selectedTx, setSelectedTx] = useState<EnrichedTransaction | null>(null);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
+    const { assets, refresh, isLoading } = useDashboard();
 
-    const fetchTxns = async () => {
-        try {
-            const assets = await fetchAssets();
-            const allTxns: any[] = [];
-            assets.forEach((asset: any) => {
-                if (asset.transactions) {
-                    asset.transactions.forEach((t: any) => {
-                        allTxns.push({
-                            ...t,
-                            assetName: asset.name,
-                            assetTicker: asset.ticker,
-                            category: asset.category,
-                            assetSource: asset.source, // Important for check
-                            valueTwd: asset.value_twd
-                        });
+    // Flatten all transactions from all assets, preserving asset metadata.
+    const transactions = useMemo<EnrichedTransaction[]>(() => {
+        const allTxns: EnrichedTransaction[] = [];
+        assets.forEach(asset => {
+            if (asset.transactions) {
+                asset.transactions.forEach(txn => {
+                    allTxns.push({
+                        ...txn,
+                        assetName: asset.name,
+                        assetTicker: asset.ticker,
+                        category: asset.category,
+                        assetSource: asset.source,
+                        valueTwd: asset.value_twd,
                     });
-                }
-            });
-            // Sort by date desc
-            allTxns.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setTransactions(allTxns);
-        } catch (error) {
-            console.error("Failed to fetch assets for history:", error);
-            // Optionally, set an error state or display a message to the user
-        }
-    };
+                });
+            }
+        });
+        return allTxns.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [assets]);
 
-    useEffect(() => {
-        fetchTxns();
-    }, []);
+    if (isLoading) return (
+        <div className="min-h-screen bg-background p-6 md:p-10 space-y-4">
+            <PageHeaderSkeleton />
+            {/* Range tabs placeholder */}
+            <div className="flex justify-end mb-6">
+                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="w-10 h-6 rounded-md bg-muted animate-pulse" />
+                    ))}
+                </div>
+            </div>
+            <div className="bg-card rounded-3xl border border-border overflow-hidden">
+                {Array.from({ length: 8 }).map((_, i) => <TableRowSkeleton key={i} />)}
+            </div>
+        </div>
+    );
 
-    const handleRowClick = (txn: any) => {
+    const handleRowClick = (txn: EnrichedTransaction) => {
         if (txn.assetSource === 'max') {
             return;
         }
@@ -102,7 +113,7 @@ export default function HistoryPage() {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {t(`range_${r}` as any)}
+                            {t(`range_${r}`)}
                         </button>
                     ))}
                 </div>
@@ -123,7 +134,7 @@ export default function HistoryPage() {
                             <div>
                                 <div className="font-bold text-foreground">{txn.assetName}</div>
                                 <div className="text-xs text-muted-foreground">
-                                    {new Date(txn.date).toLocaleDateString('zh-TW')} • {t(txn.category as any) || txn.category}
+                                    {new Date(txn.date).toLocaleDateString('zh-TW')} • {t(txn.category) || txn.category}
                                 </div>
                             </div>
                             <div className="text-right">
@@ -175,7 +186,7 @@ export default function HistoryPage() {
                                 <td className="p-4">
                                     <div className="font-bold text-foreground">{txn.assetName}</div>
                                     <div className="text-xs text-muted-foreground">
-                                        {t(txn.category as any) || txn.category}
+                                        {t(txn.category) || txn.category}
                                         {txn.assetTicker ? ` • ${txn.assetTicker}` : ''}
                                     </div>
                                 </td>
@@ -204,7 +215,7 @@ export default function HistoryPage() {
                 isOpen={!!selectedTx}
                 onClose={() => setSelectedTx(null)}
                 transaction={selectedTx}
-                onSuccess={fetchTxns}
+                onSuccess={refresh}
             />
         </div>
     );

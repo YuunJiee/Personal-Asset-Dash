@@ -8,6 +8,8 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { ChartPie } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
+import type { Asset } from '@/lib/types';
+
 // Theme Palettes (Inlined to ensure availability)
 const CHART_THEMES: Record<string, string[]> = {
     'Classic': ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'],
@@ -42,7 +44,7 @@ const SUBCATEGORY_KEY_MAP: Record<string, string> = {
 };
 
 interface AssetAllocationWidgetProps {
-    assets: any[];
+    assets: Asset[];
 }
 
 export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
@@ -76,7 +78,8 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
 
     const totalValue = data.reduce((acc, curr) => acc + curr.value, 0);
     const legendHeight = Math.max(50, Math.ceil(data.length / 3) * 30 + 20);
-    const containerHeight = Math.max(420, 360 + legendHeight);
+    // Cap to 90dvh (converted to rough px cap) so it never overflows on small screens
+    const containerHeight = Math.min(Math.max(420, 360 + legendHeight), 700);
 
     // Use Morandi Theme
     const colors = CHART_THEMES['Morandi'];
@@ -85,10 +88,10 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
         // Try to map subcategory first
         if (viewMode === 'SubCategory') {
             const key = SUBCATEGORY_KEY_MAP[name];
-            if (key) return t(key as any);
+            if (key) return t(key);
         }
         // Fallback to direct translation (for Categories which match keys, or unmapped subs)
-        return t(name as any) || name;
+        return t(name) || name;
     };
 
     return (
@@ -123,7 +126,7 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
             </CardHeader>
             <CardContent>
                 {/* Explicit height wrapper to prevent collapse */}
-                <div style={{ width: '100%', height: containerHeight, minHeight: containerHeight }}>
+                <div style={{ width: '100%', height: containerHeight, minHeight: containerHeight, overflow: 'hidden' }}>
                     {totalValue === 0 ? (
                         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground gap-2">
                             <ChartPie className="w-8 h-8 opacity-20" />
@@ -167,12 +170,13 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
                                     })}
                                 </Pie>
                                 <Tooltip
-                                    formatter={(value: any, name: any) => {
-                                        if (isPrivacyMode) return ['****', getTranslatedName(name)];
-                                        const percent = totalValue ? (value / totalValue * 100).toFixed(1) : 0;
+                                    formatter={(value, name) => {
+                                        if (isPrivacyMode) return ['****', getTranslatedName(String(name ?? ''))];
+                                        const v = Number(value ?? 0);
+                                        const percent = totalValue ? (v / totalValue * 100).toFixed(1) : 0;
                                         return [
-                                            `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)} (${percent}%)`,
-                                            getTranslatedName(name)
+                                            `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v)} (${percent}%)`,
+                                            getTranslatedName(String(name ?? ''))
                                         ];
                                     }}
                                     contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}

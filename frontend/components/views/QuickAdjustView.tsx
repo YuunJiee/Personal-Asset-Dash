@@ -9,8 +9,10 @@ import { createTransaction } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
+import type { Asset } from '@/lib/types';
+
 interface QuickAdjustViewProps {
-    asset: any;
+    asset: Asset;
     onClose: () => void;
     onBack?: () => void;
 }
@@ -22,7 +24,7 @@ export function QuickAdjustView({ asset, onClose, onBack }: QuickAdjustViewProps
     const [mode, setMode] = useState<'set' | 'adjust'>('set');
     const [value, setValue] = useState('');
 
-    const currentBalance = asset ? asset.transactions.reduce((acc: number, t: any) => acc + t.amount, 0) : 0;
+    const currentBalance = asset ? asset.transactions?.reduce((acc: number, t) => acc + t.amount, 0) ?? 0 : 0;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

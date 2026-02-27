@@ -2,19 +2,25 @@
 
 import React from 'react';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ArrowUpDown, Search, Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchAssets, deleteAsset, fetchDashboardData } from "@/lib/api";
+import { deleteAsset } from "@/lib/api";
+import { useDashboard } from "@/lib/hooks";
+import { useToast } from "@/components/ui/toast";
+import { AssetRowSkeleton, PageHeaderSkeleton } from "@/components/ui/skeleton";
 
 import { Pencil, Trash2 } from "lucide-react";
 import { AssetIcon } from "@/components/IconPicker";
 import { getCategoryIconName } from "@/lib/iconHelper";
 import { AssetActionDialog } from "@/components/AssetActionDialog";
+import { CATEGORY_ICON_BG, CATEGORY_ICON_TEXT } from "@/lib/constants";
+import type { Asset, Transaction } from "@/lib/types";
+import { EmptyState } from "@/components/EmptyState";
 
 // Map raw subcategory strings (from DB) to translation keys
 const SUBCATEGORY_KEY_MAP: Record<string, string> = {
@@ -44,20 +50,14 @@ const SUBCATEGORY_KEY_MAP: Record<string, string> = {
 };
 
 export default function AssetsPage() {
-    const [assets, setAssets] = useState<any[]>([]);
-    const [historyAsset, setHistoryAsset] = useState<any | null>(null);
+    const [historyAsset, setHistoryAsset] = useState<Asset | null>(null);
     const [search, setSearch] = useState('');
     const [sortDesc, setSortDesc] = useState(true);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
     const [groupBy, setGroupBy] = useState<'category' | 'source'>('category');
 
-    useEffect(() => {
-        // Use fetchDashboardData to get assets with calculated value_twd (including FX)
-        fetchDashboardData().then(data => {
-            setAssets(data.assets);
-        }).catch(console.error);
-    }, []);
+    const { assets, refresh: refreshData, isLoading } = useDashboard();
 
     const filteredAssets = assets
         .filter(a =>
@@ -65,36 +65,47 @@ export default function AssetsPage() {
             (a.ticker && a.ticker.toLowerCase().includes(search.toLowerCase()))
         )
         .sort((a, b) => {
-            const valA = a.current_price * (a.transactions ? a.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0);
-            const valB = b.current_price * (b.transactions ? b.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0);
+            const qty = (txns: Transaction[] | undefined) =>
+                txns ? txns.reduce((acc, t) => acc + t.amount, 0) : 0;
+            const valA = (a.current_price ?? 0) * qty(a.transactions);
+            const valB = (b.current_price ?? 0) * qty(b.transactions);
             return sortDesc ? valB - valA : valA - valB;
         });
 
     const totalValue = filteredAssets.reduce((sum, a) => {
-        if (a.category === 'Liabilities') return sum; // Don't sum liabilities in Asset Total? Or Net?
-        // Let's just sum positive value assets for "Total Assets" view
-        const val = a.current_price * (a.transactions ? a.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0);
+        if (a.category === 'Liabilities') return sum;
+        const qty = a.transactions ? a.transactions.reduce((acc, t) => acc + t.amount, 0) : 0;
+        const val = (a.current_price ?? 0) * qty;
         return sum + val;
     }, 0);
 
-    const refreshData = () => {
-        fetchDashboardData().then(data => setAssets(data.assets)).catch(console.error);
-    };
+    const { toast } = useToast();
 
-    const handleDelete = async (asset: any) => {
+    const handleDelete = async (asset: Asset) => {
         if (!confirm(t('delete_asset_confirm'))) return;
         try {
             await deleteAsset(asset.id);
             refreshData();
+            toast(t('asset_deleted') || 'Asset deleted', 'success');
         } catch (e) {
             console.error("Failed to delete", e);
+            toast(t('delete_failed') || 'Failed to delete asset', 'error');
         }
     };
 
     const getTranslatedSubCategory = (sub: string) => {
         const key = SUBCATEGORY_KEY_MAP[sub];
-        return key ? t(key as any) : sub;
+        return key ? t(key) : sub;
     };
+
+    if (isLoading) return (
+        <div className="min-h-screen bg-background p-6 md:p-10 space-y-4">
+            <PageHeaderSkeleton />
+            <div className="rounded-3xl border border-border bg-card p-2 flex flex-col">
+                {Array.from({ length: 8 }).map((_, i) => <AssetRowSkeleton key={i} />)}
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
@@ -126,6 +137,16 @@ export default function AssetsPage() {
                 </div>
             </header>
 
+            {/* Empty State */}
+            {filteredAssets.length === 0 && (
+                <EmptyState
+                    icon={<Wallet className="w-8 h-8" />}
+                    title={search ? (t('no_assets_found') || 'No matching assets') : (t('no_assets_yet') || 'No assets yet')}
+                    description={search ? undefined : (t('no_assets_desc') || 'Add your first asset to start tracking your net worth.')}
+                    className="py-24"
+                />
+            )}
+
             {/* Mobile List View */}
             <div className="md:hidden space-y-6">
                 {(groupBy === 'category'
@@ -140,12 +161,12 @@ export default function AssetsPage() {
                     return (
                         <div key={groupKey} className="space-y-3">
                             <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground px-1">
-                                {groupBy === 'category' ? t(groupKey as any) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
+                                {groupBy === 'category' ? t(groupKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
                             </h3>
                             <div className="space-y-3">
                                 {categoryAssets.map(asset => {
-                                    const quantity = asset.transactions ? asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0;
-                                    const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : (asset.current_price * quantity);
+                                    const quantity = asset.transactions ? asset.transactions.reduce((acc, t) => acc + t.amount, 0) : 0;
+                                    const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price ?? 0) * quantity);
 
                                     return (
                                         <div
@@ -155,22 +176,12 @@ export default function AssetsPage() {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                                                    asset.category === 'Fluid' ? 'bg-emerald-400/10' :
-                                                        asset.category === 'Crypto' ? 'bg-orange-500/10' :
-                                                            asset.category === 'Stock' ? 'bg-indigo-500/10' :
-                                                                asset.category === 'Investment' ? 'bg-indigo-500/10' :
-                                                                    asset.category === 'Fixed' ? 'bg-blue-400/10' :
-                                                                        asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
+                                                    CATEGORY_ICON_BG[asset.category] ?? 'bg-gray-400/10'
                                                 )}>
                                                     <AssetIcon
-                                                        icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category)}
+                                                        icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category ?? undefined)}
                                                         className={cn("w-5 h-5",
-                                                            asset.category === 'Fluid' ? 'text-emerald-400' :
-                                                                asset.category === 'Crypto' ? 'text-orange-500' :
-                                                                    asset.category === 'Stock' ? 'text-indigo-500' :
-                                                                        asset.category === 'Investment' ? 'text-indigo-500' :
-                                                                            asset.category === 'Fixed' ? 'text-blue-400' :
-                                                                                asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
+                                                            CATEGORY_ICON_TEXT[asset.category] ?? 'text-gray-400'
                                                         )}
                                                     />
                                                 </div>
@@ -178,7 +189,7 @@ export default function AssetsPage() {
                                                     <div className="font-bold text-foreground">{asset.name}</div>
                                                     <div className="text-xs text-muted-foreground flex items-center gap-1">
                                                         {asset.ticker && <span className="bg-muted px-1.5 py-0.5 rounded-md">{asset.ticker}</span>}
-                                                        <span>{getTranslatedSubCategory(asset.sub_category)}</span>
+                                                        <span>{getTranslatedSubCategory(asset.sub_category ?? '')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -227,13 +238,13 @@ export default function AssetsPage() {
                                     {/* Group Separator */}
                                     <tr className="bg-muted/20 border-b border-border">
                                         <td colSpan={3} className="py-2 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pl-4">
-                                            {groupBy === 'category' ? t(groupKey as any) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
+                                            {groupBy === 'category' ? t(groupKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
                                         </td>
                                     </tr>
                                     {categoryAssets.map(asset => {
-                                        const quantity = asset.transactions ? asset.transactions.reduce((acc: any, t: any) => acc + t.amount, 0) : 0;
+                                        const quantity = asset.transactions ? asset.transactions.reduce((acc, t) => acc + t.amount, 0) : 0;
                                         // Use backend value_twd if available and non-zero
-                                        const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : (asset.current_price * quantity);
+                                        const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price ?? 0) * quantity);
                                         const isCrypto = asset.sub_category && asset.sub_category.includes('Crypto');
 
                                         return (
@@ -241,22 +252,12 @@ export default function AssetsPage() {
                                                 <td className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                                                            asset.category === 'Fluid' ? 'bg-emerald-400/10' :
-                                                                asset.category === 'Crypto' ? 'bg-orange-500/10' :
-                                                                    asset.category === 'Stock' ? 'bg-indigo-500/10' :
-                                                                        asset.category === 'Investment' ? 'bg-indigo-500/10' :
-                                                                            asset.category === 'Fixed' ? 'bg-blue-400/10' :
-                                                                                asset.category === 'Receivables' ? 'bg-orange-400/10' : 'bg-red-400/10'
+                                                            CATEGORY_ICON_BG[asset.category] ?? 'bg-gray-400/10'
                                                         )}>
                                                             <AssetIcon
-                                                                icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category)}
+                                                                icon={asset.icon || getCategoryIconName(asset.category, asset.sub_category ?? undefined)}
                                                                 className={cn("w-5 h-5",
-                                                                    asset.category === 'Fluid' ? 'text-emerald-400' :
-                                                                        asset.category === 'Crypto' ? 'text-orange-500' :
-                                                                            asset.category === 'Stock' ? 'text-indigo-500' :
-                                                                                asset.category === 'Investment' ? 'text-indigo-500' :
-                                                                                    asset.category === 'Fixed' ? 'text-blue-400' :
-                                                                                        asset.category === 'Receivables' ? 'text-orange-400' : 'text-red-400'
+                                                                    CATEGORY_ICON_TEXT[asset.category] ?? 'text-gray-400'
                                                                 )}
                                                             />
                                                         </div>
@@ -270,7 +271,7 @@ export default function AssetsPage() {
                                                     </div>
                                                 </td>
                                                 <td className="p-4 text-sm text-muted-foreground text-right">
-                                                    {getTranslatedSubCategory(asset.sub_category)}
+                                                    {getTranslatedSubCategory(asset.sub_category ?? '')}
                                                 </td>
                                                 <td className="p-4 text-right tabular-nums font-bold text-foreground">
                                                     {isPrivacyMode ? '****' : `$${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value)}`}

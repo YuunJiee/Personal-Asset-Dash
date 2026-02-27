@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { fetchHistory } from '@/lib/api';
+import { useNetWorthHistory } from '@/lib/hooks';
 
 interface DataPoint {
     date: string;
@@ -23,47 +23,12 @@ interface MonthlyChange {
 export function MonthlyChangeChart() {
     const { t, language } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const [data, setData] = useState<MonthlyChange[]>([]);
-    const [originalData, setOriginalData] = useState<DataPoint[]>([]);
     const [category, setCategory] = useState<string>('Total');
-    const [isLoading, setIsLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-        const fetchData = async () => {
-            setIsLoading(true);
-            try {
-                // Fetch 1 year of data to calculate monthly changes
-                const result: DataPoint[] = await fetchHistory('1y');
-                if (result && result.length > 0) {
-                    setOriginalData(result);
-                    // Process initial (Total)
-                    const processed = processMonthlyChanges(result, 'Total');
-                    setData(processed);
-                } else {
-                    // No data available
-                    setOriginalData([]);
-                    setData([]);
-                }
-            } catch (error) {
-                console.error("Failed to fetch history:", error);
-                setOriginalData([]);
-                setData([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    useEffect(() => { setMounted(true); }, []);
 
-        fetchData();
-    }, []);
-
-    // Re-process when category changes
-    useEffect(() => {
-        if (originalData.length > 0) {
-            setData(processMonthlyChanges(originalData, category));
-        }
-    }, [category, originalData]);
+    const { history: originalData, isLoading } = useNetWorthHistory('1y');
 
     const processMonthlyChanges = (history: DataPoint[], selectedCat: string): MonthlyChange[] => {
         if (!history || history.length === 0) return [];
@@ -111,6 +76,12 @@ export function MonthlyChangeChart() {
         return changes.slice(-12); // Last 12 months
     };
 
+    // Re-process whenever originalData or selected category changes
+    const data = useMemo(
+        () => (originalData.length > 0 ? processMonthlyChanges(originalData, category) : []),
+        [originalData, category],
+    );
+
     if (!mounted) return <div className="rounded-3xl shadow-sm border-border bg-card h-[400px]" />;
 
     return (
@@ -135,13 +106,13 @@ export function MonthlyChangeChart() {
                             )}
                         >
                             {/* Use Mobile Short Keys */}
-                            {cat === 'Crypto' && language === 'zh-TW' ? '加密' : (t(`cat_${cat}` as any) || cat)}
+                            {cat === 'Crypto' && language === 'zh-TW' ? '加密' : (t(`cat_${cat}`) || cat)}
                         </button>
                     ))}
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="h-[300px] w-full min-w-0">
+                <div className="h-[300px] w-full min-w-0 overflow-hidden">
                     {isLoading ? (
                         <div className="h-full w-full flex items-center justify-center text-muted-foreground">Loading...</div>
                     ) : data.length === 0 ? (

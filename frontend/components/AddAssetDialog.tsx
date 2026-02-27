@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/components/LanguageProvider';
+import { useToast } from '@/components/ui/toast';
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { createAsset, createTransaction, lookupTicker, fetchIntegrations } from '@/lib/api';
+import type { IntegrationConnection } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { IconPicker, AssetIcon, getDefaultIcon } from './IconPicker';
 
@@ -20,6 +22,7 @@ interface AddAssetDialogProps {
 export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDialogProps) {
     const { t } = useLanguage();
     const router = useRouter();
+    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -38,7 +41,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
     // Web3 / Wallet State
     const [source, setSource] = useState('manual'); // manual, wallet
-    const [connections, setConnections] = useState<any[]>([]);
+    const [connections, setConnections] = useState<IntegrationConnection[]>([]);
     const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
     const [network, setNetwork] = useState('Ethereum');
     const [contractAddress, setContractAddress] = useState('');
@@ -119,7 +122,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
             // Fetch integrations
             fetchIntegrations().then(data => {
-                setConnections(data.filter((c: any) => c.provider === 'wallet'));
+                setConnections((data as IntegrationConnection[]).filter((c) => c.provider === 'wallet'));
             }).catch(console.error);
         }
     }, [isOpen, defaultCategory]);
@@ -235,11 +238,12 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
             router.refresh();
             onClose();
+            toast(t('asset_created') || 'Asset created successfully', 'success');
             setFormData({ name: '', ticker: '', category: 'Fluid', subCategory: '', initialBalance: '', includeInNetWorth: true, icon: '', manualAvgCost: '', paymentDueDay: '' });
             setMarket('TW');
         } catch (error) {
             console.error("Failed to create asset", error);
-            alert("Error creating asset");
+            toast(t('asset_create_failed') || 'Failed to create asset', 'error');
         } finally {
             setLoading(false);
         }
@@ -367,7 +371,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                                     <CustomSelect
                                         value={selectedConnectionId}
                                         onChange={setSelectedConnectionId}
-                                        options={connections.map(c => ({ value: c.id.toString(), label: c.name }))}
+                                        options={connections.map(c => ({ value: c.id.toString(), label: c.label ?? `Connection ${c.id}` }))}
                                     />
                                 </div>
                                 <div className="space-y-2">

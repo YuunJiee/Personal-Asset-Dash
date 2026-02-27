@@ -19,10 +19,19 @@ router = APIRouter(
 
 @router.get("/backup")
 def download_backup():
-    db_path = "./sql_app.db"
+    import os
+    from ..profile_manager import get_db_url, get_current_profile
+    # Derive the actual SQLite file path from the active profile's DB URL
+    # URL format: sqlite:////absolute/path/to/file.db
+    db_url = get_db_url()
+    db_path = db_url.replace("sqlite:///", "")
+    profile = get_current_profile()
+    backup_name = f"yantage_backup_{profile}.db" if profile != "default" else "yantage_backup.db"
+    if not os.path.exists(db_path):
+        raise HTTPException(status_code=404, detail="Database file not found")
     return FileResponse(
         path=db_path,
-        filename="ymoney_backup.db",
+        filename=backup_name,
         media_type='application/x-sqlite3'
     )
 
@@ -73,6 +82,12 @@ from .. import models
 
 @router.post("/seed")
 def seed_database(db: Session = Depends(database.get_db)):
+    import os
+    if os.getenv("SEED_ALLOWED", "").lower() not in ("1", "true", "yes"):
+        raise HTTPException(
+            status_code=403,
+            detail="Seed endpoint is disabled. Set SEED_ALLOWED=1 to enable."
+        )
     import random
     from datetime import timedelta
 

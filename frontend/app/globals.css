@@ -236,10 +236,24 @@ html.dark body[data-chart-theme="Vibrant"],
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Remove the gray tap-flash on mobile */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent rubber-band/bounce scrolling on iOS that makes the app feel like a web page */
+    overscroll-behavior: none;
+  }
+
+  /* Faster tap response: skip the 300ms click delay on mobile */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Ensure inputs always use 16px so iOS Safari doesn't auto-zoom into them */
+  input, textarea, select {
+    font-size: max(1rem, 16px);
   }
 }
 
@@ -276,5 +290,37 @@ html.dark body[data-chart-theme="Vibrant"],
 
   .bg-trend-down-soft {
     background-color: color-mix(in srgb, var(--color-trend-down), transparent 85%);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Print / PDF export styles
+   Hide all navigation, sidebars, and action buttons
+   so only the analytics content is printed.
+───────────────────────────────────────────── */
+@media print {
+  /* Hide sidebar, mobile nav, and toast overlay */
+  aside,
+  nav,
+  [data-sidebar],
+  [aria-label="Notifications"] {
+    display: none !important;
+  }
+
+  /* Remove main area offset so it fills the page */
+  main {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* Ensure backgrounds & colors are printed */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page break helpers */
+  .print\:break-before-page {
+    break-before: page;
   }
 }
