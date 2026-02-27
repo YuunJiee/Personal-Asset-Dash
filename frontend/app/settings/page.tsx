@@ -186,10 +186,10 @@ export default function SettingsPage() {
                                     value={updateInterval}
                                     onChange={handleSaveUpdateInterval}
                                     options={[
-                                        { value: '15', label: t('every_15_mins') || 'Every 15 mins' },
-                                        { value: '30', label: t('every_30_mins') || 'Every 30 mins' },
+                                        { value: '15', label: t('every_15_mins') },
+                                        { value: '30', label: t('every_30_mins') },
                                         { value: '60', label: t('every_hour') },
-                                        { value: '1440', label: t('daily') || 'Daily' },
+                                        { value: '1440', label: t('daily') },
                                     ]}
                                 />
                             </div>
@@ -254,7 +254,7 @@ export default function SettingsPage() {
                                     variant="outline"
                                     onClick={() => window.open(`${API_URL}/system/export/csv`, '_blank')}
                                 >
-                                    <Download className="w-4 h-4 mr-2" /> {t('export_csv') || 'Export CSV'}
+                                    <Download className="w-4 h-4 mr-2" /> {t('export_csv')}
                                 </Button>
                             </div>
                         </div>

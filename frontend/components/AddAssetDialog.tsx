@@ -238,12 +238,12 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
 
             router.refresh();
             onClose();
-            toast(t('asset_created') || 'Asset created successfully', 'success');
+            toast(t('asset_created'), 'success');
             setFormData({ name: '', ticker: '', category: 'Fluid', subCategory: '', initialBalance: '', includeInNetWorth: true, icon: '', manualAvgCost: '', paymentDueDay: '' });
             setMarket('TW');
         } catch (error) {
             console.error("Failed to create asset", error);
-            toast(t('asset_create_failed') || 'Failed to create asset', 'error');
+            toast(t('asset_create_failed'), 'error');
         } finally {
             setLoading(false);
         }

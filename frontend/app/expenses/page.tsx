@@ -10,7 +10,7 @@ import { useBudgetCategories, useIncomeItems, useDashboard } from '@/lib/hooks';
 import { useLanguage } from "@/components/LanguageProvider";
 import { IconPicker, AssetIcon } from '@/components/IconPicker';
 import { IncomeItemDialog } from '@/components/views/IncomeItemDialog';
-import { PageHeaderSkeleton, StatCardSkeleton, BudgetRowSkeleton } from '@/components/ui/skeleton';
+import { PageHeaderSkeleton, StatCardSkeleton, BudgetRowSkeleton, PageError } from '@/components/ui/skeleton';
 
 import type { BudgetCategory, IncomeItem } from '@/lib/types';
 
@@ -35,7 +35,7 @@ const MACRO_GROUPS = ['Fixed', 'Living', 'Investment', 'Growth', 'Unassigned'];
 export default function BudgetPage() {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
-    const { categories, refresh: refreshBudgets, isLoading } = useBudgetCategories();
+    const { categories, refresh: refreshBudgets, isLoading, isError } = useBudgetCategories();
     const { incomeItems, refresh: refreshIncome } = useIncomeItems();
     const { dashboard } = useDashboard();
     const dashboardData = dashboard ?? null;
@@ -156,6 +156,8 @@ export default function BudgetPage() {
             </div>
         </div>
     );
+
+    if (isError) return <PageError onRetry={refreshBudgets} />;
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 font-sans text-foreground pb-32">

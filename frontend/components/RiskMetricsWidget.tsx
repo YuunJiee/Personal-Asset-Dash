@@ -75,7 +75,7 @@ export function RiskMetricsWidget() {
                         {metrics.cagr.status === 'N/A' ? '--' : `${metrics.cagr.value.toFixed(1)}%`}
                     </div>
                     <div className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                        <span>{t('compound_growth') || 'Annual Growth'}</span>
+                        <span>{t('compound_growth')}</span>
                         <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", cagrColor.replace('text-', 'bg-').replace('500', '500/10'), cagrColor)}>
                             {translateStatus(metrics.cagr.status)}
                         </span>
@@ -98,7 +98,7 @@ export function RiskMetricsWidget() {
                         {metrics.maxDrawdown.status === 'N/A' ? '--' : `-${metrics.maxDrawdown.value.toFixed(1)}%`}
                     </div>
                     <div className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                        <span>{t('max_drawdown') || 'Peak to Trough'}</span>
+                        <span>{t('max_drawdown')}</span>
                         <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", ddColor.replace('text-', 'bg-').replace('500', '500/10'), ddColor)}>
                             {translateStatus(metrics.maxDrawdown.status)}
                         </span>
@@ -121,7 +121,7 @@ export function RiskMetricsWidget() {
                         {metrics.volatility.status === 'N/A' ? '--' : `${metrics.volatility.value.toFixed(1)}%`}
                     </div>
                     <div className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                        <span>{t('annual_volatility') || 'Annualized Risk'}</span>
+                        <span>{t('annual_volatility')}</span>
                         <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", volColor.replace('text-', 'bg-').replace('500', '500/10'), volColor)}>
                             {translateStatus(metrics.volatility.status)}
                         </span>

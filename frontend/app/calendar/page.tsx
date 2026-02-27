@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { Asset, Transaction } from "@/lib/types";
-import { PageHeaderSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { PageHeaderSkeleton, PageError, Skeleton } from "@/components/ui/skeleton";
 
 /** Transaction enriched with asset metadata for calendar display. */
 interface CalendarTransaction extends Transaction {
@@ -33,7 +33,7 @@ export default function FinancialCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const { isPrivacyMode } = usePrivacy();
   const { t, language } = useLanguage();
-  const { dashboard, isLoading: loading } = useDashboard();
+  const { dashboard, isLoading: loading, isError: calendarError, refresh: refreshCalendar } = useDashboard();
 
   // Flatten transactions from all assets (memoised — recomputes only when dashboard changes)
   const transactions = useMemo<CalendarTransaction[]>(() => {
@@ -179,6 +179,33 @@ export default function FinancialCalendar() {
       default: return 'bg-gray-400';
     }
   };
+
+  if (loading) return (
+    <div className="min-h-screen bg-background p-6 md:p-10 space-y-6">
+      <PageHeaderSkeleton />
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-32" />
+        <div className="flex gap-2">
+          <Skeleton className="w-9 h-9 rounded-full" />
+          <Skeleton className="w-9 h-9 rounded-full" />
+        </div>
+      </div>
+      <div className="bg-card rounded-3xl border border-border p-4">
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-6 w-full rounded-md" />
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 35 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (calendarError) return <PageError onRetry={refreshCalendar} />;
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10 font-sans text-foreground transition-colors duration-300">

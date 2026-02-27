@@ -8,7 +8,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { useDashboard } from "@/lib/hooks";
 import type { Asset, Transaction } from "@/lib/types";
 import { TransactionEditDialog } from "@/components/TransactionEditDialog";
-import { PageHeaderSkeleton, TableRowSkeleton } from "@/components/ui/skeleton";
+import { PageError, PageHeaderSkeleton, TableRowSkeleton } from "@/components/ui/skeleton";
 
 /** Transaction enriched with its parent asset metadata for display purposes. */
 interface EnrichedTransaction extends Transaction {
@@ -24,7 +24,7 @@ export default function HistoryPage() {
     const [selectedTx, setSelectedTx] = useState<EnrichedTransaction | null>(null);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
-    const { assets, refresh, isLoading } = useDashboard();
+    const { assets, refresh, isLoading, isError } = useDashboard();
 
     // Flatten all transactions from all assets, preserving asset metadata.
     const transactions = useMemo<EnrichedTransaction[]>(() => {
@@ -62,6 +62,8 @@ export default function HistoryPage() {
             </div>
         </div>
     );
+
+    if (isError) return <PageError onRetry={refresh} />;
 
     const handleRowClick = (txn: EnrichedTransaction) => {
         if (txn.assetSource === 'max') {

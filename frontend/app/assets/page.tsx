@@ -12,7 +12,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { deleteAsset } from "@/lib/api";
 import { useDashboard } from "@/lib/hooks";
 import { useToast } from "@/components/ui/toast";
-import { AssetRowSkeleton, PageHeaderSkeleton } from "@/components/ui/skeleton";
+import { AssetRowSkeleton, PageError, PageHeaderSkeleton } from "@/components/ui/skeleton";
 
 import { Pencil, Trash2 } from "lucide-react";
 import { AssetIcon } from "@/components/IconPicker";
@@ -57,7 +57,7 @@ export default function AssetsPage() {
     const { t } = useLanguage();
     const [groupBy, setGroupBy] = useState<'category' | 'source'>('category');
 
-    const { assets, refresh: refreshData, isLoading } = useDashboard();
+    const { assets, refresh: refreshData, isLoading, isError } = useDashboard();
 
     const filteredAssets = assets
         .filter(a =>
@@ -86,10 +86,10 @@ export default function AssetsPage() {
         try {
             await deleteAsset(asset.id);
             refreshData();
-            toast(t('asset_deleted') || 'Asset deleted', 'success');
+               toast(t('asset_deleted'), 'success');
         } catch (e) {
             console.error("Failed to delete", e);
-            toast(t('delete_failed') || 'Failed to delete asset', 'error');
+               toast(t('delete_failed'), 'error');
         }
     };
 
@@ -106,6 +106,8 @@ export default function AssetsPage() {
             </div>
         </div>
     );
+
+    if (isError) return <PageError onRetry={refreshData} />;
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300">
@@ -132,7 +134,7 @@ export default function AssetsPage() {
                         onClick={() => setGroupBy('source')}
                         className={cn("px-3 py-1.5 text-xs font-medium rounded-md transition-all", groupBy === 'source' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
                     >
-                        {t('source') || 'Source'}
+                        {t('source')}
                     </button>
                 </div>
             </header>
@@ -141,8 +143,8 @@ export default function AssetsPage() {
             {filteredAssets.length === 0 && (
                 <EmptyState
                     icon={<Wallet className="w-8 h-8" />}
-                    title={search ? (t('no_assets_found') || 'No matching assets') : (t('no_assets_yet') || 'No assets yet')}
-                    description={search ? undefined : (t('no_assets_desc') || 'Add your first asset to start tracking your net worth.')}
+                    title={search ? t('no_assets_found') : t('no_assets_yet')}
+                    description={search ? undefined : t('no_assets_desc')}
                     className="py-24"
                 />
             )}

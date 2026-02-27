@@ -10,14 +10,14 @@ import { Wallet, Bitcoin, Activity, Layers } from 'lucide-react';
 import { IntegrationManager } from "@/components/IntegrationManager";
 import { useDashboard } from "@/lib/hooks";
 import type { Asset } from "@/lib/types";
-import { AssetRowSkeleton, ChartSkeleton, PageHeaderSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
+import { AssetRowSkeleton, ChartSkeleton, PageError, PageHeaderSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
 
 export default function CryptoPage() {
     const { t } = useLanguage();
     const { isPrivacyMode } = usePrivacy();
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
-    const { assets: allAssets, isLoading } = useDashboard();
+    const { assets: allAssets, isLoading, isError, refresh } = useDashboard();
     const assets = allAssets.filter(a => a.category === 'Crypto');
 
     if (isLoading) return (
@@ -34,6 +34,8 @@ export default function CryptoPage() {
             </div>
         </div>
     );
+
+    if (isError) return <PageError onRetry={refresh} />;
 
     // Derived Data
     const totalValue = assets.reduce((sum, a) => sum + (a.value_twd || 0), 0);

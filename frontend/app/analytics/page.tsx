@@ -4,16 +4,11 @@ import { MonthlyChangeChart } from "@/components/MonthlyChangeChart";
 import { NetWorthTrendChart } from "@/components/NetWorthTrendChart";
 import { RiskMetricsWidget } from "@/components/RiskMetricsWidget";
 import { useLanguage } from "@/components/LanguageProvider";
-import { ChartSkeleton, StatCardSkeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
 import { PieChart, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AnalyticsPage() {
     const { t } = useLanguage();
-    // Lightweight loading flag: show skeletons until charts mount
-    const [isLoading, setIsLoading] = useState(true);
-    useEffect(() => { setIsLoading(false); }, []);
 
     return (
         <div className="min-h-screen bg-background p-6 md:p-10 text-foreground transition-colors duration-300 print:p-4">
@@ -35,7 +30,7 @@ export default function AnalyticsPage() {
                         onClick={() => window.print()}
                     >
                         <Printer className="w-4 h-4" />
-                        {t('export_pdf') || 'Export PDF'}
+                        {t('export_pdf')}
                     </Button>
                     <a
                         href="/stock"
@@ -55,19 +50,11 @@ export default function AnalyticsPage() {
                 <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</p>
             </div>
 
-            {isLoading ? (
-                <div className="space-y-8">
-                    <StatCardSkeleton />
-                    <ChartSkeleton height={300} />
-                    <ChartSkeleton />
-                </div>
-            ) : (
-                <div className="space-y-8">
-                    <RiskMetricsWidget />
-                    <NetWorthTrendChart />
-                    <MonthlyChangeChart />
-                </div>
-            )}
+            <div className="space-y-8">
+                <RiskMetricsWidget />
+                <NetWorthTrendChart />
+                <MonthlyChangeChart />
+            </div>
         </div>
     );
 }

@@ -15,7 +15,7 @@ import { AlertCircle, ArrowLeftRight, TrendingUp, Filter } from "lucide-react";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
 import { TopMovers } from "@/components/TopMovers";
 import { TopPerformersWidget } from "@/components/TopPerformersWidget";
-import { PageHeaderSkeleton, ChartSkeleton, AssetRowSkeleton } from "@/components/ui/skeleton";
+import { PageHeaderSkeleton, ChartSkeleton, AssetRowSkeleton, PageError } from "@/components/ui/skeleton";
 
 // Reusable Table Component
 function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title: string, assets: Asset[], exchangeRate: number, onUpdate: () => void, onTrade: (asset: Asset) => void }) {
@@ -25,30 +25,7 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
     const handleCostChange = async (asset: Asset, value: string) => {
         const num = parseFloat(value);
         if (isNaN(num)) return;
-
-        // If USD asset, convert input TWD back to USD for storage
-        // But wait, manual_avg_cost is stored in "native" currency or TWD?
-        // Let's assume manual_avg_cost is meant to be in NATIVE currency (matching buy_price logic).
-        // Since user sees TWD, we should convert TWD input -> USD Output if asset is USD.
-
-        // Helper to check if TWD
-        const isTWD = asset.ticker && asset.ticker.endsWith('.TW');
-        const isUSD = !isTWD && (asset.ticker && (asset.ticker.includes('-') || !asset.ticker.endsWith('.TW'))); // Ticker logic from backend
-        // Actually simplest is: if title is "Cryptocurrencies" or "Others" (minus TW stocks).
-        // Let's reuse the isUSD logic from existing code or pass it in.
-
-        // Better: Calculate conversion factor passed to this row?
-        // For simplicity now: manual cost is usually entered in Native currency in the *Trade* dialog.
-        // Here in the table, if we show TWD, editing "Avg Cost" is ambiguous.
-        // Let's DISABLE editing Cost in the table for now to avoid confusion, or assume input is Native.
-        // Given the request "Portfolio converted to TWD", ideally everything is TWD.
-        // If I input 32000 (TWD) for TSLA, backend stores 32000? That's wrong if TSLA is USD.
-
-        // Decision: Keep "Avg Cost" input as NATIVE currency for now to avoid complex reverse-calc bugs,
-        // OR hide the input if it's not TWD.
-        // Let's HIDE the direct input for non-TWD assets for safety, forcing use of Trade Dialog or explicit settings.
-        // But for this step, I will just display converted values.
-
+        // Stored in native currency; use TradeDialog for precise TWD-based cost editing.
         try {
             await updateAsset(asset.id, { manual_avg_cost: num });
             onUpdate();
@@ -278,7 +255,7 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
 }
 
 export default function InvestmentPage() {
-    const { assets, dashboard: dashData, refresh: refreshData, isLoading } = useDashboard();
+    const { assets, dashboard: dashData, refresh: refreshData, isLoading, isError } = useDashboard();
     const exchangeRate = dashData?.exchange_rate ?? 30;
     const [tradingAsset, setTradingAsset] = useState<Asset | null>(null);
 
@@ -293,6 +270,8 @@ export default function InvestmentPage() {
             </div>
         </div>
     );
+
+    if (isError) return <PageError onRetry={refreshData} />;
 
     // Initialize from localStorage if available, otherwise false
     const [dustFilter, setDustFilter] = useState(() => {

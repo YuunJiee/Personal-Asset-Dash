@@ -236,7 +236,7 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                         title={t('export_csv')}
                     >
                         <Download className="w-5 h-5" />
-                        {!isCollapsed && <span>{t('export_csv') || 'Export CSV'}</span>}
+                        {!isCollapsed && <span>{t('export_csv')}</span>}
                     </button>
                     */}
                 </div>

@@ -42,7 +42,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             const p = parseFloat(price);
 
             if (isNaN(qty) || isNaN(p) || qty <= 0) {
-                toast(t('invalid_qty_price') || 'Invalid quantity or price', 'error');
+                toast(t('invalid_qty_price'), 'error');
                 setLoading(false);
                 return;
             }
@@ -65,7 +65,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             setPrice('');
         } catch (error) {
             console.error("Trade failed", error);
-            toast(t('trade_failed') || 'Trade failed', 'error');
+            toast(t('trade_failed'), 'error');
         } finally {
             setLoading(false);
         }
