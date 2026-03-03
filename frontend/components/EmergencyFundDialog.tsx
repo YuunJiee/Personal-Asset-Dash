@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { LifeBuoy, AlertTriangle, CheckCircle2, ShieldCheck, Wallet } from "lucide-react";
@@ -77,8 +78,7 @@ export function EmergencyFundDialog({ isOpen, onClose, currentCash = 0 }: Emerge
                             <Label className="flex justify-between">
                                 <span className="flex items-center gap-2"><Wallet className="w-4 h-4 text-primary" /> {t('liquid_assets')} (Cash)</span>
                             </Label>
-                            <Input
-                                type="number"
+                            <MoneyInput
                                 value={cash}
                                 onChange={(e) => setCash(Number(e.target.value))}
                                 className="bg-muted/50 font-mono text-lg"
@@ -89,8 +89,7 @@ export function EmergencyFundDialog({ isOpen, onClose, currentCash = 0 }: Emerge
                             <Label className="flex justify-between">
                                 <span>{t('monthly_expenses')}</span>
                             </Label>
-                            <Input
-                                type="number"
+                            <MoneyInput
                                 value={monthlyExpense}
                                 onChange={(e) => setMonthlyExpense(Number(e.target.value))}
                                 className="bg-muted/50 font-mono text-lg"

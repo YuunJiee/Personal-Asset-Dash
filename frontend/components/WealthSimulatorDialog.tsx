@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog } from "@/components/ui/dialog"; // Using our custom Dialog wrapper
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
@@ -118,8 +119,7 @@ export function WealthSimulatorDialog({ isOpen, onClose, currentNetWorth = 0 }: 
                                 <span className="flex items-center gap-2"><DollarSign className="w-4 h-4" /> {t('initial_amount')}</span>
                                 <span className={cn("font-mono text-primary font-bold", isPrivacyMode ? "blur-sm" : "")}>${initialAmount.toLocaleString()}</span>
                             </Label>
-                            <Input
-                                type="number"
+                            <MoneyInput
                                 value={initialAmount}
                                 onChange={(e) => setInitialAmount(Number(e.target.value))}
                                 className="bg-muted/50"

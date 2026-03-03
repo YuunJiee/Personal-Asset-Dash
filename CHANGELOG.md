@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2026-03-03
+
+### ✨ Added
+
+- **`MoneyInput` component** — `components/ui/MoneyInput.tsx`
+  - Displays thousand separators while typing (e.g. `1,000,000`)
+  - Accepts `inputMode="decimal"` for mobile numeric keyboard; strips commas before firing `onChange` so all consumers receive clean numeric strings — no downstream changes required
+  - Replaced all `<Input type="number">` amount fields across: `QuickAdjustView`, `TransferView`, `TradeDialog`, `TransactionEditDialog`, `AddAssetDialog`, `EditAssetView`, `GoalDialog`, `WealthSimulatorWidget`, `WealthSimulatorDialog`, `EmergencyFundWidget`, `EmergencyFundDialog`, `IncomeItemDialog`, `expenses/page` (budget amount)
+
+- **GitHub Actions self-hosted runner CI/CD** — `.github/workflows/deploy.yml`
+  - Push to `main` automatically triggers `scripts/update.sh` on the server via self-hosted runner (no SSH keys or open ports required)
+  - `workflow_dispatch` support for manual trigger from GitHub UI
+
+### 🐛 Fixed
+
+- **Manual balance update did not refresh `last_updated_at`** on asset cards
+  - `backend/crud.py` `create_transaction()` now updates `asset.last_updated_at = datetime.now()` before committing, so cards reflect the correct timestamp after every `QuickAdjust` / trade / transfer
+
+### ⚙️ DevOps
+
+- `scripts/update.sh` — added `SUDO="sudo -n"` fallback for non-TTY environments (runner, CI) and updated comments to reference self-hosted runner pattern
+
+---
+
 ## [2.5.0] - 2026-02-27
 
 ### ✨ Added

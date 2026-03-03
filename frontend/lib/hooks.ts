@@ -195,6 +195,8 @@ export function useRealtimeUpdates() {
     const { mutate } = useSWRConfig();
     const wsRef = useRef<WebSocket | null>(null);
     const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Exponential backoff state: starts at 2 s, doubles on each failure, caps at 30 s.
+    const retryDelay = useRef<number>(2_000);
 
     useEffect(() => {
         function getWsUrl(): string {
@@ -213,6 +215,11 @@ export function useRealtimeUpdates() {
             const ws = new WebSocket(url);
             wsRef.current = ws;
 
+            ws.onopen = () => {
+                // Reset backoff on successful connection.
+                retryDelay.current = 2_000;
+            };
+
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data) as { type: string };
@@ -225,8 +232,11 @@ export function useRealtimeUpdates() {
             };
 
             ws.onclose = () => {
-                // Back-off reconnect: try again after 5 s.
-                retryTimer.current = setTimeout(connect, 5_000);
+                // Exponential backoff: 2 s → 4 s → 8 s → … capped at 30 s.
+                // Prevents hammering the server during extended downtime.
+                const delay = retryDelay.current;
+                retryDelay.current = Math.min(retryDelay.current * 2, 30_000);
+                retryTimer.current = setTimeout(connect, delay);
             };
 
             // On error just let onclose handle the reconnect.

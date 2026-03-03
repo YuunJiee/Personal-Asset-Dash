@@ -3,6 +3,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { CustomSelect } from "@/components/ui/custom-select";
 import { updateAsset, deleteAsset, API_URL } from '@/lib/api';
 import type { Asset, Transaction } from '@/lib/types';
@@ -195,11 +196,10 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
                             </div>
                             <div className="space-y-2 flex-1">
                                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('avg_cost_twd')}</Label>
-                                <Input
-                                    type="number"
+                                <MoneyInput
                                     className="h-11 rounded-xl"
                                     value={formData.manualAvgCost}
-                                    onChange={(e) => setFormData({ ...formData, manualAvgCost: parseFloat(e.target.value) })}
+                                    onChange={(e) => setFormData({ ...formData, manualAvgCost: e.target.value })}
                                     placeholder="Optional"
                                 />
                             </div>

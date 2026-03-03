@@ -138,6 +138,12 @@ def create_transaction(db: Session, transaction: schemas.TransactionCreate, asse
         asset_id=asset_id
     )
     db.add(db_transaction)
+
+    # Update asset's last_updated_at whenever a transaction is created
+    asset = db.query(models.Asset).filter(models.Asset.id == asset_id).first()
+    if asset:
+        asset.last_updated_at = datetime.now()
+
     db.commit()
     db.refresh(db_transaction)
     return db_transaction

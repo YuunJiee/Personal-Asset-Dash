@@ -33,3 +33,7 @@ logs/
 
 # Note: Python and Database files in backend/ are handled by backend/.gitignore
 ARCHITECTURE.md
+
+# SQLite WAL files
+backend/sql_app.db-shm
+backend/sql_app.db-wal

@@ -5,6 +5,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from 'next/navigation';
 import { useLanguage } from "@/components/LanguageProvider";
@@ -170,8 +171,7 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
                 {!isAllocation && (
                     <div className="space-y-2">
                         <Label>{t('target_amount_twd')}</Label>
-                        <Input
-                            type="number"
+                        <MoneyInput
                             className="font-mono"
                             value={targetAmount}
                             onChange={(e) => setTargetAmount(e.target.value)}

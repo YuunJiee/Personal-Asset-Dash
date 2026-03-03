@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { LifeBuoy, AlertTriangle, CheckCircle2, ShieldCheck, Wallet } from "lucide-react";
@@ -128,8 +129,7 @@ export function EmergencyFundWidget({ currentCash = 0 }: EmergencyFundWidgetProp
                         <Label className="flex items-center gap-2 text-xs">
                             <Wallet className="w-3 h-3 text-primary" /> {t('liquid_assets')} (Cash)
                         </Label>
-                        <Input
-                            type="number"
+                        <MoneyInput
                             value={cash}
                             onChange={(e) => setCash(Number(e.target.value))}
                             className="bg-muted/50 font-mono h-9"
@@ -138,8 +138,7 @@ export function EmergencyFundWidget({ currentCash = 0 }: EmergencyFundWidgetProp
 
                     <div className="space-y-2">
                         <Label className="text-xs">{t('monthly_expenses')}</Label>
-                        <Input
-                            type="number"
+                        <MoneyInput
                             value={monthlyExpense}
                             onChange={(e) => setMonthlyExpense(Number(e.target.value))}
                             className="bg-muted/50 font-mono h-9"

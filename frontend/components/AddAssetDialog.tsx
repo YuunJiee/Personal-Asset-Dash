@@ -5,6 +5,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { CustomSelect } from "@/components/ui/custom-select";
 import { createAsset, createTransaction, lookupTicker, fetchIntegrations } from '@/lib/api';
 import type { IntegrationConnection } from '@/lib/types';
@@ -444,9 +445,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                                 formData.category === 'Crypto' ? t('current_holdings') :
                                     t('initial_balance')}
                         </Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             className="font-mono"
                             value={formData.initialBalance}
                             onChange={(e) => setFormData({ ...formData, initialBalance: e.target.value })}
@@ -466,9 +465,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
                     {(formData.category === 'Stock' || formData.category === 'Crypto') && (
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('average_cost')}</Label>
-                            <Input
-                                type="number"
-                                step="any"
+                            <MoneyInput
                                 value={formData.manualAvgCost}
                                 onChange={(e) => setFormData({ ...formData, manualAvgCost: e.target.value })}
                                 placeholder={fetchedPrice ? `${fetchedPrice}` : t('ph_average_cost')}

@@ -7,6 +7,31 @@ export const API_URL = isServer
     ? (process.env.INTERNAL_API_URL || "http://127.0.0.1:8000/api") // Server-side: Direct to backend
     : "/api"; // Client-side: Relative path (proxied by Next.js)
 
+/**
+ * Unified fetch wrapper used by all API helpers below.
+ *
+ * Benefits over raw fetch:
+ *  - Richer error messages: includes HTTP status, path, and up to 200 chars
+ *    of the response body — much easier to debug than "HTTP error! status: 422".
+ *  - Single place to add auth headers, logging, or retries in the future.
+ *
+ * @example
+ *   const data = await apiFetch<Asset[]>('/assets/');
+ */
+export async function apiFetch<T = unknown>(
+    path: string,
+    init?: RequestInit,
+): Promise<T> {
+    const url = `${API_URL}${path}`;
+    const res = await fetch(url, { cache: 'no-store', ...init });
+    if (!res.ok) {
+        let detail = '';
+        try { detail = (await res.text()).slice(0, 200); } catch (_) { /* ignore */ }
+        throw new Error(`API ${res.status} [${path}]${detail ? ': ' + detail : ''}`);
+    }
+    return res.json() as Promise<T>;
+}
+
 // Asset History
 export async function fetchAssetHistory(assetId: number, range: string = '1y') {
     try {

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { createTransaction } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 
 import type { Asset } from '@/lib/types';
 
@@ -94,9 +95,7 @@ export function QuickAdjustView({ asset, onClose, onBack }: QuickAdjustViewProps
                         <Label>
                             {mode === 'set' ? t('new_balance') : t('amount_to_add_sub')}
                         </Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             autoFocus
                             placeholder={mode === 'set' ? "e.g. 5000" : "e.g. -200"}
                             className="font-mono text-xl h-12"

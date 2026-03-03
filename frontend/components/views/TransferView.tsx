@@ -5,6 +5,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { transferFunds } from '@/lib/api';
 import { ArrowRightLeft, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -164,9 +165,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>{t('amount')}</Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             value={formData.amount}
                             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                             placeholder="0.00"
@@ -176,9 +175,7 @@ export function TransferView({ onClose, assets, initialFromAssetId, onBack }: Tr
                     </div>
                     <div className="space-y-2">
                         <Label>{t('fee_optional')}</Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             value={formData.fee}
                             onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                             placeholder="0.00"

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
@@ -170,8 +171,7 @@ export function WealthSimulatorWidget({ currentNetWorth = 0 }: WealthSimulatorWi
                             <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> {t('initial_amount')}</span>
                             <span className={cn("font-mono text-primary font-bold", isPrivacyMode ? "blur-sm" : "")}>${initialAmount.toLocaleString()}</span>
                         </Label>
-                        <Input
-                            type="number"
+                        <MoneyInput
                             value={initialAmount}
                             onChange={(e) => setInitialAmount(Number(e.target.value))}
                             className="bg-muted/50 h-9"

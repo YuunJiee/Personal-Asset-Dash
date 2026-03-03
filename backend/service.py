@@ -1,3 +1,5 @@
+import os
+import time
 import yfinance as yf
 import ccxt
 import json
@@ -48,33 +50,48 @@ def get_icon_for_ticker(ticker: str, category: str = None) -> str:
     return 'Circle' # Default
 
 def fetch_stock_price(ticker: str) -> float:
-    try:
-        if ticker.isdigit() and len(ticker) == 4:
-            ticker = f"{ticker}.TW"
-        data = yf.Ticker(ticker)
-        history = data.history(period="1d")
-        if not history.empty:
-            return history["Close"].iloc[-1]
-    except Exception as e:
-        logger.error(f"Error fetching stock {ticker}: {e}")
+    """Fetch latest close price from Yahoo Finance with up to 3 attempts.
+
+    Retries use exponential backoff (1 s, 2 s) so a transient rate-limit
+    won't silently zero-out an asset price.
+    """
+    if ticker.isdigit() and len(ticker) == 4:
+        ticker = f"{ticker}.TW"
+    for attempt in range(3):
+        try:
+            data = yf.Ticker(ticker)
+            history = data.history(period="1d")
+            if not history.empty:
+                return float(history["Close"].iloc[-1])
+        except Exception as e:
+            if attempt == 2:
+                logger.error(f"fetch_stock_price {ticker} failed after 3 attempts: {e}")
+            else:
+                time.sleep(1.0 * (2 ** attempt))  # 1 s then 2 s
     return 0.0
 
-def fetch_crypto_price(ticker: str) -> float:
-    try:
-        symbol = ticker
-        if symbol.endswith("-USD"):
-            symbol = symbol.replace("-USD", "")
-        # Handle wrapped tokens
-        if symbol == 'BTCB': symbol = 'BTC'
-        elif symbol == 'WETH': symbol = 'ETH'
-        # Stablecoins
-        if symbol in ('USDT', 'USDC'): return 1.0
 
-        exchange = ccxt.binance()
-        ticker_data = exchange.fetch_ticker(f"{symbol}/USDT")
-        return float(ticker_data['last'])
-    except Exception as e:
-        logger.error(f"Error fetching crypto {ticker}: {e}")
+def fetch_crypto_price(ticker: str) -> float:
+    """Fetch latest price from Binance via CCXT with up to 3 attempts."""
+    symbol = ticker
+    if symbol.endswith("-USD"):
+        symbol = symbol.replace("-USD", "")
+    # Handle wrapped tokens
+    if symbol == 'BTCB': symbol = 'BTC'
+    elif symbol == 'WETH': symbol = 'ETH'
+    # Stablecoins — no fetch needed
+    if symbol in ('USDT', 'USDC'): return 1.0
+
+    for attempt in range(3):
+        try:
+            exchange = ccxt.binance()
+            ticker_data = exchange.fetch_ticker(f"{symbol}/USDT")
+            return float(ticker_data['last'])
+        except Exception as e:
+            if attempt == 2:
+                logger.error(f"fetch_crypto_price {ticker} failed after 3 attempts: {e}")
+            else:
+                time.sleep(0.5 * (2 ** attempt))  # 0.5 s then 1 s
     return 0.0
 
 def update_prices(db: Session):
@@ -103,7 +120,10 @@ def update_prices(db: Session):
     def _fetch_stock(asset_id: int, ticker: str) -> tuple[int, float]:
         return asset_id, fetch_stock_price(ticker)
 
-    with ThreadPoolExecutor(max_workers=12) as executor:
+    # Limit workers to avoid overloading low-core machines (old PCs).
+    # min(8, cpu_count) gives headroom for the OS and other services.
+    _max_workers = min(8, os.cpu_count() or 4)
+    with ThreadPoolExecutor(max_workers=_max_workers) as executor:
         futures = {
             executor.submit(_fetch_crypto, aid, t): aid
             for aid, t in crypto_jobs

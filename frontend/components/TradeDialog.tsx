@@ -10,6 +10,7 @@ import { createTransaction } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/components/LanguageProvider';
 import { useToast } from '@/components/ui/toast';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import type { Asset } from '@/lib/types';
 
 interface TradeDialogProps {
@@ -105,9 +106,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                     <Label className="uppercase text-xs tracking-wider text-muted-foreground font-semibold">{t('price_unit')}</Label>
-                    <Input
-                        type="number"
-                        step="any"
+                    <MoneyInput
                         placeholder={asset.current_price?.toString()}
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
@@ -118,9 +117,7 @@ export function TradeDialog({ isOpen, onClose, asset, onSuccess }: TradeDialogPr
 
                 <div className="space-y-2">
                     <Label className="uppercase text-xs tracking-wider text-muted-foreground font-semibold">{t('quantity')}</Label>
-                    <Input
-                        type="number"
-                        step="any"
+                    <MoneyInput
                         placeholder="0.00"
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}

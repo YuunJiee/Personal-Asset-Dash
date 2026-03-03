@@ -9,6 +9,15 @@ cd "$PROJECT_ROOT"
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+# When triggered by GitHub Actions self-hosted runner, there is no TTY.
+# systemctl restart requires passwordless sudo. Set it up once:
+#   sudo visudo  →  add:  yourusername ALL=(ALL) NOPASSWD: /bin/systemctl
+SUDO="sudo"
+if [ ! -t 0 ]; then
+  # Not a TTY (e.g. runner environment) → non-interactive sudo
+  SUDO="sudo -n"
+fi
+
 echo -e "${GREEN}⬇️  Pulling latest code...${NC}"
 git pull
 
@@ -30,8 +39,8 @@ npm run build
 cd ..
 
 echo -e "${GREEN}🔄 Restarting Services...${NC}"
-if systemctl is-active --quiet yantage-backend; then
-    sudo systemctl restart yantage-backend yantage-frontend
+if systemctl is-active --quiet yantage-backend 2>/dev/null || systemctl is-active --quiet yantage-frontend 2>/dev/null; then
+    $SUDO systemctl restart yantage-backend yantage-frontend
     echo "Restarted systemd services."
 else
     # Fallback to prod script

@@ -90,23 +90,37 @@ def start_scheduler():
     finally:
         db.close()
 
+    # coalesce=True: if a job misfires multiple times, run it only once on recovery.
+    # misfire_grace_time=60: tolerate up to 60s late start before marking a misfire.
+    _job_defaults = dict(coalesce=True, misfire_grace_time=60)
+
     if not scheduler.running:
-        scheduler.add_job(run_price_updates, 'interval', minutes=interval_minutes, id='price_update_job')
-        scheduler.add_job(run_max_sync, 'interval', minutes=60, id='max_sync_job') # Default 1 hour
-        scheduler.add_job(run_pionex_sync, 'interval', minutes=60, id='pionex_sync_job')
-        scheduler.add_job(run_binance_sync, 'interval', minutes=60, id='binance_sync_job')
-        scheduler.add_job(run_wallet_sync, 'interval', minutes=10, id='wallet_sync_job') # Low cost RPC, higher freq
+        scheduler.add_job(run_price_updates, 'interval', minutes=interval_minutes, id='price_update_job', **_job_defaults)
+        scheduler.add_job(run_max_sync, 'interval', minutes=60, id='max_sync_job', **_job_defaults)
+        scheduler.add_job(run_pionex_sync, 'interval', minutes=60, id='pionex_sync_job', **_job_defaults)
+        scheduler.add_job(run_binance_sync, 'interval', minutes=60, id='binance_sync_job', **_job_defaults)
+        scheduler.add_job(run_wallet_sync, 'interval', minutes=10, id='wallet_sync_job', **_job_defaults)
         # Daily midnight snapshot ensures history data exists even on days with no manual refresh
-        scheduler.add_job(lambda: run_price_updates(), 'cron', hour=0, minute=5, id='daily_snapshot_job')
+        scheduler.add_job(lambda: run_price_updates(), 'cron', hour=0, minute=5, id='daily_snapshot_job', **_job_defaults)
         scheduler.start()
         logger.info(f"Scheduler started with interval: {interval_minutes} minutes")
 
 def reschedule_updates(interval_minutes: int):
+    _job_defaults = dict(coalesce=True, misfire_grace_time=60)
     if scheduler.get_job('price_update_job'):
-        scheduler.reschedule_job('price_update_job', trigger='interval', minutes=interval_minutes)
+        scheduler.reschedule_job(
+            'price_update_job',
+            trigger='interval',
+            minutes=interval_minutes,
+        )
         logger.info(f"Rescheduled price updates to every {interval_minutes} minutes")
     else:
-        scheduler.add_job(run_price_updates, 'interval', minutes=interval_minutes, id='price_update_job')
+        scheduler.add_job(
+            run_price_updates, 'interval',
+            minutes=interval_minutes,
+            id='price_update_job',
+            **_job_defaults,
+        )
         logger.info(f"Added new price update job with interval: {interval_minutes} minutes")
 
 def shutdown_scheduler():

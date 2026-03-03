@@ -10,6 +10,7 @@ import { useBudgetCategories, useIncomeItems, useDashboard } from '@/lib/hooks';
 import { useLanguage } from "@/components/LanguageProvider";
 import { IconPicker, AssetIcon } from '@/components/IconPicker';
 import { IncomeItemDialog } from '@/components/views/IncomeItemDialog';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { PageHeaderSkeleton, StatCardSkeleton, BudgetRowSkeleton, PageError } from '@/components/ui/skeleton';
 
 import type { BudgetCategory, IncomeItem } from '@/lib/types';
@@ -416,7 +417,7 @@ export default function BudgetPage() {
 
                             <div>
                                 <label className="text-sm font-medium mb-1 block">{t('budget_amount_label')} (TWD)</label>
-                                <input type="number" min="0" step="10" className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2" value={budgetForm.budget_amount} onChange={e => setBudgetForm({ ...budgetForm, budget_amount: e.target.value })} required />
+                                <MoneyInput className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2" value={budgetForm.budget_amount} onChange={e => setBudgetForm({ ...budgetForm, budget_amount: e.target.value })} required />
                             </div>
 
                             <div>

@@ -4,6 +4,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { IncomeItem } from "@/lib/types";
@@ -91,9 +92,8 @@ export function IncomeItemDialog({ open, onOpenChange, onSave, editingItem }: In
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="income-amount">{t('expected_income')}</Label>
-                    <Input
+                    <MoneyInput
                         id="income-amount"
-                        type="number"
                         value={amount}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
                     />

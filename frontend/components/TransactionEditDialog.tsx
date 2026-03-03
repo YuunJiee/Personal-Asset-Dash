@@ -93,18 +93,14 @@ export function TransactionEditDialog({ isOpen, onClose, transaction, onSuccess 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>{t('amount_qty')}</Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">
                         <Label>{t('price_unit_cost')}</Label>
-                        <Input
-                            type="number"
-                            step="any"
+                        <MoneyInput
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         />
