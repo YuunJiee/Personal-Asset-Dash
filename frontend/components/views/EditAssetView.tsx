@@ -59,9 +59,16 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
             'E-Wallet': t('sc_ewallet'),
             'Debit Card': t('sc_debit_card'),
             'Other': t('sc_other'),
-            'Fund': t('sc_fund'),
-            'Stock': t('sc_stock'),
-            'Crypto': t('sc_crypto'),
+            'Coin': t('sc_coin'),
+            'Token': t('sc_token'),
+            'Stablecoin': t('sc_stablecoin'),
+            'DeFi': t('sc_defi'),
+            'NFT': t('sc_nft'),
+            'TW Stock': t('sc_tw_stock'),
+            'US Stock': t('sc_us_stock'),
+            'ETF': t('sc_etf'),
+            'Bond': t('sc_bond'),
+            'Mutual Fund': t('sc_mutual_fund'),
             'Other Investment': t('sc_other_invest'),
             'Real Estate': t('sc_real_estate'),
             'Car': t('sc_car'),
@@ -149,7 +156,7 @@ export function EditAssetView({ asset, onClose, onBack }: EditAssetViewProps) {
 
                 {asset.source === 'max' && (
                     <div className="bg-blue-500/10 text-blue-600 px-4 py-3 rounded-xl text-sm font-medium mb-4 flex items-center gap-2">
-                        🔒 This asset is managed by MAX Integration. Manual edits are disabled to ensure data consistency.
+                        {t('max_managed_notice')}
                     </div>
                 )}
 

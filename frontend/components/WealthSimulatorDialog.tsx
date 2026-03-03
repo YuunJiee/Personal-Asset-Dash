@@ -129,7 +129,7 @@ export function WealthSimulatorDialog({ isOpen, onClose, currentNetWorth = 0 }: 
                         <div className="space-y-4 pt-4 border-t border-border">
                             <Label className="flex justify-between">
                                 <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> {t('years_to_grow')}</span>
-                                <span className="font-mono text-primary font-bold">{metric.years} Years</span>
+                                <span className="font-mono text-primary font-bold">{metric.years} {t('years')}</span>
                             </Label>
                             <SimpleSlider
                                 value={metric.years}
@@ -164,8 +164,8 @@ export function WealthSimulatorDialog({ isOpen, onClose, currentNetWorth = 0 }: 
                                 className="py-4"
                             />
                             <div className="flex justify-between text-xs text-muted-foreground px-1">
-                                <span>Conservative (3%)</span>
-                                <span>Aggressive (10%)</span>
+                                <span>{t('return_conservative')}</span>
+                                <span>{t('return_aggressive')}</span>
                             </div>
                         </div>
                     </div>

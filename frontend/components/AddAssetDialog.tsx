@@ -60,7 +60,7 @@ export function AddAssetDialog({ isOpen, onClose, defaultCategory }: AddAssetDia
     const subCategories: Record<string, string[]> = {
         'Fluid': ['Cash', 'E-Wallet', 'Debit Card', 'Other'],
         'Crypto': ['Coin', 'Token', 'Stablecoin', 'DeFi', 'NFT'],
-        'Stock': ['TW Stock', 'US Stock', 'Mutual Fund'],
+        'Stock': ['TW Stock', 'US Stock', 'ETF', 'Bond', 'Mutual Fund', 'Other Investment'],
         'Fixed': ['Real Estate', 'Car', 'Other Fixed Asset'],
         'Receivables': [],
         'Liabilities': ['Credit Card', 'Loan', 'Payable', 'Other Liability']

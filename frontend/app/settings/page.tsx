@@ -86,20 +86,20 @@ export default function SettingsPage() {
     };
 
     const handleReset = async () => {
-        if (!confirm("Are you sure you want to delete ALL data? This action cannot be undone.")) return;
-        if (!confirm("Double check: ALL assets, transactions, and goals will be lost. Confirm reset?")) return;
+        if (!confirm(t('reset_confirm_1'))) return;
+        if (!confirm(t('reset_confirm_2'))) return;
 
         try {
             const res = await fetch(`${API_URL}/system/reset`, { method: 'DELETE' });
             if (res.ok) {
-                alert("System has been reset to factory defaults.");
+                alert(t('reset_success'));
                 window.location.href = '/';
             } else {
-                alert("Reset failed. Please check server logs.");
+                alert(t('reset_failed_server'));
             }
         } catch (e) {
             console.error(e);
-            alert("Reset failed. Server might be down.");
+            alert(t('reset_failed_network'));
         }
     };
 
@@ -119,12 +119,12 @@ export default function SettingsPage() {
 
                 {/* GLOBAL SETTINGS (Language & Theme) */}
                 <section className="space-y-4">
-                    <h2 className="text-lg font-semibold border-b border-border pb-2">Appearance & Language</h2>
+                    <h2 className="text-lg font-semibold border-b border-border pb-2">{t('appearance_language')}</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex flex-col gap-3">
                             <div className="flex items-center gap-2 font-medium">
                                 <Languages className="w-4 h-4" />
-                                <span>Language</span>
+                                <span>{t('language')}</span>
                             </div>
                             <div className="flex gap-2 mt-auto">
                                 <Button
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                         <div className="bg-card p-6 rounded-3xl border border-border shadow-sm flex flex-col gap-3">
                             <div className="flex items-center gap-2 font-medium">
                                 <Palette className="w-4 h-4" />
-                                <span>Theme</span>
+                                <span>{t('theme')}</span>
                             </div>
                             <div className="flex gap-2 mt-auto">
                                 <Button
@@ -155,14 +155,14 @@ export default function SettingsPage() {
                                     onClick={() => setTheme('light')}
                                     className="flex-1"
                                 >
-                                    <Sun className="w-4 h-4 mr-2" /> Light
+                                    <Sun className="w-4 h-4 mr-2" /> {t('light')}
                                 </Button>
                                 <Button
                                     variant={mounted && theme === 'dark' ? 'default' : 'outline'}
                                     onClick={() => setTheme('dark')}
                                     className="flex-1"
                                 >
-                                    <Moon className="w-4 h-4 mr-2" /> Dark
+                                    <Moon className="w-4 h-4 mr-2" /> {t('dark')}
                                 </Button>
                             </div>
                         </div>
