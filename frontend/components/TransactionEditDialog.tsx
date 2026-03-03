@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateTransaction, deleteTransaction } from "@/lib/api";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { Trash2, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 
