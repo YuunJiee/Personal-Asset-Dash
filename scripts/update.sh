@@ -9,6 +9,19 @@ cd "$PROJECT_ROOT"
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+echo -e "${GREEN}⬇️  Pulling latest code...${NC}"
+git pull
+
+# ── Docker path (preferred) ───────────────────────────────────────────────
+if command -v docker &> /dev/null && docker compose version &> /dev/null 2>&1; then
+    echo -e "${GREEN}🐳 Rebuilding Docker images & restarting...${NC}"
+    docker compose build --no-cache
+    docker compose up -d
+    echo -e "${GREEN}✅ Update Complete! (Docker)${NC}"
+    exit 0
+fi
+
+# ── Legacy systemd / manual path (fallback) ──────────────────────────────
 # When triggered by GitHub Actions self-hosted runner, there is no TTY.
 # systemctl restart requires passwordless sudo. Set it up once:
 #   sudo visudo  →  add:  yourusername ALL=(ALL) NOPASSWD: /bin/systemctl
@@ -17,9 +30,6 @@ if [ ! -t 0 ]; then
   # Not a TTY (e.g. runner environment) → non-interactive sudo
   SUDO="sudo -n"
 fi
-
-echo -e "${GREEN}⬇️  Pulling latest code...${NC}"
-git pull
 
 echo -e "${GREEN}📦 Updating Backend...${NC}"
 cd backend

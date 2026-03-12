@@ -1,0 +1,7 @@
+# frontend/.dockerignore (context is ./frontend)
+node_modules
+.next
+.env.local
+.env.*.local
+*.log
+Dockerfile

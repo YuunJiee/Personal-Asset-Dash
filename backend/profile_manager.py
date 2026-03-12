@@ -5,7 +5,15 @@ from pathlib import Path
 
 # Get the backend directory path
 BACKEND_DIR = Path(__file__).parent
-CONFIG_FILE = BACKEND_DIR / "config.json"
+
+# YANTAGE_DATA_DIR allows redirecting all persistent files (SQLite DBs +
+# config.json) to an external directory — used by the Docker setup so data
+# survives container rebuilds via a named volume.  Falls back to BACKEND_DIR
+# for non-Docker / legacy runs.
+DATA_DIR = Path(os.environ.get("YANTAGE_DATA_DIR", str(BACKEND_DIR)))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+CONFIG_FILE = DATA_DIR / "config.json"
 DEFAULT_PROFILE = "default"
 DB_PREFIX = "sql_app"
 
@@ -61,8 +69,8 @@ def get_db_url(profile_name=None):
     else:
         db_file = f"{DB_PREFIX}_{profile_name}.db"
     
-    # Use backend directory for database files
-    db_path = BACKEND_DIR / db_file
+    # Use DATA_DIR for database files (respects YANTAGE_DATA_DIR env var)
+    db_path = DATA_DIR / db_file
     return f"sqlite:///{db_path}"
 
 def list_profiles():

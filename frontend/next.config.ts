@@ -7,6 +7,10 @@ const BACKEND_ORIGIN =
     .replace(/\/api\/?$/, "");
 
 const nextConfig: NextConfig = {
+  // Standalone output bundles only the files needed to run the app —
+  // required for the minimal Docker image (see frontend/Dockerfile).
+  output: "standalone",
+
   async rewrites() {
     return [
       {

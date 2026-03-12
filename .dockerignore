@@ -1,0 +1,34 @@
+# Root-level .dockerignore (used by backend/Dockerfile whose context is .)
+# Excludes everything irrelevant to the backend build to keep the context small.
+
+# Version control
+.git
+.github
+.gitignore
+
+# Frontend — not needed for the backend image
+frontend/
+screenshots/
+
+# Python artifacts
+**/__pycache__
+**/*.py[cod]
+**/.*_cache
+.pytest_cache
+
+# Existing data files — Docker volume manages persistence
+backend/sql_app*.db
+backend/sql_app*.db-shm
+backend/sql_app*.db-wal
+backend/config.json
+
+# Logs and environment
+*.log
+.env
+.env.*
+!.env.example
+
+# Docker files themselves
+docker-compose.yml
+backend/Dockerfile
+frontend/Dockerfile
