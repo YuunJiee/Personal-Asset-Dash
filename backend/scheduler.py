@@ -20,10 +20,10 @@ def run_price_updates():
         # endpoint can serve from fast DB reads instead of recalculating.
         service.snapshot_net_worth(db)
         logger.info("Scheduled price updates + snapshot completed.")
-        # Notify all connected WebSocket clients so the frontend SWR cache
+        # Notify all connected SSE clients so the frontend SWR cache
         # revalidates automatically (no manual page refresh needed).
-        from .routers.ws import manager as ws_manager
-        ws_manager.broadcast_from_thread(json.dumps({"type": "prices_updated"}))
+        from .routers.sse import manager as sse_manager
+        sse_manager.broadcast_from_thread(json.dumps({"type": "prices_updated"}))
     except Exception as e:
         logger.error(f"Error in scheduled price update: {e}")
     finally:

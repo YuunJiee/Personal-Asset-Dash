@@ -96,11 +96,11 @@ async def lifespan(app: FastAPI):
     # Run incremental schema migrations
     _run_migrations()
 
-    # Register the running asyncio event loop with the WebSocket manager
+    # Register the running asyncio event loop with the SSE manager
     # so background threads can safely broadcast to connected clients.
     import asyncio
-    from .routers.ws import manager as ws_manager
-    ws_manager.set_loop(asyncio.get_running_loop())
+    from .routers.sse import manager as sse_manager
+    sse_manager.set_loop(asyncio.get_running_loop())
 
     # Start background scheduler
     from . import scheduler as sched_module
@@ -136,7 +136,7 @@ app.add_middleware(
 )
 
 from .routers import dashboard, assets, stats, goals, alerts, transactions, budgets, settings, system, integrations, income
-from .routers.ws import router as ws_router
+from .routers.sse import router as sse_router
 
 app.include_router(dashboard.router)
 app.include_router(assets.router)
@@ -149,7 +149,7 @@ app.include_router(income.router)
 app.include_router(settings.router)
 app.include_router(system.router)
 app.include_router(integrations.router)
-app.include_router(ws_router, prefix="/api")
+app.include_router(sse_router, prefix="/api")
 
 
 @app.get("/")
