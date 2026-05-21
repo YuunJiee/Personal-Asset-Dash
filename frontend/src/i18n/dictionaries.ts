@@ -294,6 +294,7 @@ export const translations = {
         delete: "Delete",
         search: "Search...",
         save: "Save",
+        saving: "Saving...",
         saved: "Saved",
         select_placeholder: "Select...",
         sort_desc: "Sort Descending",
@@ -334,6 +335,7 @@ export const translations = {
         portfolio_balanced: "Portfolio is perfectly balanced!",
 
         // Integration Dialog
+        manage_integrations: "Manage Integrations",
         add_integration: "Add Integration",
         provider_type: "Provider Type",
         name_optional: "Name (Optional)",
@@ -448,6 +450,7 @@ export const translations = {
 
         // Trade Dialog
         trade: "Trade",
+        amount: "Amount",
         quantity: "Quantity",
         price_unit: "Price (Unit)",
         total_amount: "Total Amount",
@@ -850,6 +853,7 @@ export const translations = {
         delete: "刪除",
         search: "搜尋...",
         save: "儲存",
+        saving: "儲存中...",
         saved: "已儲存",
         select_placeholder: "選擇...",
         sort_desc: "降冪排序",
@@ -892,6 +896,7 @@ export const translations = {
         decrease: "減少",
 
         // Integration Dialog
+        manage_integrations: "管理整合",
         add_integration: "新增整合",
         provider_type: "提供者類型",
         name_optional: "名稱（可選）",
@@ -1021,6 +1026,7 @@ export const translations = {
 
         // Trade Dialog
         trade: "交易",
+        amount: "金額",
         quantity: "數量",
         price_unit: "單價",
         total_amount: "總金額",

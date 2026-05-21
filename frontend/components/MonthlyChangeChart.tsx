@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useNetWorthHistory } from '@/lib/hooks';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 interface DataPoint {
     date: string;
@@ -106,7 +107,7 @@ export function MonthlyChangeChart() {
                             )}
                         >
                             {/* Use Mobile Short Keys */}
-                            {cat === 'Crypto' && language === 'zh-TW' ? '加密' : (t(`cat_${cat}`) || cat)}
+                            {cat === 'Crypto' && language === 'zh-TW' ? '加密' : (t(`cat_${cat}` as TranslationKey) || cat)}
                         </button>
                     ))}
                 </div>

@@ -1,19 +1,15 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { AlertButton } from "@/components/AlertButton";
-import { updateAsset } from "@/lib/api";
 import { useDashboard } from "@/lib/hooks";
 import type { Asset } from "@/lib/types";
 
 import { TradeDialog } from "@/components/TradeDialog";
 import { AlertCircle, ArrowLeftRight, TrendingUp, Filter } from "lucide-react";
 import { PortfolioAllocation } from "@/components/PortfolioAllocation";
-import { TopMovers } from "@/components/TopMovers";
 import { TopPerformersWidget } from "@/components/TopPerformersWidget";
 import { PageHeaderSkeleton, ChartSkeleton, AssetRowSkeleton, PageError } from "@/components/ui/skeleton";
 
@@ -21,18 +17,6 @@ import { PageHeaderSkeleton, ChartSkeleton, AssetRowSkeleton, PageError } from "
 function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title: string, assets: Asset[], exchangeRate: number, onUpdate: () => void, onTrade: (asset: Asset) => void }) {
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
-
-    const handleCostChange = async (asset: Asset, value: string) => {
-        const num = parseFloat(value);
-        if (isNaN(num)) return;
-        // Stored in native currency; use TradeDialog for precise TWD-based cost editing.
-        try {
-            await updateAsset(asset.id, { manual_avg_cost: num });
-            onUpdate();
-        } catch (error) {
-            console.error("Failed to update cost", error);
-        }
-    };
 
     if (assets.length === 0) return null;
 
@@ -207,13 +191,6 @@ function AssetTable({ title, assets, exchangeRate, onUpdate, onTrade }: { title:
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">{asset.ticker ? asset.name : asset.category}</div>
                                             </div>
-                                            {asset.ticker && (
-                                                <AlertButton
-                                                    assetId={asset.id}
-                                                    currentPrice={currentPriceNative}
-                                                    ticker={asset.ticker!}
-                                                />
-                                            )}
                                         </div>
                                     </td>
                                     <td className="p-4 text-right tabular-nums text-foreground">
@@ -262,8 +239,8 @@ export default function InvestmentPage() {
     if (isLoading) return (
         <div className="min-h-screen bg-background p-6 md:p-10 space-y-6">
             <PageHeaderSkeleton />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <ChartSkeleton /><ChartSkeleton /><ChartSkeleton height={160} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ChartSkeleton /><ChartSkeleton />
             </div>
             <div className="bg-card rounded-3xl border border-border overflow-hidden">
                 {Array.from({ length: 6 }).map((_, i) => <AssetRowSkeleton key={i} />)}
@@ -353,7 +330,7 @@ export default function InvestmentPage() {
 
             {filteredAssets.length > 0 && (
                 <>
-                    <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <PortfolioAllocation
                             assets={filteredAssets}
                             title={t('allocation_by_asset')}
@@ -366,7 +343,6 @@ export default function InvestmentPage() {
                             defaultTab="Platform"
                             showToggle={false}
                         />
-                        <TopMovers assets={filteredAssets} />
                     </div>
                     <div className="mb-8">
                         <TopPerformersWidget assets={filteredAssets} />

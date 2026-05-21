@@ -9,6 +9,7 @@ import { useDashboard } from "@/lib/hooks";
 import type { Asset, Transaction } from "@/lib/types";
 import { TransactionEditDialog } from "@/components/TransactionEditDialog";
 import { PageError, PageHeaderSkeleton, TableRowSkeleton } from "@/components/ui/skeleton";
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 /** Transaction enriched with its parent asset metadata for display purposes. */
 interface EnrichedTransaction extends Transaction {
@@ -115,7 +116,7 @@ export default function HistoryPage() {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {t(`range_${r}`)}
+                            {t(`range_${r}` as TranslationKey)}
                         </button>
                     ))}
                 </div>

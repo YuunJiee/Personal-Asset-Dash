@@ -1,6 +1,6 @@
 // Use relative path '/api' which works with Next.js Rewrites (proxy)
 // This avoids CORS and Mixed Content issues when deployed
-import { DashboardData, Asset, Goal, Alert, Transaction, BudgetCategory, RiskMetricsResponse, IncomeItem } from './types';
+import { DashboardData, Asset, Transaction, BudgetCategory, RiskMetricsResponse, IncomeItem } from './types';
 
 const isServer = typeof window === 'undefined';
 export const API_URL = isServer
@@ -152,7 +152,7 @@ export async function fetchForecast() {
 
 export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
     try {
-        const res = await fetch(`${API_URL}/budgets/`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/budgets/categories`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
     } catch (error) {
@@ -164,7 +164,7 @@ export async function fetchBudgetCategories(): Promise<BudgetCategory[]> {
 // --- Income API ---
 export async function fetchIncomeItems(): Promise<IncomeItem[]> {
     try {
-        const res = await fetch(`${API_URL}/income/`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/income/items`, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return await res.json();
     } catch (error) {
@@ -174,7 +174,7 @@ export async function fetchIncomeItems(): Promise<IncomeItem[]> {
 }
 
 export async function createIncomeItem(data: { name: string; amount: number }) {
-    const res = await fetch(`${API_URL}/income/`, {
+    const res = await fetch(`${API_URL}/income/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -184,7 +184,7 @@ export async function createIncomeItem(data: { name: string; amount: number }) {
 }
 
 export async function updateIncomeItem(id: number, data: { name?: string; amount?: number }) {
-    const res = await fetch(`${API_URL}/income/${id}`, {
+    const res = await fetch(`${API_URL}/income/items/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -194,7 +194,7 @@ export async function updateIncomeItem(id: number, data: { name?: string; amount
 }
 
 export async function deleteIncomeItem(id: number) {
-    const res = await fetch(`${API_URL}/income/${id}`, { method: 'DELETE' });
+    const res = await fetch(`${API_URL}/income/items/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Failed to delete income item");
     return true;
 }
@@ -301,23 +301,6 @@ export async function fetchIntegrations() {
         return await res.json();
     } catch (error) {
         console.error("fetchIntegrations failed:", error);
-        throw error;
-    }
-}
-
-export async function discoverWalletAssets(connectionId: number) {
-    try {
-        const res = await fetch(`${API_URL}/integrations/discover/${connectionId}`, {
-            method: 'POST',
-            cache: 'no-store'
-        });
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || `HTTP error! status: ${res.status}`);
-        }
-        return await res.json();
-    } catch (error) {
-        console.error("discoverWalletAssets failed:", error);
         throw error;
     }
 }

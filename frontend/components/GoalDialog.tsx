@@ -14,20 +14,21 @@ import { cn } from "@/lib/utils";
 import { API_URL } from '@/lib/api';
 import { Trash2 } from 'lucide-react';
 import type { Goal } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 // Categories available for allocation goals
 const ALLOCATION_CATEGORIES = ['Fluid', 'Stock', 'Crypto', 'Fixed', 'Receivables'];
 
 type AllocationMap = Record<string, number>; // { Fluid: 20, Stock: 50, ... }
 
-function parseAllocation(description?: string): AllocationMap {
-    if (!description) return { Stock: 60, Fluid: 40 };
+function parseAllocation(allocationData?: string): AllocationMap {
+    if (!allocationData) return { Stock: 60, Fluid: 40 };
     try {
-        const parsed = JSON.parse(description);
+        const parsed = JSON.parse(allocationData);
         if (typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
     } catch (_) { }
-    // Legacy single-category format
-    return { [description]: 100 };
+    // Legacy: plain category name string (pre-migration data)
+    return { [allocationData]: 100 };
 }
 
 interface GoalDialogProps {
@@ -59,7 +60,7 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
             setName(initialGoal.name || '');
             setTargetAmount(String(initialGoal.target_amount || ''));
             if (initialGoal.goal_type === 'ASSET_ALLOCATION') {
-                setAllocation(parseAllocation(initialGoal.description));
+                setAllocation(parseAllocation(initialGoal.allocation_data));
             }
         } else {
             setGoalType('NET_WORTH');
@@ -102,13 +103,13 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
                     name,
                     target_amount: parseFloat(targetAmount),
                     goal_type: 'NET_WORTH',
-                    description: null,
+                    allocation_data: null,
                 }
                 : {
                     name,
                     target_amount: 100,
                     goal_type: 'ASSET_ALLOCATION',
-                    description: JSON.stringify(allocation),
+                    allocation_data: JSON.stringify(allocation),
                 };
 
         try {
@@ -203,7 +204,7 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
                         <div className="space-y-2">
                             {Object.entries(allocation).map(([cat, pct]) => (
                                 <div key={cat} className="flex items-center gap-3">
-                                    <span className="w-24 text-sm font-medium shrink-0">{t(cat) || cat}</span>
+                                    <span className="w-24 text-sm font-medium shrink-0">{t(cat as TranslationKey) || cat}</span>
                                     <div className="relative flex-1">
                                         <Input
                                             type="number"
@@ -238,7 +239,7 @@ export function GoalDialog({ isOpen, onClose, initialGoal }: GoalDialogProps) {
                                         onClick={() => addCategory(cat)}
                                         className="text-xs px-2.5 py-1 rounded-full border border-dashed border-border hover:border-primary hover:text-primary transition-colors"
                                     >
-                                        + {t(cat) || cat}
+                                        + {t(cat as TranslationKey) || cat}
                                     </button>
                                 ))}
                             </div>

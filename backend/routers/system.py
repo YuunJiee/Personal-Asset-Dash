@@ -3,13 +3,13 @@ from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from datetime import datetime, timedelta
-from pydantic import BaseModel
 import csv
 import io
 import json
 import random
-from .. import database, models, profile_manager
-from ..services import max_service, wallet_service, exchange_service
+from .. import database, models, profile_manager, schemas
+from ..repositories.asset_repo import AssetRepository
+from ..services.providers import PROVIDERS
 
 router = APIRouter(
     prefix="/api/system",
@@ -37,7 +37,7 @@ def download_backup():
 
 @router.get("/export/csv")
 def export_assets_csv(db: Session = Depends(database.get_db)):
-    assets = db.query(models.Asset).all()
+    assets = AssetRepository(db).list_all()
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -77,28 +77,21 @@ def reset_database(db: Session = Depends(database.get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-from datetime import datetime, timedelta
-from .. import models
-
 @router.post("/seed")
 def seed_database(db: Session = Depends(database.get_db)):
+    import os
     import os
     if os.getenv("SEED_ALLOWED", "").lower() not in ("1", "true", "yes"):
         raise HTTPException(
             status_code=403,
             detail="Seed endpoint is disabled. Set SEED_ALLOWED=1 to enable."
         )
-    import random
-    from datetime import timedelta
 
     # 1. Reset first
     try:
         db.execute(text("DELETE FROM transactions"))
-        db.execute(text("DELETE FROM asset_tags"))
-        db.execute(text("DELETE FROM tags"))
         db.execute(text("DELETE FROM assets"))
         db.execute(text("DELETE FROM goals"))
-        db.execute(text("DELETE FROM expenses"))
         db.execute(text("DELETE FROM alerts"))
         db.execute(text("DELETE FROM system_settings"))
     except Exception as e:
@@ -237,39 +230,20 @@ def seed_database(db: Session = Depends(database.get_db)):
 
 @router.post("/sync/max")
 def trigger_max_sync(db: Session = Depends(database.get_db)):
-    success = max_service.sync_max_assets(db)
-    if success:
-        return {"message": "MAX assets synced successfully"}
-    else:
-        # It might return False if no keys set, which isn't exactly an error
-        return {"message": "Sync attempted (Check logs or API keys)"}
+    success = PROVIDERS["max"].sync(db)
+    return {"message": "MAX assets synced successfully" if success else "Sync attempted (Check logs or API keys)"}
 
 @router.post("/sync/pionex")
 def trigger_pionex_sync(db: Session = Depends(database.get_db)):
-    # Legacy endpoint name, now triggers generic sync for all CCXT exchanges (including Pionex)
-    success = exchange_service.sync_all_exchanges(db)
-    if success:
-        return {"message": "Exchange assets synced successfully"}
-    else:
-        return {"message": "Sync attempted (Check active connections)"}
+    success = PROVIDERS["pionex"].sync(db)
+    return {"message": "Pionex assets synced successfully" if success else "Sync attempted (Check active connections)"}
 
 @router.post("/sync/wallet")
 def trigger_wallet_sync(db: Session = Depends(database.get_db)):
-    success = wallet_service.sync_wallets(db)
-    if success:
-        return {"message": "Wallet assets synced successfully"}
-    else:
-        return {"message": "Sync attempted (Check logs or API keys)"}
+    success = PROVIDERS["wallet"].sync(db)
+    return {"message": "Wallet assets synced successfully" if success else "Sync attempted (Check logs or API keys)"}
 
 # --- Profile Management ---
-from pydantic import BaseModel
-from .. import profile_manager
-
-class ProfileCreate(BaseModel):
-    name: str
-
-class ProfileSwitch(BaseModel):
-    name: str
 
 @router.get("/profiles")
 def get_profiles():
@@ -279,7 +253,7 @@ def get_profiles():
     }
 
 @router.post("/profiles")
-def create_new_profile(profile: ProfileCreate):
+def create_new_profile(profile: schemas.ProfileCreate):
     if profile.name == "default":
         raise HTTPException(status_code=400, detail="Cannot create default profile")
     
@@ -293,7 +267,7 @@ def create_new_profile(profile: ProfileCreate):
         raise HTTPException(status_code=400, detail="Profile already exists")
 
 @router.post("/switch_profile")
-def switch_active_profile(profile: ProfileSwitch):
+def switch_active_profile(profile: schemas.ProfileSwitch):
     if profile_manager.switch_profile(profile.name):
         # Trigger DB Reconnect
         database.reconnect()

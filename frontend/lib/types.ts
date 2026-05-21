@@ -53,16 +53,8 @@ export interface Goal {
     goal_type: 'NET_WORTH' | 'ASSET_ALLOCATION';
     target_amount: number;
     currency: string;
-    description?: string;
-}
-
-export interface Alert {
-    id: number;
-    asset_id: number;
-    condition: 'ABOVE' | 'BELOW';
-    target_price: number;
-    is_active: boolean;
-    triggered_at?: string;
+    description?: string;        // human-readable note
+    allocation_data?: string;    // JSON: {"Stock": 60, "Fluid": 40} for ASSET_ALLOCATION
 }
 
 export interface BudgetCategory {
@@ -111,14 +103,6 @@ export interface IntegrationConnection {
 export interface AssetHistoryPoint {
     date: string;
     value: number;
-}
-
-/** Single data point for WealthSimulator compound-growth chart */
-export interface SimulatorDataPoint {
-    year: string;
-    balance: number;
-    principal: number;
-    interest: number;
 }
 
 /** A web3 wallet group combining multiple wallet addresses of the same token */

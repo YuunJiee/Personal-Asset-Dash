@@ -3,27 +3,23 @@
 import React from 'react';
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, Search, Wallet } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ArrowUpDown, Wallet } from "lucide-react";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
-import { deleteAsset } from "@/lib/api";
 import { useDashboard } from "@/lib/hooks";
-import { useToast } from "@/components/ui/toast";
 import { AssetRowSkeleton, PageError, PageHeaderSkeleton } from "@/components/ui/skeleton";
 
-import { Pencil, Trash2 } from "lucide-react";
 import { AssetIcon } from "@/components/IconPicker";
 import { getCategoryIconName } from "@/lib/iconHelper";
 import { AssetActionDialog } from "@/components/AssetActionDialog";
 import { CATEGORY_ICON_BG, CATEGORY_ICON_TEXT } from "@/lib/constants";
 import type { Asset, Transaction } from "@/lib/types";
+import type { TranslationKey } from "@/src/i18n/dictionaries";
 import { EmptyState } from "@/components/EmptyState";
 
 // Map raw subcategory strings (from DB) to translation keys
-const SUBCATEGORY_KEY_MAP: Record<string, string> = {
+const SUBCATEGORY_KEY_MAP: Record<string, TranslationKey> = {
     'Cash': 'sc_cash',
     'E-Wallet': 'sc_ewallet',
     'Debit Card': 'sc_debit_card',
@@ -51,7 +47,6 @@ const SUBCATEGORY_KEY_MAP: Record<string, string> = {
 
 export default function AssetsPage() {
     const [historyAsset, setHistoryAsset] = useState<Asset | null>(null);
-    const [search, setSearch] = useState('');
     const [sortDesc, setSortDesc] = useState(true);
     const { isPrivacyMode } = usePrivacy();
     const { t } = useLanguage();
@@ -60,10 +55,6 @@ export default function AssetsPage() {
     const { assets, refresh: refreshData, isLoading, isError } = useDashboard();
 
     const filteredAssets = assets
-        .filter(a =>
-            a.name.toLowerCase().includes(search.toLowerCase()) ||
-            (a.ticker && a.ticker.toLowerCase().includes(search.toLowerCase()))
-        )
         .sort((a, b) => {
             const qty = (txns: Transaction[] | undefined) =>
                 txns ? txns.reduce((acc, t) => acc + t.amount, 0) : 0;
@@ -71,27 +62,6 @@ export default function AssetsPage() {
             const valB = (b.current_price ?? 0) * qty(b.transactions);
             return sortDesc ? valB - valA : valA - valB;
         });
-
-    const totalValue = filteredAssets.reduce((sum, a) => {
-        if (a.category === 'Liabilities') return sum;
-        const qty = a.transactions ? a.transactions.reduce((acc, t) => acc + t.amount, 0) : 0;
-        const val = (a.current_price ?? 0) * qty;
-        return sum + val;
-    }, 0);
-
-    const { toast } = useToast();
-
-    const handleDelete = async (asset: Asset) => {
-        if (!confirm(t('delete_asset_confirm'))) return;
-        try {
-            await deleteAsset(asset.id);
-            refreshData();
-               toast(t('asset_deleted'), 'success');
-        } catch (e) {
-            console.error("Failed to delete", e);
-               toast(t('delete_failed'), 'error');
-        }
-    };
 
     const getTranslatedSubCategory = (sub: string) => {
         const key = SUBCATEGORY_KEY_MAP[sub];
@@ -143,8 +113,8 @@ export default function AssetsPage() {
             {filteredAssets.length === 0 && (
                 <EmptyState
                     icon={<Wallet className="w-8 h-8" />}
-                    title={search ? t('no_assets_found') : t('no_assets_yet')}
-                    description={search ? undefined : t('no_assets_desc')}
+                    title={t('no_assets_yet')}
+                    description={t('no_assets_desc')}
                     className="py-24"
                 />
             )}
@@ -163,7 +133,7 @@ export default function AssetsPage() {
                     return (
                         <div key={groupKey} className="space-y-3">
                             <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground px-1">
-                                {groupBy === 'category' ? t(groupKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
+                                {groupBy === 'category' ? t(groupKey as TranslationKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
                             </h3>
                             <div className="space-y-3">
                                 {categoryAssets.map(asset => {
@@ -240,15 +210,13 @@ export default function AssetsPage() {
                                     {/* Group Separator */}
                                     <tr className="bg-muted/20 border-b border-border">
                                         <td colSpan={3} className="py-2 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground pl-4">
-                                            {groupBy === 'category' ? t(groupKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
+                                            {groupBy === 'category' ? t(groupKey as TranslationKey) : (groupKey.charAt(0).toUpperCase() + groupKey.slice(1))}
                                         </td>
                                     </tr>
                                     {categoryAssets.map(asset => {
                                         const quantity = asset.transactions ? asset.transactions.reduce((acc, t) => acc + t.amount, 0) : 0;
                                         // Use backend value_twd if available and non-zero
                                         const value = (asset.value_twd !== undefined && asset.value_twd !== 0) ? asset.value_twd : ((asset.current_price ?? 0) * quantity);
-                                        const isCrypto = asset.sub_category && asset.sub_category.includes('Crypto');
-
                                         return (
                                             <tr key={asset.id} className="hover:bg-muted/50 transition-colors group cursor-pointer" onClick={() => setHistoryAsset(asset)}>
                                                 <td className="p-4">
@@ -288,7 +256,7 @@ export default function AssetsPage() {
                 </table>
                 {filteredAssets.length === 0 && (
                     <div className="p-8 text-center text-muted-foreground">
-                        {search ? `${t('no_assets_found_matching')} "${search}"` : t('no_assets_yet')}
+                        {t('no_assets_yet')}
                     </div>
                 )}
             </div>

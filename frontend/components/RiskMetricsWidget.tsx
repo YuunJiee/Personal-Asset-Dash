@@ -4,6 +4,7 @@ import { useRiskMetrics } from '@/lib/hooks';
 import { Activity, ShieldAlert, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/components/LanguageProvider';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 export function RiskMetricsWidget() {
     const { metrics, isLoading: loading } = useRiskMetrics();
@@ -26,7 +27,7 @@ export function RiskMetricsWidget() {
     // Let's use generic strings for now and fallback to english status if translation is missing.
     const translateStatus = (s: string) => {
         const key = `status_${s.toLowerCase().replace(' ', '_')}`;
-        const translated = t(key);
+        const translated = t(key as TranslationKey);
         return translated === key ? s : translated;
     };
 

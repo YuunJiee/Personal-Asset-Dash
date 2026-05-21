@@ -9,6 +9,7 @@ import { ChartPie } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 import type { Asset } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 // Theme Palettes (Inlined to ensure availability)
 const CHART_THEMES: Record<string, string[]> = {
@@ -17,7 +18,7 @@ const CHART_THEMES: Record<string, string[]> = {
     'Vibrant': ['#FF0055', '#00CCFF', '#CCFF00', '#FF3300', '#9D00FF', '#00FF99']
 };
 // Map raw subcategory strings (from DB) to translation keys (in dictionaries.ts)
-const SUBCATEGORY_KEY_MAP: Record<string, string> = {
+const SUBCATEGORY_KEY_MAP: Record<string, TranslationKey> = {
     'Cash': 'sc_cash',
     'E-Wallet': 'sc_ewallet',
     'Debit Card': 'sc_debit_card',
@@ -91,7 +92,7 @@ export function AssetAllocationWidget({ assets }: AssetAllocationWidgetProps) {
             if (key) return t(key);
         }
         // Fallback to direct translation (for Categories which match keys, or unmapped subs)
-        return t(name) || name;
+        return t(name as TranslationKey) || name;
     };
 
     return (

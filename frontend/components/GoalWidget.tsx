@@ -7,12 +7,12 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { fetchGoals, fetchForecast } from '@/lib/api';
 import type { Goal, GoalForecast, DashboardData, Asset } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
-// Parse allocation JSON from description
-function parseAllocation(description?: string | null): Record<string, number> | null {
-    if (!description) return null;
+function parseAllocation(allocationData?: string | null): Record<string, number> | null {
+    if (!allocationData) return null;
     try {
-        const parsed = JSON.parse(description);
+        const parsed = JSON.parse(allocationData);
         if (typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
     } catch (_) { }
     return null;
@@ -112,7 +112,7 @@ export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: {
 
                 /* ── ASSET_ALLOCATION ──────────────────────── */
                 if (goal.goal_type === 'ASSET_ALLOCATION') {
-                    const allocation = parseAllocation(goal.description);
+                    const allocation = parseAllocation(goal.allocation_data);
                     if (!allocation) return null;
 
                     const entries = Object.entries(allocation) as [string, number][];
@@ -160,7 +160,7 @@ export function GoalWidget({ dashboardData, refreshTrigger, onEditGoal }: {
                                     return (
                                         <div key={cat}>
                                             <div className="flex justify-between text-xs mb-1">
-                                                <span className="font-medium">{t(cat) || cat}</span>
+                                                <span className="font-medium">{t(cat as TranslationKey) || cat}</span>
                                                 <span className="text-muted-foreground font-mono">
                                                     {isPrivacyMode ? '**%' : `${currentPct.toFixed(1)}%`}
                                                     <span className="text-muted-foreground/60"> / {targetPct}%</span>

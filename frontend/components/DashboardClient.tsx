@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { AssetPieChart } from "./AssetPieChart";
 import { AddAssetDialog } from "./AddAssetDialog";
 import { AssetAccordion } from "./AssetAccordion";
 import { GoalWidget } from "./GoalWidget";
@@ -9,11 +8,11 @@ import { GoalDialog } from "@/components/GoalDialog";
 import { AssetActionDialog } from "@/components/AssetActionDialog";
 import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, TouchSensor, MouseSensor } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, useSensor, useSensors, DragEndEvent, TouchSensor, MouseSensor } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
 import { NetWorthTrendChart } from "./NetWorthTrendChart";
 import { IntegrationDialog } from "./IntegrationDialog";
-import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft, Link as LinkIcon, ChevronRight } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, Pencil, Check, Target, ArrowRightLeft, Link as LinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AssetAllocationWidget } from "./AssetAllocationWidget";
 import { CATEGORY_COLORS } from "@/lib/constants";
@@ -23,9 +22,9 @@ interface DashboardClientProps {
 }
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { API_URL } from '@/lib/api';
 import { useSetting } from '@/lib/hooks';
 import type { Goal, DashboardData } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 export function DashboardClient({ data }: DashboardClientProps) {
     const { isPrivacyMode } = usePrivacy();
@@ -68,7 +67,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
         setIsAddOpen(true);
     };
 
-    const { net_worth, total_pl, total_roi, assets, updated_at } = data;
+    const { assets, updated_at } = data;
     const formattedTime = new Date(updated_at).toLocaleTimeString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
 
     // Helper to filter assets by category and sum values (excluding those filtered out of net worth)
@@ -120,34 +119,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const isStale = diffDays > 5;
 
-    // Prepare data for Chart
-    // Prepare data for Chart: Top 5 Assets by Value
-    // Prepare data for Chart: Top 5 Assets by Value
-    const aggregatedChartData: Record<string, number> = {};
-    assets.forEach((a) => {
-        if (a.include_in_net_worth === false) return;
-
-        let val = 0;
-        if (a.value_twd !== undefined) val = a.value_twd;
-        else {
-            const qty = a.transactions?.reduce((sum, t) => sum + t.amount, 0) ?? 0;
-            val = (a.current_price ?? 0) * qty;
-        }
-
-        if (val > 0) {
-            // Aggregate by Name
-            const key = a.name;
-            aggregatedChartData[key] = (aggregatedChartData[key] || 0) + val;
-        }
-    });
-
-    const chartData = Object.entries(aggregatedChartData)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 6); // Top 6
-
     const [visibleCategories, setVisibleCategories] = useState<Record<string, boolean>>({});
-    const [chartTheme, setChartTheme] = useState('Classic');
 
     const { value: visibleCatsRaw } = useSetting('visible_categories');
 
@@ -171,11 +143,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
             localStorage.setItem('setting_visible_categories', JSON.stringify(parsed));
         } catch { /* ignore malformed JSON */ }
     }, [visibleCatsRaw]);
-
-    useEffect(() => {
-        // Force Morandi Theme
-        setChartTheme('Morandi');
-    }, []);
 
     const filteredOrder = order.filter(category => {
         // If visibility setting exists, verify it. default true.
@@ -302,7 +269,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                             strategy={rectSortingStrategy}
                         >
                             <div className="grid grid-cols-1 gap-4 auto-rows-min">
-                                {filteredOrder.map((category, index) => {
+                                {filteredOrder.map((category) => {
                                     const catTotal = getCategoryTotal(category);
                                     // Calculate percentage based on Positive Net Worth (Total Assets)
                                     // Or Net Worth? Usually Asset Allocation is % of Assets.
@@ -324,12 +291,12 @@ export function DashboardClient({ data }: DashboardClientProps) {
                                         <AssetAccordion
                                             key={category}
                                             category={category}
-                                            title={t(category) || category}
+                                            title={t(category as TranslationKey) || category}
                                             totalAmount={catTotal}
                                             assets={data.assets}
                                             color={CATEGORY_COLORS[category] || 'bg-gray-500'}
                                             onAddClick={category === 'Crypto' ? undefined : () => openAddDialog(category)}
-                                            onTitleClick={category === 'Crypto' ? () => router.push('/crypto') : undefined}
+                                            onTitleClick={category === 'Crypto' ? () => router.push('/stock') : undefined}
                                             onActionClick={category === 'Crypto' ? () => setIsIntegrationOpen(true) : undefined}
                                             actionIcon={<LinkIcon className="w-5 h-5" />}
                                             isEditMode={isEditMode}

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 
 import { useLanguage } from '@/components/LanguageProvider';
 import { fetchSetting, updateSetting } from '@/lib/api';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 const ALL_CATEGORIES = ['Fluid', 'Stock', 'Crypto', 'Fixed', 'Receivables', 'Liabilities'];
 
@@ -50,7 +51,7 @@ export function CategoryVisibility() {
         <div className="space-y-4">
             {ALL_CATEGORIES.map(cat => (
                 <div key={cat} className="flex items-center justify-between">
-                    <Label htmlFor={`toggle-${cat}`} className="text-base">{t(cat)}</Label>
+                    <Label htmlFor={`toggle-${cat}`} className="text-base">{t(cat as TranslationKey)}</Label>
                     <div className="flex items-center gap-2">
                         <Label className="text-xs text-muted-foreground">{visibility[cat] ? t('visible') : t('hidden')}</Label>
                         <Switch

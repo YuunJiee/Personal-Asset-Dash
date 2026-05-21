@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       # Named volume keeps SQLite DB files + config.json across container
       # rebuilds. Remove the volume only if you want a fresh database.
@@ -44,7 +44,7 @@ services:
         # Passed at build time so next.config.ts bakes in the rewrite target
         INTERNAL_API_URL: http://backend:8000/api
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     environment:
       # Used at runtime by lib/api.ts for SSR fetches
       INTERNAL_API_URL: http://backend:8000/api

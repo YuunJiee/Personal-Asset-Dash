@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { AssetIcon } from './IconPicker';
 import { getCategoryIconName } from '@/lib/iconHelper';
 import type { Asset, AssetGroup, Transaction } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 interface AssetAccordionProps {
     category: string;
@@ -29,7 +30,7 @@ interface AssetAccordionProps {
     percentage?: number;
 }
 
-const SUBCATEGORY_KEY_MAP: Record<string, string> = {
+const SUBCATEGORY_KEY_MAP: Record<string, TranslationKey> = {
     'Cash': 'sc_cash',
     'E-Wallet': 'sc_ewallet',
     'Debit Card': 'sc_debit_card',

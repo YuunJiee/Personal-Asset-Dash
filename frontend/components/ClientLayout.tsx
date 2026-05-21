@@ -9,14 +9,7 @@ import { AppSidebar } from "./AppSidebar";
 import { BottomNav } from "./BottomNav";
 import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/components/LanguageProvider";
-import { useRealtimeUpdates } from "@/lib/hooks";
 import { ToastProvider } from "@/components/ui/toast";
-
-/** Thin wrapper so useRealtimeUpdates() is called *inside* <SWRConfig>. */
-function RealtimeSync() {
-    useRealtimeUpdates();
-    return null;
-}
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -28,7 +21,6 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             dedupingInterval: 10_000,
             errorRetryCount: 2,
         }}>
-            <RealtimeSync />
             <ThemeProvider
                 attribute="class"
                 defaultTheme="system"

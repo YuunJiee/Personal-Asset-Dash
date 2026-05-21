@@ -105,7 +105,7 @@ def delete_profile(name: str):
         save_config(config)
         
         # Optionally delete the DB file
-        db_file = BACKEND_DIR / f"{DB_PREFIX}_{name}.db"
+        db_file = DATA_DIR / f"{DB_PREFIX}_{name}.db"
         if db_file.exists():
             try:
                 db_file.unlink()

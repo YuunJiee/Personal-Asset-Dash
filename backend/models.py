@@ -62,13 +62,12 @@ class Goal(Base):
     __tablename__ = "goals"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True) # e.g. "Net Worth Target", "Monthly Budget"
+    name = Column(String, index=True)
     target_amount = Column(Float)
-    goal_type = Column(String) # "NET_WORTH", "ASSET_ALLOCATION"
-    # For NET_WORTH: target_amount is TWD amount
-    # For ASSET_ALLOCATION: target_amount is target percentage (0-100); description holds category name (e.g. "Stock")
+    goal_type = Column(String)  # "NET_WORTH" | "ASSET_ALLOCATION"
     currency = Column(String, default="TWD")
-    description = Column(String, nullable=True)
+    description = Column(String, nullable=True)  # human-readable note
+    allocation_data = Column(String, nullable=True)  # JSON: {"Stock": 60, "Fluid": 40} for ASSET_ALLOCATION
     created_at = Column(DateTime, default=datetime.now)
 
 class Alert(Base):

@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install Python dependencies first (layer-cached until requirements change)
 COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir --timeout=120 -r backend/requirements.txt
 
 # Copy backend source
 COPY backend/ ./backend/

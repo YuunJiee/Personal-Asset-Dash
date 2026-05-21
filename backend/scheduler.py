@@ -1,9 +1,11 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 from .database import SessionLocal
-from . import service, models
-from .services import max_service, wallet_service, binance_service, exchange_service
-import json
+from . import models
+from .services.providers import PROVIDERS
+from .services.price_service import update_prices
+from .services.exchange_rate_service import get_usdt_twd_rate
+from .services.snapshot_service import snapshot_net_worth
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,68 +16,33 @@ def run_price_updates():
     logger.info("Running scheduled price updates...")
     db: Session = SessionLocal()
     try:
-        service.update_prices(db)
-        service.update_exchange_rate(db)
+        update_prices(db)
+        get_usdt_twd_rate(db)
         # Take a net worth snapshot after every price update so the history
         # endpoint can serve from fast DB reads instead of recalculating.
-        service.snapshot_net_worth(db)
+        snapshot_net_worth(db)
         logger.info("Scheduled price updates + snapshot completed.")
-        # Notify all connected SSE clients so the frontend SWR cache
-        # revalidates automatically (no manual page refresh needed).
-        from .routers.sse import manager as sse_manager
-        sse_manager.broadcast_from_thread(json.dumps({"type": "prices_updated"}))
     except Exception as e:
         logger.error(f"Error in scheduled price update: {e}")
     finally:
         db.close()
 
-def run_max_sync():
-    logger.info("Running MAX exchange sync...")
+def _run_provider_sync(name: str) -> None:
     db: Session = SessionLocal()
     try:
-        success = max_service.sync_max_assets(db)
+        success = PROVIDERS[name].sync(db)
         if success:
-            logger.info("MAX exchange sync completed.")
+            logger.info(f"{name} sync completed.")
     except Exception as e:
-        logger.error(f"Error in MAX sync: {e}")
+        logger.error(f"Error in {name} sync: {e}")
     finally:
         db.close()
 
-def run_pionex_sync():
-    logger.info("Running exchange sync (CCXT/Pionex)...")
-    db: Session = SessionLocal()
-    try:
-        success = exchange_service.sync_all_exchanges(db)
-        if success:
-            logger.info("Exchange sync completed.")
-    except Exception as e:
-        logger.error(f"Error in exchange sync: {e}")
-    finally:
-        db.close()
 
-def run_wallet_sync():
-    logger.info("Running Wallet sync (Web3)...")
-    db: Session = SessionLocal()
-    try:
-        success = wallet_service.sync_wallets(db)
-        if success:
-            logger.info("Wallet sync completed.")
-    except Exception as e:
-        logger.error(f"Error in Wallet sync: {e}")
-    finally:
-        db.close()
-
-def run_binance_sync():
-    logger.info("Running Binance exchange sync...")
-    db: Session = SessionLocal()
-    try:
-        success = binance_service.sync_binance_assets(db)
-        if success:
-            logger.info("Binance exchange sync completed.")
-    except Exception as e:
-        logger.error(f"Error in Binance sync: {e}")
-    finally:
-        db.close()
+def run_max_sync():     _run_provider_sync("max")
+def run_pionex_sync():  _run_provider_sync("pionex")
+def run_binance_sync(): _run_provider_sync("binance")
+def run_wallet_sync():  _run_provider_sync("wallet")
 
 def start_scheduler():
     # Helper to get interval from DB

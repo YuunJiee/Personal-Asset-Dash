@@ -115,11 +115,10 @@ class Alert(AlertBase):
 class GoalBase(BaseModel):
     name: str
     target_amount: float
-    goal_type: str # "NET_WORTH", "ASSET_ALLOCATION"
-    # NET_WORTH: target_amount = TWD amount
-    # ASSET_ALLOCATION: target_amount = percentage (0-100), description = category name
+    goal_type: str          # "NET_WORTH" | "ASSET_ALLOCATION"
     currency: Optional[str] = "TWD"
-    description: Optional[str] = None
+    description: Optional[str] = None       # human-readable note
+    allocation_data: Optional[str] = None   # JSON: {"Stock": 60, "Fluid": 40} for ASSET_ALLOCATION
 
 class GoalCreate(GoalBase):
     pass
@@ -129,6 +128,7 @@ class GoalUpdate(BaseModel):
     target_amount: Optional[float] = None
     goal_type: Optional[str] = None
     description: Optional[str] = None
+    allocation_data: Optional[str] = None
 
 class Goal(GoalBase):
     id: int
@@ -191,3 +191,32 @@ class SystemSettingBase(BaseModel):
 
 class SystemSetting(SystemSettingBase):
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Integration / Connection schemas ---
+
+class ConnectionCreate(BaseModel):
+    name: str
+    provider: str  # "pionex" | "max" | "binance" | "wallet"
+    api_key: Optional[str] = None
+    api_secret: Optional[str] = None
+    address: Optional[str] = None
+
+class ConnectionResponse(BaseModel):
+    id: int
+    name: str
+    provider: str
+    api_key_masked: Optional[str] = None
+    address: Optional[str] = None
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Profile schemas ---
+
+class ProfileCreate(BaseModel):
+    name: str
+
+class ProfileSwitch(BaseModel):
+    name: str

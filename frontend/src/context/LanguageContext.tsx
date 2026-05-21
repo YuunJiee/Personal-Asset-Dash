@@ -6,7 +6,7 @@ import { translations, Language, TranslationKey } from '../i18n/dictionaries';
 interface LanguageContextType {
     language: Language;
     setLanguage: (lang: Language) => void;
-    t: (key: string, params?: Record<string, string | number>) => string;
+    t: (key: TranslationKey, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -27,7 +27,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('app_language', lang);
     };
 
-    const t = (key: string | TranslationKey, params?: Record<string, string | number>): string => {
+    const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
         // 1. Get dictionary for current language, fallback to English
         const dict = translations[language] || translations['en'];
 

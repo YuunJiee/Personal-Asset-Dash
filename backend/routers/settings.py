@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from .. import crud, models, schemas, scheduler
+from .. import models, schemas, scheduler
 from ..database import get_db
 
 router = APIRouter(
@@ -17,9 +17,7 @@ def read_settings(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
     masked_settings = []
     for s in settings:
         if any(secret in s.key.lower() for secret in ["key", "secret", "password", "token"]):
-             # Create a copy or new object to avoid detaching from session issues if we were to modify s directly
-             # Pydantic model will handle from_orm, but we need to modify value.
-             # Let's return a list of modified objects.
+
              masked_value = "********" + s.value[-4:] if s.value and len(s.value) > 4 else "********"
              masked_settings.append(models.SystemSetting(key=s.key, value=masked_value))
         else:

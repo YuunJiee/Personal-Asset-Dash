@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { useLanguage } from "@/components/LanguageProvider";
 import { useNetWorthHistory } from '@/lib/hooks';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 interface DataPoint {
     date: string;
@@ -48,7 +49,7 @@ export function NetWorthTrendChart({ className }: NetWorthTrendChartProps) {
                                     : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {t(`range_${r}`)}
+                            {t(`range_${r}` as TranslationKey)}
                         </button>
                     ))}
                 </div>

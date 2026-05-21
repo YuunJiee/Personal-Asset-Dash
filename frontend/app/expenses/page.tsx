@@ -14,6 +14,7 @@ import { MoneyInput } from '@/components/ui/MoneyInput';
 import { PageHeaderSkeleton, StatCardSkeleton, BudgetRowSkeleton, PageError } from '@/components/ui/skeleton';
 
 import type { BudgetCategory, IncomeItem } from '@/lib/types';
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 
 // Predefined color palette for categories
 const COLOR_OPTIONS = [
@@ -409,7 +410,7 @@ export default function BudgetPage() {
                                             onClick={() => setBudgetForm({ ...budgetForm, group_name: g })}
                                             className={cn("px-3 py-1.5 rounded-lg border text-sm transition-colors", budgetForm.group_name === g ? 'bg-primary text-primary-foreground border-primary' : 'bg-transparent border-border hover:bg-muted text-foreground')}
                                         >
-                                            {t(`group_${g.toLowerCase()}`) || g}
+                                            {t(`group_${g.toLowerCase()}` as TranslationKey) || g}
                                         </button>
                                     ))}
                                 </div>

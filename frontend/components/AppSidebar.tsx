@@ -1,15 +1,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PieChart, Settings, Menu, ChevronLeft, ChevronRight, Eye, EyeOff, Wallet, Calendar, Star, Bitcoin, TrendingUp, CreditCard, History } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { LayoutDashboard, PieChart, Settings, Menu, ChevronLeft, ChevronRight, Eye, EyeOff, Wallet, Star, TrendingUp, CreditCard, History } from 'lucide-react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { useTheme } from "next-themes";
 import { usePrivacy } from "@/components/PrivacyProvider";
 import { AssetActionDialog } from './AssetActionDialog';
-import { ProfileSwitcher } from './ProfileSwitcher';
 import { AssetIcon } from './IconPicker';
 import { useLanguage } from "@/components/LanguageProvider";
-import { API_URL } from '@/lib/api';
 import { useDashboard } from '@/lib/hooks';
 import type { Asset } from '@/lib/types';
 
@@ -32,20 +29,10 @@ interface AppSidebarProps {
 export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { setTheme, theme } = useTheme();
     const { isPrivacyMode, togglePrivacyMode } = usePrivacy();
-    const [mounted, setMounted] = useState(false);
     const [historyAsset, setHistoryAsset] = useState<Asset | null>(null);
-    const { t, language, setLanguage } = useLanguage();
+    const { t } = useLanguage();
     const { assets } = useDashboard();
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const downloadBackup = () => {
-        window.open(`${API_URL}/system/backup`, '_blank');
-    };
 
     const navItems = [
         { name: t('dashboard'), href: '/', icon: LayoutDashboard },
@@ -53,8 +40,6 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
         { name: t('stock'), href: '/stock', icon: TrendingUp },
         { name: t('analytics'), href: '/analytics', icon: PieChart },
         { name: t('budget_planner'), href: '/expenses', icon: CreditCard },
-        { name: t('crypto'), href: '/crypto', icon: Bitcoin },
-        { name: t('calendar'), href: '/calendar', icon: Calendar },
         { name: t('history'), href: '/history', icon: History },
 
     ];
@@ -104,12 +89,6 @@ export function AppSidebar({ isCollapsed, toggle }: AppSidebarProps) {
                         )}
                     </div>
 
-                    {/* Profile Switcher */}
-                    {!isCollapsed && (
-                        <div className="mt-4 w-full">
-                            <ProfileSwitcher />
-                        </div>
-                    )}
                 </div>
 
 

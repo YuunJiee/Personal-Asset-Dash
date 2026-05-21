@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
-import { Trash2, Plus, Key, Wallet, Globe, RefreshCw, Bitcoin, ScanSearch } from "lucide-react";
+import { Trash2, Plus, Key, Wallet, Globe, RefreshCw, Bitcoin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "./LanguageProvider";
-import { API_URL, discoverWalletAssets } from '@/lib/api';
+import { API_URL } from '@/lib/api';
 
 interface Connection {
     id: number;
@@ -25,7 +25,6 @@ export function IntegrationManager() {
     const [connections, setConnections] = useState<Connection[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [scanningId, setScanningId] = useState<number | null>(null);
     const router = useRouter();
 
     // New Connection State
@@ -111,25 +110,6 @@ export function IntegrationManager() {
             } else alert("Sync failed.");
         } catch (e) {
             alert("Sync error.");
-        }
-    };
-
-    const handleScan = async (connId: number) => {
-        setScanningId(connId);
-        try {
-            const res = await discoverWalletAssets(connId);
-            if (res.status === 'success') {
-                const count = res.discovered_count;
-                alert(`Scan complete! Found ${count} new assets.`);
-                router.refresh();
-            } else {
-                alert("Scan failed: " + res.error);
-            }
-        } catch (e) {
-            alert("Scan error");
-            console.error(e);
-        } finally {
-            setScanningId(null);
         }
     };
 

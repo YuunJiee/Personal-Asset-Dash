@@ -8,7 +8,7 @@ import { usePrivacy } from "@/components/PrivacyProvider";
 import { fetchAssetHistory } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import type { AssetHistoryPoint } from "@/lib/types";
-import { Select } from "@/components/ui/select"; // Helper if you have it, else native
+import type { TranslationKey } from '@/src/i18n/dictionaries';
 // Assuming native select for simplicity since we don't have Select component handy in context
 // actually we do have Select in ui/select based on IntegrationManager
 
@@ -55,7 +55,7 @@ export function AssetHistoryChart({ assetId, color = "#8884d8" }: AssetHistoryCh
                                     : "text-muted-foreground hover:text-foreground"
                                 }`}
                         >
-                            {t(`range_${r}`)}
+                            {t(`range_${r}` as TranslationKey)}
                         </button>
                     ))}
                 </div>

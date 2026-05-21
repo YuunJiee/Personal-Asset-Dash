@@ -32,12 +32,6 @@ async def lifespan(app: FastAPI):
     from . import migrations as db_migrations
     db_migrations.run_migrations()
 
-    # Register the running asyncio event loop with the SSE manager
-    # so background threads can safely broadcast to connected clients.
-    import asyncio
-    from .routers.sse import manager as sse_manager
-    sse_manager.set_loop(asyncio.get_running_loop())
-
     # Start background scheduler
     from . import scheduler as sched_module
     sched_module.start_scheduler()
@@ -71,21 +65,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from .routers import dashboard, assets, stats, goals, alerts, transactions, budgets, settings, system, integrations, income
-from .routers.sse import router as sse_router
+from .routers import dashboard, assets, stats, goals, transactions, budgets, settings, system, integrations, income
 
 app.include_router(dashboard.router)
 app.include_router(assets.router)
 app.include_router(transactions.router)
 app.include_router(goals.router)
 app.include_router(stats.router)
-app.include_router(alerts.router)
 app.include_router(budgets.router)
 app.include_router(income.router)
 app.include_router(settings.router)
 app.include_router(system.router)
 app.include_router(integrations.router)
-app.include_router(sse_router, prefix="/api")
 
 
 @app.get("/")
